@@ -1,0 +1,83 @@
+<div class="container fade-in">
+    <div class="header">
+        <h1>Explore the World</h1>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn" [class.active]="activeTab === 'countries'" (click)="activeTab = 'countries'">
+                Countries
+            </button>
+            <button class="tab-btn" [class.active]="activeTab === 'pois'" (click)="activeTab = 'pois'">
+                Heritage Sites
+            </button>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="search-container">
+                <input type="text" class="search-input"
+                    [placeholder]="activeTab === 'countries' ? 'Search for a country...' : 'Search heritage sites...'"
+                    [ngModel]="searchQuery" (ngModelChange)="onSearchChange($event)">
+            </div>
+
+            @if (vm$ | async; as vm) {
+            <div class="continent-filter">
+                <select class="continent-select" [ngModel]="selectedContinent"
+                    (ngModelChange)="onContinentChange($event)">
+                    <option value="">All Continents</option>
+                    @for (continent of vm.continents; track continent.id) {
+                    <option [value]="continent.name">{{ continent.name }}</option>
+                    }
+                </select>
+            </div>
+            }
+        </div>
+    </div>
+
+    @if (vm$ | async; as vm) {
+    <!-- Countries Tab -->
+    @if (activeTab === 'countries') {
+    @for (group of vm.countryGroups; track group.continent) {
+    <div class="continent-section">
+        <h2 class="continent-header">{{ group.continent }}</h2>
+        <div class="grid">
+            @for (country of group.countries; track country.id) {
+            <div class="country-card">
+                <h3 class="country-name">{{ country.name }}</h3>
+                <button class="btn-visit" [class.visited]="isCountryVisited(country.id, vm.profile)"
+                    (click)="toggleCountryVisited(country.id, vm.profile)">
+                    {{ isCountryVisited(country.id, vm.profile) ? 'Visited' : 'Add to List' }}
+                </button>
+            </div>
+            }
+        </div>
+    </div>
+    }
+    }
+
+    <!-- POIs Tab -->
+    @if (activeTab === 'pois') {
+    @for (group of vm.poiGroups; track group.continent) {
+    <div class="continent-section">
+        <h2 class="continent-header">{{ group.continent }}</h2>
+        <div class="grid poi-grid">
+            @for (poi of group.pois; track poi.id) {
+            <div class="poi-card">
+                <div class="poi-header">
+                    <span class="poi-category">{{ poi.category }}</span>
+                    <span class="poi-country">{{ poi.country }}</span>
+                </div>
+                <h3 class="poi-name">{{ poi.name }}</h3>
+                <p class="poi-description">{{ poi.description }}</p>
+                <button class="btn-visit" [class.visited]="isPOIVisited(poi.id, vm.profile)"
+                    (click)="togglePOIVisited(poi.id, vm.profile)">
+                    {{ isPOIVisited(poi.id, vm.profile) ? 'Visited' : 'Add to List' }}
+                </button>
+            </div>
+            }
+        </div>
+    </div>
+    }
+    }
+    }
+</div>

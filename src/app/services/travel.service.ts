@@ -1,8 +1,8 @@
 import { Injectable, NgZone } from '@angular/core';
-import { Firestore, collection, doc, setDoc, getDoc, getDocs, query, where, updateDoc, arrayUnion, arrayRemove, onSnapshot } from '@angular/fire/firestore';
+import { Firestore, collection, doc, setDoc, getDocs, updateDoc, arrayUnion, arrayRemove, onSnapshot } from '@angular/fire/firestore';
 import { Auth, user } from '@angular/fire/auth';
-import { POI, Country, UserProfile } from '../models/travel.model';
-import { map, switchMap, take } from 'rxjs/operators';
+import { POI, Country, UserProfile, Continent } from '../models/travel.model';
+import { switchMap } from 'rxjs/operators';
 import { of, Observable } from 'rxjs';
 import * as Papa from 'papaparse';
 
@@ -63,7 +63,7 @@ export class TravelService {
         return new Observable<Country[]>(observer => {
             getDocs(countriesCol).then(snapshot => {
                 const countries = snapshot.docs.map(doc => doc.data() as Country);
-                observer.next(countries.sort((a, b) => a.name.localeCompare(b.name)));
+                observer.next(countries.sort((a, b) => (a.name || '').localeCompare(b.name || '')));
             });
         });
     }
@@ -77,19 +77,85 @@ export class TravelService {
         });
     }
 
+    getContinents(): Observable<Continent[]> {
+        const continentsCol = collection(this.firestore, 'continents');
+        return new Observable<Continent[]>(observer => {
+            getDocs(continentsCol).then(snapshot => {
+                const continents = snapshot.docs.map(doc => doc.data() as Continent);
+                observer.next(continents.sort((a, b) => a.name.localeCompare(b.name)));
+            });
+        });
+    }
+
     // Seeding
-    async seedCountries(csvContent: string) {
-        const results = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
-        for (const row of results.data as any[]) {
-            if (row.country && row.name) {
-                const country: Country = {
-                    id: row.country,
-                    name: row.name,
-                    latitude: parseFloat(row.latitude),
-                    longitude: parseFloat(row.longitude)
-                };
-                await setDoc(doc(this.firestore, `countries/${country.id}`), country);
+    async seedCountries(csvContent: string, coordsCsvContent: string) {
+        const metadataResults = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
+        const coordsResults = Papa.parse(coordsCsvContent, { header: true, skipEmptyLines: true });
+
+        const coordsMap = new Map<string, { lat: number, lng: number }>();
+        for (const row of coordsResults.data as any[]) {
+            if (row.country && row.latitude && row.longitude) {
+                coordsMap.set(row.country, {
+                    lat: parseFloat(row.latitude),
+                    lng: parseFloat(row.longitude)
+                });
             }
+        }
+
+        // Collect unique continents while seeding countries
+        const continentsSet = new Set<string>();
+
+        for (const row of metadataResults.data as any[]) {
+            // Use 'id' or 'iso2' from countries.csv as the lookup key
+            const isoCode = row.id || row.iso2;
+            if (isoCode && row.country) {
+                const coords = coordsMap.get(isoCode);
+                const continent = row.continent || 'Unknown';
+
+                const country: Country = {
+                    id: isoCode,
+                    name: row.country,
+                    latitude: coords ? coords.lat : 0,
+                    longitude: coords ? coords.lng : 0,
+                    region: continent
+                };
+
+                if (coords) {
+                    await setDoc(doc(this.firestore, `countries/${country.id}`), country);
+                } else {
+                    console.warn(`No coordinates found for ${country.name} (${country.id})`);
+                    await setDoc(doc(this.firestore, `countries/${country.id}`), country);
+                }
+
+                // Add continent to set
+                if (continent && continent !== 'Unknown') {
+                    continentsSet.add(continent);
+                }
+            }
+        }
+
+        // Seed continents
+        for (const continentName of continentsSet) {
+            const continent: Continent = {
+                id: continentName.toLowerCase().replace(/\s+/g, '-'),
+                name: continentName
+            };
+            await setDoc(doc(this.firestore, `continents/${continent.id}`), continent);
+        }
+    }
+
+    async seedContinents() {
+        const continents = [
+            { id: 'africa', name: 'Africa' },
+            { id: 'asia', name: 'Asia' },
+            { id: 'europe', name: 'Europe' },
+            { id: 'north-america', name: 'North America' },
+            { id: 'oceania', name: 'Oceania' },
+            { id: 'south-america', name: 'South America' }
+        ];
+
+        for (const continent of continents) {
+            await setDoc(doc(this.firestore, `continents/${continent.id}`), continent);
         }
     }
 

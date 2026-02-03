@@ -23,3 +23,8 @@ export interface UserProfile {
     visitedCountries: string[]; // List of country IDs
     visitedPOIs: string[]; // List of POI IDs
 }
+
+export interface Continent {
+    id: string;
+    name: string;
+}
