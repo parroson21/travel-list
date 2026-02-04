@@ -42,12 +42,50 @@
         <h2 class="continent-header">{{ group.continent }}</h2>
         <div class="grid">
             @for (country of group.countries; track country.id) {
-            <div class="country-card">
-                <h3 class="country-name">{{ country.name }}</h3>
-                <button class="btn-visit" [class.visited]="isCountryVisited(country.id, vm.profile)"
-                    (click)="toggleCountryVisited(country.id, vm.profile)">
-                    {{ isCountryVisited(country.id, vm.profile) ? 'Visited' : 'Add to List' }}
-                </button>
+            <div class="country-card" [class.expanded]="isExpanded(country.id)"
+                (click)="toggleExpand(country.id, vm.profile)">
+                <div class="country-card-header">
+                    <div class="country-info">
+                        <h3 class="country-name">{{ country.name }}</h3>
+                        <div class="country-meta">
+                            <span class="country-emoji">{{ country.emoji }}</span>
+                            <span class="country-id">{{ country.id }}</span>
+                        </div>
+                    </div>
+                    <button class="btn-visit" [class.visited]="isCountryVisited(country.id, vm.profile)"
+                        (click)="toggleCountryVisited(country.id, vm.profile); $event.stopPropagation()">
+                        {{ isCountryVisited(country.id, vm.profile) ? 'Visited' : 'Add to List' }}
+                    </button>
+                </div>
+
+                <div class="country-body">
+                    <p class="country-subinfo">{{ country.region }} - {{ country.native }}</p>
+                </div>
+
+                @if (isExpanded(country.id)) {
+                <div class="country-details fade-in" (click)="$event.stopPropagation()">
+                    <div class="subdivisions-section">
+                        <h4>Subdivisions</h4>
+                        @if (subdivisions$ | async; as subs) {
+                        @if (subs.length > 0) {
+                        <div class="subdivision-grid">
+                            @for (sub of subs; track sub.id) {
+                            <div class="subdivision-item" [class.visited]="isSubdivisionVisited(sub.id, vm.profile)"
+                                (click)="toggleSubdivisionVisited(sub.id, vm.profile)">
+                                <span>{{ sub.name }}</span>
+                                <div class="visit-indicator"></div>
+                            </div>
+                            }
+                        </div>
+                        } @else {
+                        <p class="placeholder-text">No subdivisions found for this country.</p>
+                        }
+                        } @else {
+                        <p class="placeholder-text">Loading subdivisions...</p>
+                        }
+                    </div>
+                </div>
+                }
             </div>
             }
         </div>

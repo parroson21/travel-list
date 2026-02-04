@@ -2,9 +2,9 @@ import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TravelService } from '../../services/travel.service';
-import { Country, UserProfile, Continent, POI } from '../../models/travel.model';
-import { Observable, combineLatest, BehaviorSubject } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { Country, UserProfile, Continent, POI, Subdivision } from '../../models/travel.model';
+import { Observable, combineLatest, BehaviorSubject, of } from 'rxjs';
+import { map, startWith, switchMap, shareReplay, catchError } from 'rxjs/operators';
 
 interface CountryGroup {
   continent: string;
@@ -28,8 +28,12 @@ export class ExploreComponent implements OnInit {
   activeTab: 'countries' | 'pois' = 'countries';
   searchQuery = '';
   selectedContinent = '';
+  expandedCountries = new Set<string>();
   private searchSubject = new BehaviorSubject<string>('');
   private continentSubject = new BehaviorSubject<string>('');
+  private expandedCountrySubject = new BehaviorSubject<string | null>(null);
+
+  subdivisions$: Observable<Subdivision[]> | undefined;
 
   vm$: Observable<{
     countryGroups: CountryGroup[],
@@ -57,13 +61,13 @@ export class ExploreComponent implements OnInit {
 
         // Filter countries by continent if selected
         if (selectedContinent) {
-          filteredCountries = filteredCountries.filter(c => c.region === selectedContinent);
+          filteredCountries = filteredCountries.filter(c => c.continent === selectedContinent);
         }
 
         // Group countries by continent
         const countryMap = new Map<string, Country[]>();
         filteredCountries.forEach(country => {
-          const continent = country.region || 'Unknown';
+          const continent = country.continent || 'Unknown';
           if (!countryMap.has(continent)) {
             countryMap.set(continent, []);
           }
@@ -118,6 +122,16 @@ export class ExploreComponent implements OnInit {
         };
       })
     );
+
+    this.subdivisions$ = this.expandedCountrySubject.pipe(
+      switchMap(id => id ? this.travel.getSubdivisions(id) : of([])),
+      map(subs => subs.sort((a, b) => a.name.localeCompare(b.name))),
+      catchError(err => {
+        console.error('Subdivisions stream error:', err);
+        return of([]);
+      }),
+      shareReplay(1)
+    );
   }
 
   onSearchChange(val: string) {
@@ -138,6 +152,10 @@ export class ExploreComponent implements OnInit {
     return profile?.visitedPOIs?.includes(poiId) || false;
   }
 
+  isSubdivisionVisited(subdivisionId: string, profile: UserProfile | null): boolean {
+    return profile?.visitedSubdivisions?.includes(subdivisionId) || false;
+  }
+
   toggleCountryVisited(countryId: string, profile: UserProfile | null) {
     const visited = this.isCountryVisited(countryId, profile);
     this.travel.markCountryVisited(countryId, !visited);
@@ -146,5 +164,27 @@ export class ExploreComponent implements OnInit {
   togglePOIVisited(poiId: string, profile: UserProfile | null) {
     const visited = this.isPOIVisited(poiId, profile);
     this.travel.markPOIVisited(poiId, !visited);
+  }
+
+  toggleSubdivisionVisited(subdivisionId: string, profile: UserProfile | null) {
+    this.travel.toggleSubdivisionVisited(subdivisionId, profile);
+  }
+
+  toggleExpand(countryId: string, profile: UserProfile | null) {
+    if (!this.isCountryVisited(countryId, profile)) return;
+
+    if (this.expandedCountries.has(countryId)) {
+      this.expandedCountries.delete(countryId);
+      this.expandedCountrySubject.next(null);
+    } else {
+      // Collapse others? User didn't specify, but usually better for grid
+      this.expandedCountries.clear();
+      this.expandedCountries.add(countryId);
+      this.expandedCountrySubject.next(countryId);
+    }
+  }
+
+  isExpanded(countryId: string): boolean {
+    return this.expandedCountries.has(countryId);
   }
 }

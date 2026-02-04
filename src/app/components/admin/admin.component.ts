@@ -20,6 +20,9 @@ import { HttpClient } from '@angular/common/http';
           <button class="btn btn-primary" (click)="seedPOIs()" [disabled]="loadingPOIs">
             {{ loadingPOIs ? 'Seeding...' : 'Seed Heritage Sites' }}
           </button>
+          <button class="btn btn-primary" (click)="seedStates()" [disabled]="loadingStates">
+            {{ loadingStates ? 'Seeding...' : 'Seed States' }}
+          </button>
         </div>
 
         <div class="logs" *ngIf="logs.length > 0">
@@ -60,41 +63,31 @@ import { HttpClient } from '@angular/common/http';
 export class AdminComponent {
   loadingCountries = false;
   loadingPOIs = false;
+  loadingStates = false;
   logs: string[] = [];
 
   constructor(private travel: TravelService, private http: HttpClient, private zone: NgZone, private cdr: ChangeDetectorRef) { }
 
   seedCountries() {
     this.loadingCountries = true;
-    this.addLog('Fetching countries.csv and countries.csv...');
+    this.addLog('Fetching countries.json...');
 
-    // Fetch both CSVs
-    this.http.get('countries.csv', { responseType: 'text' }).subscribe({
-      next: (csvNew) => {
-        this.http.get('countries.csv', { responseType: 'text' }).subscribe({
-          next: (csvCoords) => {
-            this.zone.run(async () => {
-              this.addLog('Parsing and seeding countries...');
-              try {
-                await this.travel.seedCountries(csvNew, csvCoords);
-                this.addLog('Countries seeded successfully!');
-              } catch (e: any) {
-                this.addLog('Error seeding countries: ' + e.message);
-              }
-              this.loadingCountries = false;
-            });
-          },
-          error: (err) => {
-            this.zone.run(() => {
-              this.addLog('Error fetching countries.csv: ' + err.message);
-              this.loadingCountries = false;
-            });
+    this.http.get('countries.json').subscribe({
+      next: (jsonContent: any) => {
+        this.zone.run(async () => {
+          this.addLog('Parsing and seeding countries...');
+          try {
+            await this.travel.seedCountries(JSON.stringify(jsonContent));
+            this.addLog('Countries seeded successfully!');
+          } catch (e: any) {
+            this.addLog('Error seeding countries: ' + e.message);
           }
+          this.loadingCountries = false;
         });
       },
       error: (err) => {
         this.zone.run(() => {
-          this.addLog('Error fetching countries.csv: ' + err.message);
+          this.addLog('Error fetching countries.json: ' + err.message);
           this.loadingCountries = false;
         });
       }
@@ -121,6 +114,31 @@ export class AdminComponent {
         this.zone.run(() => {
           this.addLog('Error fetching file: ' + err.message);
           this.loadingPOIs = false;
+        });
+      }
+    });
+  }
+
+  seedStates() {
+    this.loadingStates = true;
+    this.addLog('Fetching states.json...');
+    this.http.get('states.json').subscribe({
+      next: (jsonContent: any) => {
+        this.zone.run(async () => {
+          this.addLog('Parsing and seeding states (this may take a while)...');
+          try {
+            await this.travel.seedSubdivisions(JSON.stringify(jsonContent));
+            this.addLog('States seeded successfully!');
+          } catch (e: any) {
+            this.addLog('Error seeding states: ' + e.message);
+          }
+          this.loadingStates = false;
+        });
+      },
+      error: (err) => {
+        this.zone.run(() => {
+          this.addLog('Error fetching states.json: ' + err.message);
+          this.loadingStates = false;
         });
       }
     });
