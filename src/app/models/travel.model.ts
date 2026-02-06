@@ -21,6 +21,7 @@ export interface Country {
     emoji: string;
     native: string;
     hasStates?: boolean;
+    worldHeritageSites?: any[];
 }
 
 export interface Subdivision {

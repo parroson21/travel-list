@@ -11,14 +11,11 @@ import { HttpClient } from '@angular/common/http';
     <div class="container fade-in">
       <div class="glass-panel admin-panel">
         <h2>Seeding Utility</h2>
-        <p>Click the buttons below to seed the database from public CSV files.</p>
+        <p>Click the buttons below to seed the database from JSON files. Heritage sites are seeded automatically with countries.</p>
         
         <div class="actions">
           <button class="btn btn-primary" (click)="seedCountries()" [disabled]="loadingCountries">
-            {{ loadingCountries ? 'Seeding...' : 'Seed Countries' }}
-          </button>
-          <button class="btn btn-primary" (click)="seedPOIs()" [disabled]="loadingPOIs">
-            {{ loadingPOIs ? 'Seeding...' : 'Seed Heritage Sites' }}
+            {{ loadingCountries ? 'Seeding...' : 'Seed Countries & Heritage Sites' }}
           </button>
           <button class="btn btn-primary" (click)="seedStates()" [disabled]="loadingStates">
             {{ loadingStates ? 'Seeding...' : 'Seed States' }}
@@ -62,7 +59,6 @@ import { HttpClient } from '@angular/common/http';
 })
 export class AdminComponent {
   loadingCountries = false;
-  loadingPOIs = false;
   loadingStates = false;
   logs: string[] = [];
 
@@ -75,7 +71,7 @@ export class AdminComponent {
     this.http.get('countries.json').subscribe({
       next: (jsonContent: any) => {
         this.zone.run(async () => {
-          this.addLog('Parsing and seeding countries...');
+          this.addLog('Parsing and seeding countries (with heritage sites)...');
           try {
             await this.travel.seedCountries(JSON.stringify(jsonContent));
             this.addLog('Countries seeded successfully!');
@@ -89,31 +85,6 @@ export class AdminComponent {
         this.zone.run(() => {
           this.addLog('Error fetching countries.json: ' + err.message);
           this.loadingCountries = false;
-        });
-      }
-    });
-  }
-
-  seedPOIs() {
-    this.loadingPOIs = true;
-    this.addLog('Fetching whc-sites-2025.csv...');
-    this.http.get('whc-sites-2025.csv', { responseType: 'text' }).subscribe({
-      next: (csv) => {
-        this.zone.run(async () => {
-          this.addLog('Parsing and seeding POIs...');
-          try {
-            await this.travel.seedPOIs(csv);
-            this.addLog('POIs seeded successfully!');
-          } catch (e: any) {
-            this.addLog('Error seeding POIs: ' + e.message);
-          }
-          this.loadingPOIs = false;
-        });
-      },
-      error: (err) => {
-        this.zone.run(() => {
-          this.addLog('Error fetching file: ' + err.message);
-          this.loadingPOIs = false;
         });
       }
     });

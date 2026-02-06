@@ -4,7 +4,6 @@ import { Firestore, collection, doc, setDoc, getDocs, updateDoc, arrayUnion, arr
 import { Auth, user } from '@angular/fire/auth';
 import { switchMap } from 'rxjs/operators';
 import { of, Observable } from 'rxjs';
-import * as Papa from 'papaparse';
 
 @Injectable({
     providedIn: 'root'
@@ -114,10 +113,29 @@ export class TravelService {
                     capital: item.capital || '',
                     emoji: item.emoji || '',
                     native: item.native || '',
-                    hasStates: false
+                    hasStates: false,
+                    worldHeritageSites: item.worldHeritageSites || []
                 };
 
                 await setDoc(doc(this.firestore, `countries/${country.id}`), country);
+
+                // Also seed the Individual POIs (Heritage Sites)
+                if (item.worldHeritageSites && Array.isArray(item.worldHeritageSites)) {
+                    for (const site of item.worldHeritageSites) {
+                        const poi: POI = {
+                            id: site.id_no,
+                            name: site.name_en,
+                            description: site.short_description_en || '',
+                            latitude: site.latitude ? parseFloat(site.latitude) : 0,
+                            longitude: site.longitude ? parseFloat(site.longitude) : 0,
+                            category: site.category || '',
+                            country: site.states_name_en || '',
+                            isoCode: site.iso_code || '',
+                            region: site.region_en || ''
+                        };
+                        await setDoc(doc(this.firestore, `pois/${poi.id}`), poi);
+                    }
+                }
 
                 // Add continent to set
                 if (continent && continent !== 'Unknown') {
@@ -132,21 +150,6 @@ export class TravelService {
                 id: continentName.toLowerCase().replace(/\s+/g, '-'),
                 name: continentName
             };
-            await setDoc(doc(this.firestore, `continents/${continent.id}`), continent);
-        }
-    }
-
-    async seedContinents() {
-        const continents = [
-            { id: 'africa', name: 'Africa' },
-            { id: 'asia', name: 'Asia' },
-            { id: 'europe', name: 'Europe' },
-            { id: 'north-america', name: 'North America' },
-            { id: 'oceania', name: 'Oceania' },
-            { id: 'south-america', name: 'South America' }
-        ];
-
-        for (const continent of continents) {
             await setDoc(doc(this.firestore, `continents/${continent.id}`), continent);
         }
     }
@@ -227,35 +230,6 @@ export class TravelService {
             await updateDoc(userDocRef, {
                 visitedSubdivisions: arrayUnion(subdivisionId)
             });
-        }
-    }
-
-    async seedPOIs(csvContent: string) {
-        const results = Papa.parse(csvContent, { header: true, skipEmptyLines: true });
-        const updatedCountries = new Set<string>();
-
-        for (const row of results.data as any[]) {
-            if (row.id_no && row.name_en) {
-                const poi: POI = {
-                    id: row.id_no,
-                    name: row.name_en,
-                    description: row.short_description_en || '',
-                    latitude: parseFloat(row.latitude),
-                    longitude: parseFloat(row.longitude),
-                    category: row.category,
-                    country: row.states_name_en,
-                    isoCode: row.iso_code,
-                    region: row.region_en
-                };
-                await setDoc(doc(this.firestore, `pois/${poi.id}`), poi);
-
-                // Update Country Region if not already done
-                if (poi.isoCode && poi.region && !updatedCountries.has(poi.isoCode)) {
-                    const countryRef = doc(this.firestore, `countries/${poi.isoCode}`);
-                    await setDoc(countryRef, { region: poi.region }, { merge: true });
-                    updatedCountries.add(poi.isoCode);
-                }
-            }
         }
     }
 }

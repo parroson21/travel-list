@@ -2,22 +2,11 @@
     <div class="header">
         <h1>Explore the World</h1>
 
-        <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab-btn" [class.active]="activeTab === 'countries'" (click)="activeTab = 'countries'">
-                Countries
-            </button>
-            <button class="tab-btn" [class.active]="activeTab === 'pois'" (click)="activeTab = 'pois'">
-                Heritage Sites
-            </button>
-        </div>
-
         <!-- Filter Bar -->
         <div class="filter-bar">
             <div class="search-container">
-                <input type="text" class="search-input"
-                    [placeholder]="activeTab === 'countries' ? 'Search for a country...' : 'Search heritage sites...'"
-                    [ngModel]="searchQuery" (ngModelChange)="onSearchChange($event)">
+                <input type="text" class="search-input" placeholder="Search for a country..." [ngModel]="searchQuery"
+                    (ngModelChange)="onSearchChange($event)">
             </div>
 
             @if (vm$ | async; as vm) {
@@ -35,8 +24,7 @@
     </div>
 
     @if (vm$ | async; as vm) {
-    <!-- Countries Tab -->
-    @if (activeTab === 'countries') {
+    <!-- Countries -->
     @for (group of vm.countryGroups; track group.continent) {
     <div class="continent-section">
         <h2 class="continent-header">{{ group.continent }}</h2>
@@ -48,7 +36,6 @@
                     <div class="country-info">
                         <h3 class="country-name">{{ country.name }}</h3>
                         <div class="country-meta">
-                            <span class="country-emoji">{{ country.emoji }}</span>
                             <span class="country-id">{{ country.id }}</span>
                         </div>
                     </div>
@@ -64,7 +51,29 @@
 
                 @if (isExpanded(country.id)) {
                 <div class="country-details fade-in" (click)="$event.stopPropagation()">
-                    <div class="subdivisions-section">
+                    <!-- Heritage Sites Section -->
+                    <div class="detail-section">
+                        <h4>World Heritage Sites</h4>
+                        @if (country.worldHeritageSites && country.worldHeritageSites.length > 0) {
+                        <div class="subdivision-grid">
+                            @for (poi of country.worldHeritageSites; track poi.id_no) {
+                            <div class="subdivision-item" [class.visited]="isPOIVisited(poi.id_no, vm.profile)"
+                                (click)="togglePOIVisited(poi.id_no, vm.profile)">
+                                <div class="poi-title-row">
+                                    <span class="poi-name-small">{{ poi.name_en }}</span>
+                                    <span class="poi-cat-badge">{{ poi.category_short }}</span>
+                                </div>
+                                <div class="visit-indicator"></div>
+                            </div>
+                            }
+                        </div>
+                        } @else {
+                        <p class="placeholder-text">No World Heritage Sites found for this country.</p>
+                        }
+                    </div>
+
+                    <!-- Subdivisions Section -->
+                    <div class="detail-section">
                         <h4>Subdivisions</h4>
                         @if (subdivisions$ | async; as subs) {
                         @if (subs.length > 0) {
@@ -90,32 +99,6 @@
             }
         </div>
     </div>
-    }
-    }
-
-    <!-- POIs Tab -->
-    @if (activeTab === 'pois') {
-    @for (group of vm.poiGroups; track group.continent) {
-    <div class="continent-section">
-        <h2 class="continent-header">{{ group.continent }}</h2>
-        <div class="grid poi-grid">
-            @for (poi of group.pois; track poi.id) {
-            <div class="poi-card">
-                <div class="poi-header">
-                    <span class="poi-category">{{ poi.category }}</span>
-                    <span class="poi-country">{{ poi.country }}</span>
-                </div>
-                <h3 class="poi-name">{{ poi.name }}</h3>
-                <p class="poi-description">{{ poi.description }}</p>
-                <button class="btn-visit" [class.visited]="isPOIVisited(poi.id, vm.profile)"
-                    (click)="togglePOIVisited(poi.id, vm.profile)">
-                    {{ isPOIVisited(poi.id, vm.profile) ? 'Visited' : 'Add to List' }}
-                </button>
-            </div>
-            }
-        </div>
-    </div>
-    }
     }
     }
 </div>

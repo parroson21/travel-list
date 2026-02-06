@@ -11,11 +11,6 @@ interface CountryGroup {
   countries: Country[];
 }
 
-interface POIGroup {
-  continent: string;
-  pois: POI[];
-}
-
 @Component({
   selector: 'app-explore',
   standalone: true,
@@ -25,7 +20,6 @@ interface POIGroup {
   styleUrls: ['./explore.component.css']
 })
 export class ExploreComponent implements OnInit {
-  activeTab: 'countries' | 'pois' = 'countries';
   searchQuery = '';
   selectedContinent = '';
   expandedCountries = new Set<string>();
@@ -37,7 +31,6 @@ export class ExploreComponent implements OnInit {
 
   vm$: Observable<{
     countryGroups: CountryGroup[],
-    poiGroups: POIGroup[],
     continents: Continent[],
     profile: UserProfile | null
   }> | undefined;
@@ -47,13 +40,12 @@ export class ExploreComponent implements OnInit {
   ngOnInit() {
     this.vm$ = combineLatest([
       this.travel.getCountries(),
-      this.travel.getPOIs(),
       this.travel.getContinents(),
       this.searchSubject,
       this.continentSubject,
       this.travel.getUserProfile().pipe(startWith(null))
     ]).pipe(
-      map(([countries, pois, continents, query, selectedContinent, profile]) => {
+      map(([countries, continents, query, selectedContinent, profile]) => {
         const q = query.toLowerCase();
 
         // Filter countries by search query
@@ -83,40 +75,8 @@ export class ExploreComponent implements OnInit {
             )
           }));
 
-        // Filter POIs by search query
-        let filteredPOIs = pois.filter(p =>
-          (p.name || '').toLowerCase().includes(q) ||
-          (p.country || '').toLowerCase().includes(q) ||
-          (p.description || '').toLowerCase().includes(q)
-        );
-
-        // Filter POIs by continent if selected
-        if (selectedContinent) {
-          filteredPOIs = filteredPOIs.filter(p => p.region === selectedContinent);
-        }
-
-        // Group POIs by continent
-        const poiMap = new Map<string, POI[]>();
-        filteredPOIs.forEach(poi => {
-          const continent = poi.region || 'Unknown';
-          if (!poiMap.has(continent)) {
-            poiMap.set(continent, []);
-          }
-          poiMap.get(continent)!.push(poi);
-        });
-
-        const poiGroups: POIGroup[] = Array.from(poiMap.keys())
-          .sort()
-          .map(continent => ({
-            continent,
-            pois: poiMap.get(continent)!.sort((a, b) =>
-              (a.name || '').localeCompare(b.name || '')
-            )
-          }));
-
         return {
           countryGroups,
-          poiGroups,
           continents,
           profile
         };
