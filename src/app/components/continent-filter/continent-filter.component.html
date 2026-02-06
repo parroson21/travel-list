@@ -1,0 +1,14 @@
+<aside class="sidebar glass-panel">
+    <h3>Filter by Continent</h3>
+    <div class="continent-filters">
+        <button class="filter-btn" [class.active]="!selectedContinent" (click)="clearFilter()">
+            <span class="filter-name">All Continents</span>
+            <span class="filter-count">{{ totalCount }}</span>
+        </button>
+        <button *ngFor="let continent of continents" class="filter-btn"
+            [class.active]="selectedContinent === continent.name" (click)="selectContinent(continent.name)">
+            <span class="filter-name">{{ continent.name }}</span>
+            <span class="filter-count">{{ continentCounts.get(continent.name) || 0 }}</span>
+        </button>
+    </div>
+</aside>

@@ -1,1 +1,62 @@
-<p>home works!</p>
+<div class="home-container" *ngIf="vm$ | async as vm">
+    <!-- Header with Stats -->
+    <header class="dashboard-header fade-in">
+        <h1>Welcome back, <span class="highlight">{{ (auth.user$ | async)?.displayName || 'Traveler' }}</span></h1>
+        <p class="subtitle">Your travel journey at a glance</p>
+
+        <div class="stats-grid">
+            <div class="glass-panel stat-card">
+                <div class="stat-value">{{ vm.stats.countriesVisited }} / 197</div>
+                <div class="stat-label">Countries Visited</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="(vm.stats.countriesVisited / 197) * 100"></div>
+                </div>
+            </div>
+            <div class="glass-panel stat-card">
+                <div class="stat-value">{{ vm.stats.poisVisited }}</div>
+                <div class="stat-label">Heritage Sites Visited</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content: Sidebar + Countries -->
+    <div class="content-layout">
+        <!-- Continent Filter Sidebar -->
+        <app-continent-filter [continents]="vm.continents" [continentCounts]="vm.continentCounts"
+            [selectedContinent]="vm.selectedContinent" [totalCount]="vm.stats.countriesVisited"
+            (continentSelected)="selectContinent($event)" (filterCleared)="clearFilter()">
+        </app-continent-filter>
+
+        <!-- Countries List -->
+        <main class="countries-section">
+            <div class="section-header">
+                <h2>
+                    <span *ngIf="!vm.selectedContinent">All Visited Countries</span>
+                    <span *ngIf="vm.selectedContinent">{{ vm.selectedContinent }}</span>
+                </h2>
+                <p class="count">{{ vm.visitedCountries.length }} {{ vm.visitedCountries.length === 1 ? 'country' :
+                    'countries' }}</p>
+            </div>
+
+            <div class="countries-grid" *ngIf="vm.visitedCountries.length > 0">
+                <div class="glass-panel country-card" *ngFor="let country of vm.visitedCountries">
+                    <div class="country-emoji">{{ country.emoji }}</div>
+                    <div class="country-info">
+                        <h3 class="country-name">{{ country.name }}</h3>
+                        <p class="country-details">
+                            <span class="detail-item">{{ country.capital }}</span>
+                            <span class="detail-separator">•</span>
+                            <span class="detail-item">{{ country.continent }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="empty-state glass-panel" *ngIf="vm.visitedCountries.length === 0">
+                <p *ngIf="!vm.selectedContinent">You haven't visited any countries yet. Head to the Explore page to
+                    start tracking!</p>
+                <p *ngIf="vm.selectedContinent">You haven't visited any countries in {{ vm.selectedContinent }} yet.</p>
+            </div>
+        </main>
+    </div>
+</div>

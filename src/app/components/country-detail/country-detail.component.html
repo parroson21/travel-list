@@ -1,0 +1,93 @@
+<div class="country-detail-container" *ngIf="vm$ | async as vm">
+    <!-- Back Button -->
+    <button class="back-btn glass-panel" (click)="goBack()">
+        ← Back to Explore
+    </button>
+
+    <!-- Country Header -->
+    <div class="country-header glass-panel fade-in">
+        <div class="header-content">
+            <div class="country-title-section">
+                <h1 class="country-title">{{ vm.country?.name }}</h1>
+                <div class="country-emoji">{{ vm.country?.emoji }}</div>
+            </div>
+
+            <button class="btn-visited" [class.visited]="vm.isVisited"
+                (click)="toggleCountryVisited(vm.country?.id || '', vm.isVisited)">
+                {{ vm.isVisited ? 'Visited ✓' : 'Mark as Visited' }}
+            </button>
+        </div>
+
+        <!-- Country Info Grid -->
+        <div class="country-info-grid">
+            <div class="info-item">
+                <span class="info-label">Continent</span>
+                <span class="info-value">{{ vm.country?.continent }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Sub-region</span>
+                <span class="info-value">{{ vm.country?.region }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Capital</span>
+                <span class="info-value">{{ vm.country?.capital }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Native Name</span>
+                <span class="info-value">{{ vm.country?.native }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <div class="tabs glass-panel">
+            <button class="tab-btn" [class.active]="activeTab === 'subdivisions'"
+                (click)="setActiveTab('subdivisions')">
+                Subdivisions
+                <span class="tab-count">{{ vm.subdivisions.length }}</span>
+            </button>
+            <button class="tab-btn" [class.active]="activeTab === 'heritage'" (click)="setActiveTab('heritage')">
+                World Heritage Sites
+                <span class="tab-count">{{ vm.heritageSites.length }}</span>
+            </button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Subdivisions Tab -->
+            <div *ngIf="activeTab === 'subdivisions'" class="tab-panel fade-in">
+                <div *ngIf="vm.subdivisions.length > 0" class="items-grid">
+                    <div *ngFor="let subdivision of vm.subdivisions" class="item-card glass-panel"
+                        [class.visited]="isSubdivisionVisited(subdivision.id, vm.profile)"
+                        (click)="toggleSubdivisionVisited(subdivision.id, vm.profile)">
+                        <div class="item-name">{{ subdivision.name }}</div>
+                        <div class="visit-indicator"></div>
+                    </div>
+                </div>
+                <div *ngIf="vm.subdivisions.length === 0" class="empty-state glass-panel">
+                    <p>No subdivisions found for this country.</p>
+                </div>
+            </div>
+
+            <!-- Heritage Sites Tab -->
+            <div *ngIf="activeTab === 'heritage'" class="tab-panel fade-in">
+                <div *ngIf="vm.heritageSites.length > 0" class="items-grid">
+                    <div *ngFor="let site of vm.heritageSites" class="item-card glass-panel heritage-card"
+                        [class.visited]="isPOIVisited(site.id_no, vm.profile)"
+                        (click)="togglePOIVisited(site.id_no, vm.profile)">
+                        <div class="heritage-header">
+                            <div class="item-name">{{ site.name_en }}</div>
+                            <span class="heritage-badge">{{ site.category_short }}</span>
+                        </div>
+                        <p class="heritage-description">{{ site.short_description_en }}</p>
+                        <div class="visit-indicator"></div>
+                    </div>
+                </div>
+                <div *ngIf="vm.heritageSites.length === 0" class="empty-state glass-panel">
+                    <p>No World Heritage Sites found for this country.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

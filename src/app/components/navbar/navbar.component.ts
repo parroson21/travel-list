@@ -10,7 +10,7 @@ import { AuthService } from '../../services/auth.service';
   template: `
     <nav class="glass-panel navbar">
       <div class="container nav-content">
-        <div class="brand" routerLink="/">TRAVEL<span>QUEST</span></div>
+        <div class="brand" routerLink="/">TRAVEL<span>LIST</span></div>
         <div class="nav-links">
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
           <a routerLink="/explore" routerLinkActive="active">Explore</a>

@@ -1,0 +1,92 @@
+.sidebar {
+    padding: 1.5rem;
+    position: sticky;
+    top: 2rem;
+}
+
+.sidebar h3 {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    color: var(--text-main);
+}
+
+.continent-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-btn {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--accent-color);
+}
+
+.filter-name {
+    flex: 1;
+}
+
+.filter-count {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    min-width: 24px;
+    text-align: center;
+}
+
+.filter-btn.active {
+    background: var(--accent-gradient);
+    border-color: transparent;
+    color: white;
+    font-weight: 600;
+}
+
+.filter-btn.active .filter-count {
+    background: rgba(255, 255, 255, 0.25);
+    font-weight: 700;
+}
+
+/* Responsive Design */
+@media (max-width: 968px) {
+    .sidebar {
+        position: static;
+        margin-bottom: 2rem;
+    }
+
+    .continent-filters {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        flex: 1;
+        min-width: 120px;
+    }
+}
+
+@media (max-width: 640px) {
+    .continent-filters {
+        flex-direction: column;
+    }
+
+    .filter-btn {
+        min-width: auto;
+    }
+}

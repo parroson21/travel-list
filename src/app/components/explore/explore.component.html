@@ -1,104 +1,53 @@
-<div class="container fade-in">
+<div class="explore-container fade-in" *ngIf="vm$ | async as vm">
     <div class="header">
         <h1>Explore the World</h1>
 
-        <!-- Filter Bar -->
-        <div class="filter-bar">
-            <div class="search-container">
-                <input type="text" class="search-input" placeholder="Search for a country..." [ngModel]="searchQuery"
-                    (ngModelChange)="onSearchChange($event)">
-            </div>
-
-            @if (vm$ | async; as vm) {
-            <div class="continent-filter">
-                <select class="continent-select" [ngModel]="selectedContinent"
-                    (ngModelChange)="onContinentChange($event)">
-                    <option value="">All Continents</option>
-                    @for (continent of vm.continents; track continent.id) {
-                    <option [value]="continent.name">{{ continent.name }}</option>
-                    }
-                </select>
-            </div>
-            }
+        <!-- Search Bar -->
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search for a country..." [ngModel]="searchQuery"
+                (ngModelChange)="onSearchChange($event)">
         </div>
     </div>
 
-    @if (vm$ | async; as vm) {
-    <!-- Countries -->
-    @for (group of vm.countryGroups; track group.continent) {
-    <div class="continent-section">
-        <h2 class="continent-header">{{ group.continent }}</h2>
-        <div class="grid">
-            @for (country of group.countries; track country.id) {
-            <div class="country-card" [class.expanded]="isExpanded(country.id)"
-                (click)="toggleExpand(country.id, vm.profile)">
-                <div class="country-card-header">
-                    <div class="country-info">
-                        <h3 class="country-name">{{ country.name }}</h3>
-                        <div class="country-meta">
-                            <span class="country-id">{{ country.id }}</span>
-                        </div>
-                    </div>
-                    <button class="btn-visit" [class.visited]="isCountryVisited(country.id, vm.profile)"
-                        (click)="toggleCountryVisited(country.id, vm.profile); $event.stopPropagation()">
-                        {{ isCountryVisited(country.id, vm.profile) ? 'Visited' : 'Add to List' }}
-                    </button>
-                </div>
+    <!-- Main Content: Sidebar + Countries -->
+    <div class="content-layout">
+        <!-- Continent Filter Sidebar -->
+        <app-continent-filter [continents]="vm.continents" [continentCounts]="vm.continentCounts"
+            [selectedContinent]="vm.selectedContinent" [totalCount]="vm.totalCountries"
+            (continentSelected)="selectContinent($event)" (filterCleared)="clearFilter()">
+        </app-continent-filter>
 
-                <div class="country-body">
-                    <p class="country-subinfo">{{ country.region }} - {{ country.native }}</p>
-                </div>
-
-                @if (isExpanded(country.id)) {
-                <div class="country-details fade-in" (click)="$event.stopPropagation()">
-                    <!-- Heritage Sites Section -->
-                    <div class="detail-section">
-                        <h4>World Heritage Sites</h4>
-                        @if (country.worldHeritageSites && country.worldHeritageSites.length > 0) {
-                        <div class="subdivision-grid">
-                            @for (poi of country.worldHeritageSites; track poi.id_no) {
-                            <div class="subdivision-item" [class.visited]="isPOIVisited(poi.id_no, vm.profile)"
-                                (click)="togglePOIVisited(poi.id_no, vm.profile)">
-                                <div class="poi-title-row">
-                                    <span class="poi-name-small">{{ poi.name_en }}</span>
-                                    <span class="poi-cat-badge">{{ poi.category_short }}</span>
+        <!-- Countries Section -->
+        <main class="countries-section">
+            @for (group of vm.countryGroups; track group.continent) {
+            <div class="continent-section">
+                <h2 class="continent-header">{{ group.continent }}</h2>
+                <div class="grid">
+                    @for (country of group.countries; track country.id) {
+                    <div class="country-card">
+                        <div class="country-card-header">
+                            <div class="country-info">
+                                <a [routerLink]="['/explore', country.id]" class="country-name-link">
+                                    <h3 class="country-name">{{ country.name }}</h3>
+                                </a>
+                                <div class="country-meta">
+                                    <span class="country-id">{{ country.id }}</span>
                                 </div>
-                                <div class="visit-indicator"></div>
                             </div>
-                            }
+                            <button class="btn-visit" [class.visited]="isCountryVisited(country.id, vm.profile)"
+                                (click)="toggleCountryVisited(country.id, vm.profile)">
+                                {{ isCountryVisited(country.id, vm.profile) ? 'Visited' : 'Add to List' }}
+                            </button>
                         </div>
-                        } @else {
-                        <p class="placeholder-text">No World Heritage Sites found for this country.</p>
-                        }
-                    </div>
 
-                    <!-- Subdivisions Section -->
-                    <div class="detail-section">
-                        <h4>Subdivisions</h4>
-                        @if (subdivisions$ | async; as subs) {
-                        @if (subs.length > 0) {
-                        <div class="subdivision-grid">
-                            @for (sub of subs; track sub.id) {
-                            <div class="subdivision-item" [class.visited]="isSubdivisionVisited(sub.id, vm.profile)"
-                                (click)="toggleSubdivisionVisited(sub.id, vm.profile)">
-                                <span>{{ sub.name }}</span>
-                                <div class="visit-indicator"></div>
-                            </div>
-                            }
+                        <div class="country-body">
+                            <p class="country-subinfo">{{ country.region }} - {{ country.native }}</p>
                         </div>
-                        } @else {
-                        <p class="placeholder-text">No subdivisions found for this country.</p>
-                        }
-                        } @else {
-                        <p class="placeholder-text">Loading subdivisions...</p>
-                        }
                     </div>
+                    }
                 </div>
-                }
             </div>
             }
-        </div>
+        </main>
     </div>
-    }
-    }
 </div>
