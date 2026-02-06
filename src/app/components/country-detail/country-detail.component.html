@@ -39,6 +39,14 @@
         </div>
     </div>
 
+    <!-- Country Map -->
+    <div class="country-map-section glass-panel fade-in">
+        <app-world-map [zoomToCountryId]="vm.country?.id || null"
+            [visitedCountryIds]="vm.isVisited ? [vm.country?.id || ''] : []" [heritageSites]="vm.heritageSites"
+            [visitedPOIIds]="vm.profile?.visitedPOIs || []" [height]="'400px'">
+        </app-world-map>
+    </div>
+
     <!-- Tabs -->
     <div class="tabs-container">
         <div class="tabs glass-panel">

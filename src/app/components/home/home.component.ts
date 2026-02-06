@@ -6,12 +6,13 @@ import { Observable, combineLatest, BehaviorSubject } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { Country, UserProfile, Continent } from '../../models/travel.model';
 import { ContinentFilterComponent } from '../continent-filter/continent-filter.component';
+import { WorldMapComponent } from '../world-map/world-map.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ContinentFilterComponent],
+  imports: [CommonModule, ContinentFilterComponent, WorldMapComponent],
   templateUrl: './home.html',
   styleUrls: ['./home.css']
 })
@@ -20,6 +21,9 @@ export class HomeComponent implements OnInit {
 
   vm$: Observable<{
     visitedCountries: Country[],
+    visitedCountryIds: string[],
+    heritageSites: any[],
+    visitedPOIIds: string[],
     continents: Continent[],
     continentCounts: Map<string, number>,
     selectedContinent: string,
@@ -62,8 +66,15 @@ export class HomeComponent implements OnInit {
           poisVisited: profile?.visitedPOIs?.length || 0
         };
 
+        // Collect all heritage sites from visited countries
+        const heritageSites = allVisitedCountries
+          .flatMap(country => country.worldHeritageSites || []);
+
         return {
           visitedCountries,
+          visitedCountryIds: allVisitedCountries.map(c => c.id),
+          heritageSites,
+          visitedPOIIds: profile?.visitedPOIs || [],
           continents,
           continentCounts,
           selectedContinent,

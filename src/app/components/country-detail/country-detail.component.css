@@ -107,6 +107,12 @@
     font-weight: 500;
 }
 
+/* Country Map */
+.country-map-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+}
+
 /* Tabs */
 .tabs-container {
     margin-bottom: 2rem;

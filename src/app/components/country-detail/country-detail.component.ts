@@ -5,11 +5,12 @@ import { TravelService } from '../../services/travel.service';
 import { Country, UserProfile, Subdivision } from '../../models/travel.model';
 import { Observable, combineLatest } from 'rxjs';
 import { map, switchMap, startWith } from 'rxjs/operators';
+import { WorldMapComponent } from '../world-map/world-map.component';
 
 @Component({
     selector: 'app-country-detail',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, WorldMapComponent],
     templateUrl: './country-detail.component.html',
     styleUrls: ['./country-detail.component.css']
 })

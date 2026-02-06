@@ -19,6 +19,14 @@
         </div>
     </header>
 
+    <!-- World Map Section -->
+    <section class="map-section glass-panel fade-in">
+        <h2 class="section-title">Your Travel Map</h2>
+        <app-world-map [visitedCountryIds]="vm.visitedCountryIds" [heritageSites]="vm.heritageSites"
+            [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true" [height]="'500px'">
+        </app-world-map>
+    </section>
+
     <!-- Main Content: Sidebar + Countries -->
     <div class="content-layout">
         <!-- Continent Filter Sidebar -->
