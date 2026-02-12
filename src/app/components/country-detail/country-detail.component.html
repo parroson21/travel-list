@@ -41,8 +41,8 @@
 
     <!-- Country Map -->
     <div class="country-map-section glass-panel fade-in">
-        <app-world-map [zoomToCountryId]="vm.country?.id || null"
-            [visitedCountryIds]="vm.isVisited ? [vm.country?.id || ''] : []" [heritageSites]="vm.heritageSites"
+        <app-world-map [focusedCountry]="vm.country || null"
+            [visitedCountryNames]="vm.isVisited ? [vm.country?.name || ''] : []" [heritageSites]="vm.heritageSites"
             [visitedPOIIds]="vm.profile?.visitedPOIs || []" [height]="'400px'">
         </app-world-map>
     </div>
@@ -53,7 +53,7 @@
             <button class="tab-btn" [class.active]="activeTab === 'subdivisions'"
                 (click)="setActiveTab('subdivisions')">
                 Subdivisions
-                <span class="tab-count">{{ vm.subdivisions.length }}</span>
+                <span class="tab-count">{{ vm.totalSubdivisions }}</span>
             </button>
             <button class="tab-btn" [class.active]="activeTab === 'heritage'" (click)="setActiveTab('heritage')">
                 World Heritage Sites
@@ -65,15 +65,20 @@
         <div class="tab-content">
             <!-- Subdivisions Tab -->
             <div *ngIf="activeTab === 'subdivisions'" class="tab-panel fade-in">
-                <div *ngIf="vm.subdivisions.length > 0" class="items-grid">
-                    <div *ngFor="let subdivision of vm.subdivisions" class="item-card glass-panel"
-                        [class.visited]="isSubdivisionVisited(subdivision.id, vm.profile)"
-                        (click)="toggleSubdivisionVisited(subdivision.id, vm.profile)">
-                        <div class="item-name">{{ subdivision.name }}</div>
-                        <div class="visit-indicator"></div>
+                <div *ngIf="vm.totalSubdivisions > 0">
+                    <div *ngFor="let group of vm.subdivisionGroups" class="subdivision-group">
+                        <h3 class="division-type-header">{{ group.label }}</h3>
+                        <div class="items-grid">
+                            <div *ngFor="let subdivision of group.subdivisions" class="item-card glass-panel"
+                                [class.visited]="isSubdivisionVisited(subdivision.code, vm.profile)"
+                                (click)="toggleSubdivisionVisited(subdivision.code, vm.profile)">
+                                <div class="item-name">{{ subdivision.name }}</div>
+                                <div class="visit-indicator"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div *ngIf="vm.subdivisions.length === 0" class="empty-state glass-panel">
+                <div *ngIf="vm.totalSubdivisions === 0" class="empty-state glass-panel">
                     <p>No subdivisions found for this country.</p>
                 </div>
             </div>

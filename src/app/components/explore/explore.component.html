@@ -13,8 +13,8 @@
     <div class="content-layout">
         <!-- Continent Filter Sidebar -->
         <app-continent-filter [continents]="vm.continents" [continentCounts]="vm.continentCounts"
-            [selectedContinent]="vm.selectedContinent" [totalCount]="vm.totalCountries"
-            (continentSelected)="selectContinent($event)" (filterCleared)="clearFilter()">
+            [selectedContinents]="vm.selectedContinents" [totalCount]="vm.totalCountries"
+            (continentToggled)="toggleContinent($event)" (filterCleared)="clearFilter()">
         </app-continent-filter>
 
         <!-- Countries Section -->

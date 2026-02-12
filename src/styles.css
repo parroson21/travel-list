@@ -1,15 +1,24 @@
 :root {
   --primary: #008D8D;
   --primary-hover: #007070;
+  --primary-rgb: 0, 141, 141;
   --secondary: #00B8B8;
   --bg-dark: #0f172a;
   --bg-card: #1e293b;
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
+  --text-light: #e2e8f0;
   --glass: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
-  --accent-gradient: linear-gradient(135deg, #008D8D 0%, #00B8B8 100%);
-  --accent-color: #008D8D;
+  --accent-gradient: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  --accent-color: var(--primary);
+  --success: #10b981;
+  --success-hover: #059669;
+  --continent-accent: #60a5fa;
+  --continent-accent-rgb: 96, 165, 250;
+  --map-border: #ffffff;
+  --map-unvisited: #808080;
+  --map-marker-muted: #6b7280;
 }
 
 * {
@@ -69,7 +78,7 @@ h4,
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 141, 141, 0.4);
+  box-shadow: 0 10px 15px -3px rgba(var(--primary-rgb), 0.4);
 }
 
 .btn-outline {
@@ -83,7 +92,7 @@ h4,
 }
 
 .btn-visited {
-  background: #10b981;
+  background: var(--success);
   color: white;
 }
 

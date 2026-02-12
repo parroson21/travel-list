@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { POI, Country, UserProfile, Continent, Subdivision } from '../models/travel.model';
-import { Firestore, collection, doc, setDoc, getDocs, updateDoc, arrayUnion, arrayRemove, onSnapshot, query, where, collectionData, writeBatch } from '@angular/fire/firestore';
+import { Firestore, collection, doc, setDoc, getDocs, updateDoc, arrayUnion, arrayRemove, onSnapshot, query, where, collectionData, writeBatch, deleteDoc } from '@angular/fire/firestore';
 import { Auth, user } from '@angular/fire/auth';
 import { switchMap } from 'rxjs/operators';
 import { of, Observable } from 'rxjs';
@@ -91,100 +91,21 @@ export class TravelService {
         });
     }
 
-    // Seeding
-    async seedCountries(jsonContent: string) {
-        const countriesData = JSON.parse(jsonContent) as any[];
+    // --- Deletion Helpers ---
 
-        // Collect unique continents while seeding countries
-        const continentsSet = new Set<string>();
-
-        for (const item of countriesData) {
-            const isoCode = item.iso2;
-            if (isoCode && item.name) {
-                const continent = item.region || 'Unknown';
-
-                const country: Country = {
-                    id: isoCode,
-                    name: item.name,
-                    latitude: item.latitude ? parseFloat(item.latitude) : 0,
-                    longitude: item.longitude ? parseFloat(item.longitude) : 0,
-                    continent: continent,
-                    region: item.subregion || '',
-                    capital: item.capital || '',
-                    emoji: item.emoji || '',
-                    native: item.native || '',
-                    hasStates: false,
-                    worldHeritageSites: item.worldHeritageSites || []
-                };
-
-                await setDoc(doc(this.firestore, `countries/${country.id}`), country);
-
-                // Also seed the Individual POIs (Heritage Sites)
-                if (item.worldHeritageSites && Array.isArray(item.worldHeritageSites)) {
-                    for (const site of item.worldHeritageSites) {
-                        const poi: POI = {
-                            id: site.id_no,
-                            name: site.name_en,
-                            description: site.short_description_en || '',
-                            latitude: site.latitude ? parseFloat(site.latitude) : 0,
-                            longitude: site.longitude ? parseFloat(site.longitude) : 0,
-                            category: site.category || '',
-                            country: site.states_name_en || '',
-                            isoCode: site.iso_code || '',
-                            region: site.region_en || ''
-                        };
-                        await setDoc(doc(this.firestore, `pois/${poi.id}`), poi);
-                    }
-                }
-
-                // Add continent to set
-                if (continent && continent !== 'Unknown') {
-                    continentsSet.add(continent);
-                }
-            }
-        }
-
-        // Seed continents
-        for (const continentName of continentsSet) {
-            const continent: Continent = {
-                id: continentName.toLowerCase().replace(/\s+/g, '-'),
-                name: continentName
-            };
-            await setDoc(doc(this.firestore, `continents/${continent.id}`), continent);
-        }
-    }
-
-    async seedSubdivisions(jsonContent: string) {
-        const statesData = JSON.parse(jsonContent) as any[];
+    async deleteCollection(collectionPath: string): Promise<number> {
+        const colRef = collection(this.firestore, collectionPath);
+        const snapshot = await getDocs(colRef);
         const batchSize = 100;
         let batch = writeBatch(this.firestore);
         let count = 0;
 
-        const countryStateMap = new Set<string>();
-
-        for (const item of statesData) {
-            const countryCode = item.country_code;
-            const stateCode = item.iso2;
-            const stateId = item.iso3166_2 || `${countryCode}-${stateCode}`;
-
-            if (countryCode && stateCode && item.name) {
-                const subdivision: Subdivision = {
-                    id: stateId,
-                    name: item.name,
-                    countryId: countryCode,
-                    latitude: item.latitude ? parseFloat(item.latitude) : 0,
-                    longitude: item.longitude ? parseFloat(item.longitude) : 0
-                };
-
-                const stateDoc = doc(this.firestore, `subdivisions/${subdivision.id}`);
-                batch.set(stateDoc, subdivision);
-                countryStateMap.add(countryCode);
-                count++;
-
-                if (count % batchSize === 0) {
-                    await batch.commit();
-                    batch = writeBatch(this.firestore);
-                }
+        for (const docSnap of snapshot.docs) {
+            batch.delete(docSnap.ref);
+            count++;
+            if (count % batchSize === 0) {
+                await batch.commit();
+                batch = writeBatch(this.firestore);
             }
         }
 
@@ -192,21 +113,127 @@ export class TravelService {
             await batch.commit();
         }
 
-        // Update countries to mark they have states
-        for (const countryCode of countryStateMap) {
-            const countryDoc = doc(this.firestore, `countries/${countryCode}`);
-            await updateDoc(countryDoc, { hasStates: true });
+        return count;
+    }
+
+    async wipeAllCountryData(onLog?: (msg: string) => void): Promise<void> {
+        const log = onLog || (() => {});
+
+        log('Deleting all countries...');
+        const deletedCountries = await this.deleteCollection('countries');
+        log(`Deleted ${deletedCountries} countries.`);
+
+        log('All country data wiped.');
+    }
+
+    async resetAllUserData(onLog?: (msg: string) => void): Promise<void> {
+        const log = onLog || (() => {});
+        const usersCol = collection(this.firestore, 'users');
+        const snapshot = await getDocs(usersCol);
+        let count = 0;
+
+        log('Resetting all users\' visited data...');
+        for (const userSnap of snapshot.docs) {
+            await updateDoc(userSnap.ref, {
+                visitedCountries: [],
+                visitedSubdivisions: [],
+                dataResetNotification: true
+            });
+            count++;
         }
+
+        log(`Reset visited data for ${count} users. They will see a notification on next login.`);
+    }
+
+    async clearResetNotification(): Promise<void> {
+        const u = this.auth.currentUser;
+        if (!u) return;
+        const userDocRef = doc(this.firestore, `users/${u.uid}`);
+        await updateDoc(userDocRef, { dataResetNotification: false });
+    }
+
+    // --- Seeding ---
+
+    async seedCountries(jsonContent: string, onLog?: (msg: string) => void) {
+        const countriesData = JSON.parse(jsonContent) as Record<string, any>;
+        const log = onLog || (() => {});
+
+        let countryCount = 0;
+
+        for (const [isoCode, item] of Object.entries(countriesData)) {
+            if (!isoCode || !item.name) continue;
+
+            const continent = item.region || 'Unknown';
+
+            // Build subdivisions array from embedded data
+            // subdivisions can be an object keyed by division type (e.g. { "entity": [...], "district": [...] })
+            // or a flat array for backward compatibility
+            let rawSubs: any[] = [];
+            if (item.subdivisions) {
+                if (Array.isArray(item.subdivisions)) {
+                    rawSubs = item.subdivisions;
+                } else if (typeof item.subdivisions === 'object') {
+                    // Flatten all subdivision arrays from the grouped object
+                    for (const divisionType of Object.keys(item.subdivisions)) {
+                        const group = item.subdivisions[divisionType];
+                        if (Array.isArray(group)) {
+                            rawSubs.push(...group);
+                        }
+                    }
+                }
+            }
+            const subdivisions: Subdivision[] = rawSubs.map((sub: any) => ({
+                code: sub.code,
+                name: sub.name,
+                division: sub.division || '',
+                parent: sub.parent || isoCode,
+                lat: sub.lat ?? null,
+                lng: sub.lng ?? null
+            }));
+
+            const country: Country = {
+                id: isoCode,
+                name: item.name,
+                latitude: item.lat ?? (item.latitude ? parseFloat(item.latitude) : 0),
+                longitude: item.lng ?? (item.longitude ? parseFloat(item.longitude) : 0),
+                continent: continent,
+                region: item.subregion || '',
+                capital: item.capital || '',
+                emoji: item.emoji || '',
+                native: item.native || '',
+                iso3: item.iso3 || '',
+                population: item.population ?? null,
+                gdp: item.gdp ?? null,
+                currency: item.currency || '',
+                currency_name: item.currency_name || '',
+                currency_symbol: item.currency_symbol || '',
+                nationality: item.nationality || '',
+                area_sq_km: item.area_sq_km ?? null,
+                translations: item.translations || {},
+                subdivisions: subdivisions,
+                worldHeritageSites: item.worldHeritageSites || []
+            };
+
+            await setDoc(doc(this.firestore, `countries/${country.id}`), country);
+            countryCount++;
+        }
+
+        log(`Seeded ${countryCount} countries.`);
     }
 
     getSubdivisions(countryId: string): Observable<Subdivision[]> {
-        const subdivisionsRef = collection(this.firestore, 'subdivisions');
-        const q = query(subdivisionsRef, where('countryId', '==', countryId));
+        // Get subdivisions from the country document itself
+        const countryDocRef = doc(this.firestore, `countries/${countryId}`);
         return new Observable<Subdivision[]>(observer => {
-            const unsubscribe = onSnapshot(q, (snapshot) => {
+            const unsubscribe = onSnapshot(countryDocRef, (snapshot) => {
                 this.zone.run(() => {
-                    const subs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Subdivision));
-                    observer.next(subs);
+                    if (snapshot.exists()) {
+                        const data = snapshot.data() as Country;
+                        const subs = (data.subdivisions || []).sort((a, b) => a.name.localeCompare(b.name));
+                        observer.next(subs);
+                    } else {
+                        observer.next([]);
+                    }
                 });
             }, error => {
                 console.error('Error fetching subdivisions:', error);

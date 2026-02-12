@@ -1,7 +1,11 @@
+:host {
+    position: sticky;
+    top: 6rem;
+    align-self: start;
+}
+
 .sidebar {
     padding: 1.5rem;
-    position: sticky;
-    top: 2rem;
 }
 
 .sidebar h3 {
@@ -63,10 +67,59 @@
     font-weight: 700;
 }
 
+/* Keep Selection Toggle */
+.keep-selection-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--glass-border);
+    cursor: pointer;
+    user-select: none;
+}
+
+.keep-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.toggle-track {
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.15);
+    position: relative;
+    transition: background 0.2s ease;
+}
+
+.toggle-track.active {
+    background: var(--accent-color, #6366f1);
+}
+
+.toggle-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s ease;
+}
+
+.toggle-track.active .toggle-thumb {
+    transform: translateX(16px);
+}
+
 /* Responsive Design */
 @media (max-width: 968px) {
-    .sidebar {
+    :host {
         position: static;
+    }
+
+    .sidebar {
         margin-bottom: 2rem;
     }
 

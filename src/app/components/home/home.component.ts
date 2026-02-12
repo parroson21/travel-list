@@ -1,8 +1,10 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { TravelService } from '../../services/travel.service';
 import { AuthService } from '../../services/auth.service';
-import { Observable, combineLatest, BehaviorSubject } from 'rxjs';
+import { FilterService } from '../../services/filter.service';
+import { Observable, combineLatest } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { Country, UserProfile, Continent } from '../../models/travel.model';
 import { ContinentFilterComponent } from '../continent-filter/continent-filter.component';
@@ -17,30 +19,29 @@ import { WorldMapComponent } from '../world-map/world-map.component';
   styleUrls: ['./home.css']
 })
 export class HomeComponent implements OnInit {
-  private selectedContinentSubject = new BehaviorSubject<string>('');
 
   vm$: Observable<{
     visitedCountries: Country[],
-    visitedCountryIds: string[],
+    visitedCountryNames: string[],
     heritageSites: any[],
     visitedPOIIds: string[],
     continents: Continent[],
     continentCounts: Map<string, number>,
-    selectedContinent: string,
+    selectedContinents: string[],
     stats: { countriesVisited: number, poisVisited: number },
     profile: UserProfile | null
   }> | undefined;
 
-  constructor(public travel: TravelService, public auth: AuthService) { }
+  constructor(public travel: TravelService, public auth: AuthService, private router: Router, private filterService: FilterService) { }
 
   ngOnInit() {
     this.vm$ = combineLatest([
       this.travel.getCountries(),
       this.travel.getContinents(),
       this.travel.getUserProfile().pipe(startWith(null)),
-      this.selectedContinentSubject
+      this.filterService.selectedContinents$
     ]).pipe(
-      map(([countries, continents, profile, selectedContinent]) => {
+      map(([countries, continents, profile, selectedContinents]) => {
         // Filter to only visited countries
         const visitedCountryIds = profile?.visitedCountries || [];
         const allVisitedCountries = countries.filter(c => visitedCountryIds.includes(c.id));
@@ -52,10 +53,10 @@ export class HomeComponent implements OnInit {
           continentCounts.set(continent, (continentCounts.get(continent) || 0) + 1);
         });
 
-        // Filter by continent if selected
+        // Filter by selected continents
         let visitedCountries = allVisitedCountries;
-        if (selectedContinent) {
-          visitedCountries = visitedCountries.filter(c => c.continent === selectedContinent);
+        if (selectedContinents.length > 0) {
+          visitedCountries = visitedCountries.filter(c => selectedContinents.includes(c.continent));
         }
 
         // Sort alphabetically
@@ -72,12 +73,12 @@ export class HomeComponent implements OnInit {
 
         return {
           visitedCountries,
-          visitedCountryIds: allVisitedCountries.map(c => c.id),
+          visitedCountryNames: allVisitedCountries.map(c => c.name),
           heritageSites,
           visitedPOIIds: profile?.visitedPOIs || [],
           continents,
           continentCounts,
-          selectedContinent,
+          selectedContinents,
           stats,
           profile
         };
@@ -85,11 +86,15 @@ export class HomeComponent implements OnInit {
     );
   }
 
-  selectContinent(continent: string) {
-    this.selectedContinentSubject.next(continent);
+  toggleContinent(continent: string) {
+    this.filterService.toggleContinent(continent);
   }
 
   clearFilter() {
-    this.selectedContinentSubject.next('');
+    this.filterService.clearFilter();
+  }
+
+  navigateToCountry(countryId: string) {
+    this.router.navigate(['/explore', countryId]);
   }
 }

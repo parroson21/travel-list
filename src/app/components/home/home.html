@@ -22,7 +22,7 @@
     <!-- World Map Section -->
     <section class="map-section glass-panel fade-in">
         <h2 class="section-title">Your Travel Map</h2>
-        <app-world-map [visitedCountryIds]="vm.visitedCountryIds" [heritageSites]="vm.heritageSites"
+        <app-world-map [visitedCountryNames]="vm.visitedCountryNames" [heritageSites]="vm.heritageSites"
             [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true" [height]="'500px'">
         </app-world-map>
     </section>
@@ -31,23 +31,24 @@
     <div class="content-layout">
         <!-- Continent Filter Sidebar -->
         <app-continent-filter [continents]="vm.continents" [continentCounts]="vm.continentCounts"
-            [selectedContinent]="vm.selectedContinent" [totalCount]="vm.stats.countriesVisited"
-            (continentSelected)="selectContinent($event)" (filterCleared)="clearFilter()">
+            [selectedContinents]="vm.selectedContinents" [totalCount]="vm.stats.countriesVisited"
+            (continentToggled)="toggleContinent($event)" (filterCleared)="clearFilter()">
         </app-continent-filter>
 
         <!-- Countries List -->
         <main class="countries-section">
             <div class="section-header">
                 <h2>
-                    <span *ngIf="!vm.selectedContinent">All Visited Countries</span>
-                    <span *ngIf="vm.selectedContinent">{{ vm.selectedContinent }}</span>
+                    <span *ngIf="vm.selectedContinents.length === 0">All Visited Countries</span>
+                    <span *ngIf="vm.selectedContinents.length > 0">{{ vm.selectedContinents.join(', ') }}</span>
                 </h2>
                 <p class="count">{{ vm.visitedCountries.length }} {{ vm.visitedCountries.length === 1 ? 'country' :
                     'countries' }}</p>
             </div>
 
             <div class="countries-grid" *ngIf="vm.visitedCountries.length > 0">
-                <div class="glass-panel country-card" *ngFor="let country of vm.visitedCountries">
+                <div class="glass-panel country-card" *ngFor="let country of vm.visitedCountries"
+                    (click)="navigateToCountry(country.id)" style="cursor: pointer;">
                     <div class="country-emoji">{{ country.emoji }}</div>
                     <div class="country-info">
                         <h3 class="country-name">{{ country.name }}</h3>
@@ -61,9 +62,9 @@
             </div>
 
             <div class="empty-state glass-panel" *ngIf="vm.visitedCountries.length === 0">
-                <p *ngIf="!vm.selectedContinent">You haven't visited any countries yet. Head to the Explore page to
+                <p *ngIf="vm.selectedContinents.length === 0">You haven't visited any countries yet. Head to the Explore page to
                     start tracking!</p>
-                <p *ngIf="vm.selectedContinent">You haven't visited any countries in {{ vm.selectedContinent }} yet.</p>
+                <p *ngIf="vm.selectedContinents.length > 0">You haven't visited any countries in the selected continents yet.</p>
             </div>
         </main>
     </div>

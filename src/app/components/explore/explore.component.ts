@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TravelService } from '../../services/travel.service';
+import { FilterService } from '../../services/filter.service';
 import { Country, UserProfile, Continent, POI, Subdivision } from '../../models/travel.model';
 import { Observable, combineLatest, BehaviorSubject, of } from 'rxjs';
 import { map, startWith, switchMap, shareReplay, catchError } from 'rxjs/operators';
@@ -23,30 +24,28 @@ interface CountryGroup {
 })
 export class ExploreComponent implements OnInit {
   searchQuery = '';
-  selectedContinent = '';
   private searchSubject = new BehaviorSubject<string>('');
-  private continentSubject = new BehaviorSubject<string>('');
 
   vm$: Observable<{
     countryGroups: CountryGroup[],
     continents: Continent[],
     continentCounts: Map<string, number>,
-    selectedContinent: string,
+    selectedContinents: string[],
     totalCountries: number,
     profile: UserProfile | null
   }> | undefined;
 
-  constructor(private travel: TravelService) { }
+  constructor(private travel: TravelService, private filterService: FilterService) { }
 
   ngOnInit() {
     this.vm$ = combineLatest([
       this.travel.getCountries(),
       this.travel.getContinents(),
       this.searchSubject,
-      this.continentSubject,
+      this.filterService.selectedContinents$,
       this.travel.getUserProfile().pipe(startWith(null))
     ]).pipe(
-      map(([countries, continents, query, selectedContinent, profile]) => {
+      map(([countries, continents, query, selectedContinents, profile]) => {
         const q = query.toLowerCase();
 
         // Filter countries by search query
@@ -59,9 +58,9 @@ export class ExploreComponent implements OnInit {
           continentCounts.set(continent, (continentCounts.get(continent) || 0) + 1);
         });
 
-        // Filter countries by continent if selected
-        if (selectedContinent) {
-          filteredCountries = filteredCountries.filter(c => c.continent === selectedContinent);
+        // Filter countries by selected continents
+        if (selectedContinents.length > 0) {
+          filteredCountries = filteredCountries.filter(c => selectedContinents.includes(c.continent));
         }
 
         // Group countries by continent
@@ -87,7 +86,7 @@ export class ExploreComponent implements OnInit {
           countryGroups,
           continents,
           continentCounts,
-          selectedContinent,
+          selectedContinents,
           totalCountries: countries.filter(c => (c.name || '').toLowerCase().includes(q)).length,
           profile
         };
@@ -100,17 +99,12 @@ export class ExploreComponent implements OnInit {
     this.searchSubject.next(val);
   }
 
-  onContinentChange(val: string) {
-    this.selectedContinent = val;
-    this.continentSubject.next(val);
-  }
-
-  selectContinent(continent: string) {
-    this.onContinentChange(continent);
+  toggleContinent(continent: string) {
+    this.filterService.toggleContinent(continent);
   }
 
   clearFilter() {
-    this.onContinentChange('');
+    this.filterService.clearFilter();
   }
 
   isCountryVisited(countryId: string, profile: UserProfile | null): boolean {

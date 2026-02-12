@@ -11,7 +11,7 @@ export interface POI {
 }
 
 export interface Country {
-    id: string; // ISO Code (iso2)
+    id: string; // ISO2 code (e.g., "AD")
     name: string;
     latitude: number;
     longitude: number;
@@ -20,23 +20,35 @@ export interface Country {
     capital: string;
     emoji: string;
     native: string;
-    hasStates?: boolean;
+    subdivisions?: Subdivision[];
     worldHeritageSites?: any[];
+    // Additional fields from merged format
+    iso3?: string;
+    population?: number;
+    gdp?: number | null;
+    currency?: string;
+    currency_name?: string;
+    currency_symbol?: string;
+    nationality?: string;
+    area_sq_km?: number;
+    translations?: Record<string, string>;
 }
 
 export interface Subdivision {
-    id: string; // Format: country_code-iso2 (e.g., US-CA)
+    code: string; // e.g., "AD-07"
     name: string;
-    countryId: string;
-    latitude: number;
-    longitude: number;
+    division: string; // e.g., "parish", "province", "state"
+    parent: string; // parent country code, e.g., "AD"
+    lat?: number;
+    lng?: number;
 }
 
 export interface UserProfile {
     uid: string;
     visitedCountries: string[]; // List of country IDs
-    visitedSubdivisions: string[]; // List of subdivision IDs
+    visitedSubdivisions: string[]; // List of subdivision codes
     visitedPOIs: string[]; // List of POI IDs
+    dataResetNotification?: boolean; // Set to true when admin resets user data
 }
 
 export interface Continent {

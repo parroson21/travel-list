@@ -84,7 +84,7 @@
 }
 
 .continent-select option {
-  background: #1e293b;
+  background: var(--bg-card);
   color: white;
 }
 
@@ -97,8 +97,8 @@
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
-  color: #60a5fa;
-  border-bottom: 2px solid rgba(96, 165, 250, 0.3);
+  color: var(--continent-accent);
+  border-bottom: 2px solid rgba(var(--continent-accent-rgb), 0.3);
   padding-bottom: 0.5rem;
 }
 
@@ -157,7 +157,7 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
-  color: #e2e8f0;
+  color: var(--text-light);
   transition: color 0.2s ease;
 }
 
@@ -180,7 +180,7 @@
 
 .country-subinfo {
   margin: 0;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.95rem;
 }
 
@@ -195,7 +195,7 @@
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: transparent;
-  color: #94a3b8;
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s;
   width: 100%;
@@ -208,13 +208,13 @@
 }
 
 .btn-visit.visited {
-  background: #10b981;
-  border-color: #10b981;
+  background: var(--success);
+  border-color: var(--success);
   color: white;
 }
 
 .btn-visit.visited:hover {
-  background: #059669;
+  background: var(--success-hover);
 }
 
 /* Responsive */

@@ -3,6 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TravelService } from '../../services/travel.service';
 import { Country, UserProfile, Subdivision } from '../../models/travel.model';
+
+interface SubdivisionGroup {
+    divisionType: string;
+    label: string;
+    subdivisions: Subdivision[];
+}
 import { Observable, combineLatest } from 'rxjs';
 import { map, switchMap, startWith } from 'rxjs/operators';
 import { WorldMapComponent } from '../world-map/world-map.component';
@@ -19,7 +25,8 @@ export class CountryDetailComponent implements OnInit {
 
     vm$: Observable<{
         country: Country | null,
-        subdivisions: Subdivision[],
+        subdivisionGroups: SubdivisionGroup[],
+        totalSubdivisions: number,
         heritageSites: any[],
         profile: UserProfile | null,
         isVisited: boolean
@@ -47,9 +54,26 @@ export class CountryDetailComponent implements OnInit {
                 const isVisited = profile?.visitedCountries?.includes(country?.id || '') || false;
                 const heritageSites = country?.worldHeritageSites || [];
 
+                // Group subdivisions by division type
+                const grouped = new Map<string, Subdivision[]>();
+                for (const sub of subdivisions) {
+                    const type = sub.division || 'other';
+                    if (!grouped.has(type)) {
+                        grouped.set(type, []);
+                    }
+                    grouped.get(type)!.push(sub);
+                }
+
+                const subdivisionGroups: SubdivisionGroup[] = Array.from(grouped.entries()).map(([type, subs]) => ({
+                    divisionType: type,
+                    label: this.pluralizeDivisionType(type),
+                    subdivisions: subs.sort((a, b) => a.name.localeCompare(b.name))
+                }));
+
                 return {
                     country,
-                    subdivisions: subdivisions.sort((a, b) => a.name.localeCompare(b.name)),
+                    subdivisionGroups,
+                    totalSubdivisions: subdivisions.length,
                     heritageSites,
                     profile,
                     isVisited
@@ -81,6 +105,17 @@ export class CountryDetailComponent implements OnInit {
     togglePOIVisited(poiId: string, profile: UserProfile | null) {
         const visited = this.isPOIVisited(poiId, profile);
         this.travel.markPOIVisited(poiId, !visited);
+    }
+
+    private pluralizeDivisionType(type: string): string {
+        const capitalized = type.charAt(0).toUpperCase() + type.slice(1);
+        if (type.endsWith('y') && !type.endsWith('ey') && !type.endsWith('ay') && !type.endsWith('oy')) {
+            return capitalized.slice(0, -1) + 'ies';
+        }
+        if (type.endsWith('sh') || type.endsWith('ch') || type.endsWith('ss') || type.endsWith('x')) {
+            return capitalized + 'es';
+        }
+        return capitalized + 's';
     }
 
     goBack() {
