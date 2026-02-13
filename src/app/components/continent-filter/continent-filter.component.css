@@ -37,7 +37,7 @@
 }
 
 .filter-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--glass-subtle);
     border-color: var(--accent-color);
 }
 
@@ -46,7 +46,7 @@
 }
 
 .filter-count {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--glass-border);
     padding: 0.25rem 0.5rem;
     border-radius: 12px;
     font-size: 0.85rem;
@@ -89,7 +89,7 @@
     width: 36px;
     height: 20px;
     border-radius: 10px;
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--glass-border);
     position: relative;
     transition: background 0.2s ease;
 }

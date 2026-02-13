@@ -4,6 +4,7 @@
     position: sticky;
     top: 1rem;
     z-index: 1000;
+    background: var(--bg-card);
 }
 
 .nav-content {
@@ -20,6 +21,7 @@
     span {
         background: var(--accent-gradient);
         -webkit-background-clip: text;
+        background-clip: text;
         -webkit-text-fill-color: transparent;
     }
 }
@@ -55,7 +57,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--glass);
     border: 1px solid var(--glass-border);
     border-radius: 999px;
     padding: 0.35rem 0.75rem 0.35rem 0.35rem;
@@ -64,7 +66,7 @@
     transition: all 0.2s ease;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: var(--glass-hover);
         border-color: var(--accent-color);
     }
 }
@@ -118,6 +120,7 @@
     border-radius: 12px;
     animation: dropdownFade 0.15s ease;
     z-index: 1001;
+    background: var(--bg-card);
 }
 
 @keyframes dropdownFade {
@@ -167,7 +170,7 @@
     font-family: inherit;
 
     &:hover {
-        background: rgba(255, 255, 255, 0.08);
+        background: var(--glass-hover);
     }
 
     &.logout {

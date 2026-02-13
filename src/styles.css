@@ -10,6 +10,8 @@
   --text-light: #e2e8f0;
   --glass: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-hover: rgba(255, 255, 255, 0.08);
+  --glass-subtle: rgba(255, 255, 255, 0.05);
   --accent-gradient: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
   --accent-color: var(--primary);
   --success: #10b981;
@@ -19,6 +21,23 @@
   --map-border: #ffffff;
   --map-unvisited: #808080;
   --map-marker-muted: #6b7280;
+  --shadow-color: rgba(0, 0, 0, 0.2);
+}
+
+html.light {
+  --bg-dark: #f0f2f5;
+  --bg-card: #ffffff;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --text-light: #334155;
+  --glass: rgba(0, 0, 0, 0.03);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-hover: rgba(0, 0, 0, 0.06);
+  --glass-subtle: rgba(0, 0, 0, 0.03);
+  --map-border: #334155;
+  --map-unvisited: #b0b0b0;
+  --map-marker-muted: #9ca3af;
+  --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
 * {

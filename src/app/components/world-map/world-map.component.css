@@ -3,8 +3,8 @@
     width: 100%;
     border-radius: 16px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
 }
 
 .map-container {
@@ -22,7 +22,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: rgba(15, 23, 42, 0.95);
+    background: var(--bg-dark);
     z-index: 10;
     gap: 1rem;
 }
@@ -30,7 +30,7 @@
 .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid rgba(255, 255, 255, 0.1);
+    border: 3px solid var(--glass-border);
     border-top-color: var(--accent-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
@@ -45,4 +45,26 @@
 .map-loading p {
     color: var(--text-muted);
     margin: 0;
+}
+
+/* Hover tooltip popup */
+::ng-deep .map-hover-popup {
+    z-index: 10;
+}
+
+::ng-deep .map-hover-popup .maplibregl-popup-content {
+    background: rgba(15, 23, 42, 0.9);
+    color: #e2e8f0;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    pointer-events: none;
+}
+
+::ng-deep .map-hover-popup .maplibregl-popup-tip {
+    display: none;
 }

@@ -23,7 +23,7 @@
 .header h1 {
   font-size: 2.5rem;
   margin-bottom: 1.5rem;
-  color: white;
+  color: var(--text-main);
 }
 
 .search-container {
@@ -36,22 +36,22 @@
   padding: 1rem 1.5rem;
   font-size: 1.1rem;
   border-radius: 50px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  color: var(--text-main);
   backdrop-filter: blur(10px);
   outline: none;
   transition: all 0.3s ease;
 }
 
 .search-input:focus {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  background: var(--glass-hover);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 20px var(--glass);
 }
 
 .search-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
 }
 
 .continent-filter {
@@ -63,9 +63,9 @@
   padding: 1rem 1.5rem;
   font-size: 1rem;
   border-radius: 50px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  color: var(--text-main);
   backdrop-filter: blur(10px);
   outline: none;
   cursor: pointer;
@@ -73,19 +73,19 @@
 }
 
 .continent-select:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--glass-hover);
+  border-color: var(--accent-color);
 }
 
 .continent-select:focus {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  background: var(--glass-hover);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 20px var(--glass);
 }
 
 .continent-select option {
   background: var(--bg-card);
-  color: white;
+  color: var(--text-main);
 }
 
 /* Continent Sections */
@@ -111,8 +111,8 @@
 
 /* Country Cards */
 .country-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
   border-radius: 16px;
   padding: 1.5rem;
   display: flex;
@@ -123,8 +123,8 @@
 
 .country-card:hover {
   transform: translateY(-5px);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  background: var(--glass-hover);
+  box-shadow: 0 10px 30px var(--shadow-color);
 }
 
 .country-card-header {
@@ -193,7 +193,7 @@
 .btn-visit {
   padding: 0.6rem 1.5rem;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--glass-border);
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
@@ -203,8 +203,8 @@
 }
 
 .btn-visit:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--glass);
+  color: var(--text-main);
 }
 
 .btn-visit.visited {

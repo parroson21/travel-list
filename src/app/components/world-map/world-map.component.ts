@@ -2,6 +2,7 @@ import { Component, Input, OnInit, OnDestroy, AfterViewInit, PLATFORM_ID, Inject
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { Country } from '../../models/travel.model';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
     selector: 'app-world-map',
@@ -19,12 +20,14 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
     @Input() showOnlyVisitedSites: boolean = false;
 
     private map: any | null = null; // maplibre-gl Map instance
+    private popup: any | null = null;
     isLoading = true;
     isBrowser: boolean;
 
     constructor(
         private router: Router,
         private cdr: ChangeDetectorRef,
+        private themeService: ThemeService,
         @Inject(PLATFORM_ID) platformId: Object
     ) {
         this.isBrowser = isPlatformBrowser(platformId);
@@ -47,6 +50,9 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
     }
 
     ngOnDestroy() {
+        if (this.popup) {
+            this.popup.remove();
+        }
         if (this.map) {
             this.map.remove();
         }
@@ -72,12 +78,22 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
 
             const zoom = this.focusedCountry ? 4 : 1.5;
 
+            const mapStyle = this.themeService.darkMode()
+                ? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
+                : 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+
             this.map = new maplibregl.Map({
                 container: 'map-container',
-                style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+                style: mapStyle,
                 center: center,
                 zoom: zoom,
                 attributionControl: false
+            });
+
+            this.popup = new maplibregl.Popup({
+                closeButton: false,
+                closeOnClick: false,
+                className: 'map-hover-popup'
             });
 
             this.map.on('load', () => {
@@ -188,21 +204,52 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
                             'circle-opacity': 1
                         }
                     });
-
-                    // Add hover effect
-                    this.map.on('mouseenter', 'heritage-sites-unvisited', () => {
-                        if (this.map) this.map.getCanvas().style.cursor = 'pointer';
-                    });
-                    this.map.on('mouseleave', 'heritage-sites-unvisited', () => {
-                        if (this.map) this.map.getCanvas().style.cursor = '';
-                    });
-                    this.map.on('mouseenter', 'heritage-sites-visited', () => {
-                        if (this.map) this.map.getCanvas().style.cursor = 'pointer';
-                    });
-                    this.map.on('mouseleave', 'heritage-sites-visited', () => {
-                        if (this.map) this.map.getCanvas().style.cursor = '';
-                    });
                 }
+
+                // Unified hover tooltip — heritage sites take priority over country fills
+                this.map?.on('mousemove', (e: any) => {
+                    if (!this.map || !this.popup) return;
+
+                    // Build list of layers to check, in priority order
+                    const heritageLayers: string[] = [];
+                    if (this.map.getLayer('heritage-sites-visited')) heritageLayers.push('heritage-sites-visited');
+                    if (this.map.getLayer('heritage-sites-unvisited')) heritageLayers.push('heritage-sites-unvisited');
+
+                    const countryLayers: string[] = [];
+                    if (this.map.getLayer('countries-visited-fill')) countryLayers.push('countries-visited-fill');
+                    if (this.map.getLayer('countries-focused-fill')) countryLayers.push('countries-focused-fill');
+
+                    // Check heritage sites first (highest priority)
+                    if (heritageLayers.length > 0) {
+                        const heritageFeatures = this.map.queryRenderedFeatures(e.point, { layers: heritageLayers });
+                        if (heritageFeatures.length > 0) {
+                            this.map.getCanvas().style.cursor = 'pointer';
+                            const coords = heritageFeatures[0].geometry.coordinates.slice();
+                            const name = heritageFeatures[0].properties?.name;
+                            if (name) {
+                                this.popup.setLngLat(coords).setHTML(`<strong>${name}</strong>`).addTo(this.map);
+                            }
+                            return;
+                        }
+                    }
+
+                    // Fall back to country fills
+                    if (countryLayers.length > 0) {
+                        const countryFeatures = this.map.queryRenderedFeatures(e.point, { layers: countryLayers });
+                        if (countryFeatures.length > 0) {
+                            this.map.getCanvas().style.cursor = 'pointer';
+                            const name = countryFeatures[0].properties?.name;
+                            if (name) {
+                                this.popup.setLngLat(e.lngLat).setHTML(`<strong>${name}</strong>`).addTo(this.map);
+                            }
+                            return;
+                        }
+                    }
+
+                    // Nothing under cursor — clear
+                    this.map.getCanvas().style.cursor = '';
+                    this.popup.remove();
+                });
 
                 this.isLoading = false;
                 this.cdr.detectChanges(); // Manually trigger change detection
