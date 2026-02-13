@@ -23,7 +23,8 @@
     <section class="map-section glass-panel fade-in">
         <h2 class="section-title">Your Travel Map</h2>
         <app-world-map [visitedCountryNames]="vm.visitedCountryNames" [heritageSites]="vm.heritageSites"
-            [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true" [height]="'500px'">
+            [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true" [height]="'500px'"
+            (poiToggled)="togglePOIVisited($event, vm.profile)">
         </app-world-map>
     </section>
 

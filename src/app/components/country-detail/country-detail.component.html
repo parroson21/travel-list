@@ -43,7 +43,9 @@
     <div class="country-map-section glass-panel fade-in">
         <app-world-map [focusedCountry]="vm.country || null"
             [visitedCountryNames]="vm.isVisited ? [vm.country?.name || ''] : []" [heritageSites]="vm.heritageSites"
-            [visitedPOIIds]="vm.profile?.visitedPOIs || []" [height]="'400px'">
+            [visitedPOIIds]="vm.profile?.visitedPOIs || []" [countryId]="vm.country?.id || ''" [height]="'400px'"
+            [visitedSubdivisionCodes]="vm.profile?.visitedSubdivisions || []"
+            (poiToggled)="togglePOIVisited($event, vm.profile, vm.country?.id)">
         </app-world-map>
     </div>
 
@@ -91,7 +93,12 @@
                         (click)="togglePOIVisited(site.id_no, vm.profile, vm.country?.id)">
                         <div class="heritage-header">
                             <div class="item-name">{{ site.name_en }}</div>
-                            <span class="heritage-badge">{{ site.category_short }}</span>
+                            <span class="heritage-badge"
+                                [class.badge-cultural]="site.category_short === 'C'"
+                                [class.badge-natural]="site.category_short === 'N'"
+                                [class.badge-mixed]="site.category_short === 'C/N' || site.category_short === 'N/C'">
+                                {{ site.category_short === 'C' ? 'Cultural' : site.category_short === 'N' ? 'Natural' : 'Mixed' }}
+                            </span>
                         </div>
                         <p class="heritage-description">{{ site.short_description_en }}</p>
                         <div class="visit-indicator"></div>

@@ -4,8 +4,8 @@ import { Router } from '@angular/router';
 import { TravelService } from '../../services/travel.service';
 import { AuthService } from '../../services/auth.service';
 import { FilterService } from '../../services/filter.service';
-import { Observable, combineLatest } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { Observable, combineLatest, firstValueFrom } from 'rxjs';
+import { map, startWith, take } from 'rxjs/operators';
 import { Country, UserProfile, Continent } from '../../models/travel.model';
 import { ContinentFilterComponent } from '../continent-filter/continent-filter.component';
 import { WorldMapComponent } from '../world-map/world-map.component';
@@ -96,5 +96,15 @@ export class HomeComponent implements OnInit {
 
   navigateToCountry(countryId: string) {
     this.router.navigate(['/explore', countryId]);
+  }
+
+  async togglePOIVisited(poiId: string, profile: UserProfile | null) {
+    const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
+    if (!user) {
+      this.auth.loginWithGoogle();
+      return;
+    }
+    const visited = profile?.visitedPOIs?.includes(poiId) || false;
+    this.travel.markPOIVisited(poiId, !visited);
   }
 }
