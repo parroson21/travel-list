@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TravelService } from '../../services/travel.service';
+import { AuthService } from '../../services/auth.service';
 import { Country, UserProfile, Subdivision } from '../../models/travel.model';
 
 interface SubdivisionGroup {
@@ -9,8 +10,8 @@ interface SubdivisionGroup {
     label: string;
     subdivisions: Subdivision[];
 }
-import { Observable, combineLatest } from 'rxjs';
-import { map, switchMap, startWith } from 'rxjs/operators';
+import { Observable, combineLatest, firstValueFrom } from 'rxjs';
+import { map, switchMap, startWith, take } from 'rxjs/operators';
 import { WorldMapComponent } from '../world-map/world-map.component';
 
 @Component({
@@ -29,13 +30,15 @@ export class CountryDetailComponent implements OnInit {
         totalSubdivisions: number,
         heritageSites: any[],
         profile: UserProfile | null,
-        isVisited: boolean
+        isVisited: boolean,
+        isLoggedIn: boolean
     }> | undefined;
 
     constructor(
         private route: ActivatedRoute,
         private router: Router,
-        private travel: TravelService
+        private travel: TravelService,
+        private auth: AuthService
     ) { }
 
     ngOnInit() {
@@ -48,9 +51,10 @@ export class CountryDetailComponent implements OnInit {
             this.route.params.pipe(
                 switchMap(params => this.travel.getSubdivisions(params['countryId']))
             ),
-            this.travel.getUserProfile().pipe(startWith(null))
+            this.travel.getUserProfile().pipe(startWith(null)),
+            this.auth.user$
         ]).pipe(
-            map(([country, subdivisions, profile]) => {
+            map(([country, subdivisions, profile, user]) => {
                 const isVisited = profile?.visitedCountries?.includes(country?.id || '') || false;
                 const heritageSites = country?.worldHeritageSites || [];
 
@@ -76,7 +80,8 @@ export class CountryDetailComponent implements OnInit {
                     totalSubdivisions: subdivisions.length,
                     heritageSites,
                     profile,
-                    isVisited
+                    isVisited,
+                    isLoggedIn: !!user
                 };
             })
         );
@@ -86,7 +91,12 @@ export class CountryDetailComponent implements OnInit {
         this.activeTab = tab;
     }
 
-    toggleCountryVisited(countryId: string, isVisited: boolean) {
+    async toggleCountryVisited(countryId: string, isVisited: boolean) {
+        const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
+        if (!user) {
+            this.auth.loginWithGoogle();
+            return;
+        }
         this.travel.markCountryVisited(countryId, !isVisited);
     }
 
@@ -98,13 +108,23 @@ export class CountryDetailComponent implements OnInit {
         return profile?.visitedPOIs?.includes(poiId) || false;
     }
 
-    toggleSubdivisionVisited(subdivisionId: string, profile: UserProfile | null) {
-        this.travel.toggleSubdivisionVisited(subdivisionId, profile);
+    async toggleSubdivisionVisited(subdivisionId: string, profile: UserProfile | null, countryId?: string) {
+        const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
+        if (!user) {
+            this.auth.loginWithGoogle();
+            return;
+        }
+        this.travel.toggleSubdivisionVisited(subdivisionId, profile, countryId);
     }
 
-    togglePOIVisited(poiId: string, profile: UserProfile | null) {
+    async togglePOIVisited(poiId: string, profile: UserProfile | null, countryId?: string) {
+        const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
+        if (!user) {
+            this.auth.loginWithGoogle();
+            return;
+        }
         const visited = this.isPOIVisited(poiId, profile);
-        this.travel.markPOIVisited(poiId, !visited);
+        this.travel.markPOIVisited(poiId, !visited, countryId);
     }
 
     private pluralizeDivisionType(type: string): string {

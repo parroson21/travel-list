@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TravelService } from '../../services/travel.service';
+import { AuthService } from '../../services/auth.service';
 import { FilterService } from '../../services/filter.service';
 import { Country, UserProfile, Continent, POI, Subdivision } from '../../models/travel.model';
-import { Observable, combineLatest, BehaviorSubject, of } from 'rxjs';
-import { map, startWith, switchMap, shareReplay, catchError } from 'rxjs/operators';
+import { Observable, combineLatest, BehaviorSubject, of, firstValueFrom } from 'rxjs';
+import { map, startWith, switchMap, shareReplay, catchError, take } from 'rxjs/operators';
 import { ContinentFilterComponent } from '../continent-filter/continent-filter.component';
 
 interface CountryGroup {
@@ -35,7 +36,7 @@ export class ExploreComponent implements OnInit {
     profile: UserProfile | null
   }> | undefined;
 
-  constructor(private travel: TravelService, private filterService: FilterService) { }
+  constructor(private travel: TravelService, private auth: AuthService, private filterService: FilterService) { }
 
   ngOnInit() {
     this.vm$ = combineLatest([
@@ -111,7 +112,12 @@ export class ExploreComponent implements OnInit {
     return profile?.visitedCountries?.includes(countryId) || false;
   }
 
-  toggleCountryVisited(countryId: string, profile: UserProfile | null) {
+  async toggleCountryVisited(countryId: string, profile: UserProfile | null) {
+    const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
+    if (!user) {
+      this.auth.loginWithGoogle();
+      return;
+    }
     const visited = this.isCountryVisited(countryId, profile);
     this.travel.markCountryVisited(countryId, !visited);
   }

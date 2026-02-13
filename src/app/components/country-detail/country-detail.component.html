@@ -71,7 +71,7 @@
                         <div class="items-grid">
                             <div *ngFor="let subdivision of group.subdivisions" class="item-card glass-panel"
                                 [class.visited]="isSubdivisionVisited(subdivision.code, vm.profile)"
-                                (click)="toggleSubdivisionVisited(subdivision.code, vm.profile)">
+                                (click)="toggleSubdivisionVisited(subdivision.code, vm.profile, vm.country?.id)">
                                 <div class="item-name">{{ subdivision.name }}</div>
                                 <div class="visit-indicator"></div>
                             </div>
@@ -88,7 +88,7 @@
                 <div *ngIf="vm.heritageSites.length > 0" class="items-grid">
                     <div *ngFor="let site of vm.heritageSites" class="item-card glass-panel heritage-card"
                         [class.visited]="isPOIVisited(site.id_no, vm.profile)"
-                        (click)="togglePOIVisited(site.id_no, vm.profile)">
+                        (click)="togglePOIVisited(site.id_no, vm.profile, vm.country?.id)">
                         <div class="heritage-header">
                             <div class="item-name">{{ site.name_en }}</div>
                             <span class="heritage-badge">{{ site.category_short }}</span>

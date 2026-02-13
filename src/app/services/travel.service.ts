@@ -50,12 +50,16 @@ export class TravelService {
         }
     }
 
-    async markPOIVisited(poiId: string, visited: boolean) {
+    async markPOIVisited(poiId: string, visited: boolean, countryId?: string) {
         const u = this.auth.currentUser;
         if (!u) return;
         const userDoc = doc(this.firestore, `users/${u.uid}`);
         if (visited) {
-            await updateDoc(userDoc, { visitedPOIs: arrayUnion(poiId) });
+            const update: any = { visitedPOIs: arrayUnion(poiId) };
+            if (countryId) {
+                update.visitedCountries = arrayUnion(countryId);
+            }
+            await updateDoc(userDoc, update);
         } else {
             await updateDoc(userDoc, { visitedPOIs: arrayRemove(poiId) });
         }
@@ -243,7 +247,7 @@ export class TravelService {
         });
     }
 
-    async toggleSubdivisionVisited(subdivisionId: string, profile: UserProfile | null) {
+    async toggleSubdivisionVisited(subdivisionId: string, profile: UserProfile | null, countryId?: string) {
         if (!profile) return;
 
         const userDocRef = doc(this.firestore, `users/${profile.uid}`);
@@ -254,9 +258,13 @@ export class TravelService {
                 visitedSubdivisions: arrayRemove(subdivisionId)
             });
         } else {
-            await updateDoc(userDocRef, {
+            const update: any = {
                 visitedSubdivisions: arrayUnion(subdivisionId)
-            });
+            };
+            if (countryId) {
+                update.visitedCountries = arrayUnion(countryId);
+            }
+            await updateDoc(userDocRef, update);
         }
     }
 }
