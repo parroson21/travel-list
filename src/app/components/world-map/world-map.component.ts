@@ -248,54 +248,66 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
 
     /**
      * Attempt to load regional GeoJSON data for a country
-     * Returns a FeatureCollection if regions are available, null otherwise
+     * Returns a FeatureCollection if subdivisions are available, null otherwise
      */
     private async loadRegionalGeoJSON(countryCode: string): Promise<any | null> {
         try {
-            // Try to fetch the manifest file
-            const manifestResponse = await fetch(`/geojson/${countryCode}/regions/manifest.json`);
-            
-            if (!manifestResponse.ok) {
-                // No manifest available - silently return null
-                return null;
+            // Try common subdivision folder names
+            const subdivisionTypes = ['regions', 'prefectures', 'provinces', 'states', 'counties'];
+
+            for (const subdivType of subdivisionTypes) {
+                try {
+                    // Try to fetch the manifest file for this subdivision type
+                    const manifestResponse = await fetch(`/geojson/${countryCode}/${subdivType}/manifest.json`);
+
+                    if (!manifestResponse.ok) {
+                        continue; // Try next subdivision type
+                    }
+
+                    const manifest = await manifestResponse.json();
+
+                    if (!manifest.regions || !Array.isArray(manifest.regions) || manifest.regions.length === 0) {
+                        console.warn(`Manifest for ${countryCode}/${subdivType} has no regions`);
+                        continue;
+                    }
+
+                    // Load all subdivision GeoJSON files in parallel
+                    const subdivisionPromises = manifest.regions.map((code: string) =>
+                        fetch(`/geojson/${countryCode}/${subdivType}/${code}.geojson`)
+                            .then(r => {
+                                if (!r.ok) throw new Error(`Failed to load ${code}`);
+                                return r.json();
+                            })
+                            .catch(err => {
+                                console.warn(`Failed to load subdivision ${code}:`, err);
+                                return null;
+                            })
+                    );
+
+                    const subdivisions = await Promise.all(subdivisionPromises);
+
+                    // Filter out any failed loads and combine features
+                    const validSubdivisions = subdivisions.filter(r => r !== null);
+
+                    if (validSubdivisions.length === 0) {
+                        console.warn(`No valid subdivisions loaded for ${countryCode}/${subdivType}`);
+                        continue;
+                    }
+
+                    const combinedFeatures = validSubdivisions.flatMap(subdivision => subdivision.features || []);
+
+                    return {
+                        type: 'FeatureCollection',
+                        features: combinedFeatures
+                    };
+                } catch (error) {
+                    // Try next subdivision type
+                    continue;
+                }
             }
 
-            const manifest = await manifestResponse.json();
-            
-            if (!manifest.regions || !Array.isArray(manifest.regions) || manifest.regions.length === 0) {
-                console.warn(`Manifest for ${countryCode} has no regions`);
-                return null;
-            }
-
-            // Load all region GeoJSON files in parallel
-            const regionPromises = manifest.regions.map((code: string) => 
-                fetch(`/geojson/${countryCode}/regions/${code}.geojson`)
-                    .then(r => {
-                        if (!r.ok) throw new Error(`Failed to load ${code}`);
-                        return r.json();
-                    })
-                    .catch(err => {
-                        console.warn(`Failed to load region ${code}:`, err);
-                        return null;
-                    })
-            );
-
-            const regions = await Promise.all(regionPromises);
-            
-            // Filter out any failed loads and combine features
-            const validRegions = regions.filter(r => r !== null);
-            
-            if (validRegions.length === 0) {
-                console.warn(`No valid regions loaded for ${countryCode}`);
-                return null;
-            }
-
-            const combinedFeatures = validRegions.flatMap(region => region.features || []);
-
-            return {
-                type: 'FeatureCollection',
-                features: combinedFeatures
-            };
+            // No subdivision data found for any type
+            return null;
 
         } catch (error) {
             // Silently fail - this is expected for countries without regional data
@@ -316,7 +328,7 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
         // Try to load regional subdivisions if viewing a specific country
         if (this.focusedCountry && this.countryId) {
             const regionalData = await this.loadRegionalGeoJSON(this.countryId);
-            
+
             if (regionalData) {
                 // Regional data available - display regions
                 const sourceId = `${this.countryId.toLowerCase()}-regions`;
@@ -520,7 +532,7 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
                 const sourceId = `${this.countryId.toLowerCase()}-regions`;
                 const fillLayerId = `${sourceId}-fill`;
                 const visitedFillLayerId = `${sourceId}-visited-fill`;
-                
+
                 if (this.map.getLayer(fillLayerId)) regionLayers.push(fillLayerId);
                 if (this.map.getLayer(visitedFillLayerId)) regionLayers.push(visitedFillLayerId);
             }
@@ -558,7 +570,7 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
                     const code = props?.code;
                     const isVisited = this.visitedSubdivisionCodes.includes(code);
                     const visitedBadge = isVisited ? ' ✓' : '';
-                    
+
                     if (name) {
                         this.popup.setLngLat(e.lngLat).setHTML(
                             `<strong>${name}</strong>${visitedBadge}`
