@@ -43,8 +43,7 @@
             <div class="countries-scroll">
                 <div class="country-row" *ngFor="let country of vm.visitedCountries"
                     (click)="navigateToCountry(country.id)">
-                    <img [src]="'https://flagcdn.com/w40/' + country.id.toLowerCase() + '.png'"
-                        class="flag-icon flag-md" [alt]="country.name">
+                    <span class="country-flag flag-emoji">{{ country.emoji }}</span>
                     <div class="country-row-info">
                         <span class="country-row-name">{{ country.name }}</span>
                         <span class="country-row-sub">{{ country.continent }}</span>

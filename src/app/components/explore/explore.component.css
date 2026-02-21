@@ -361,17 +361,18 @@
   margin-right: 1.5rem;
 }
 
-.country-link-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+.country-name-link {
   text-decoration: none;
   color: inherit;
   transition: all 0.2s ease;
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.country-link-wrapper:hover .country-name {
+.country-name-link:hover .country-name,
+.country-name-link:hover .flag-emoji {
   color: var(--accent-color);
 }
 

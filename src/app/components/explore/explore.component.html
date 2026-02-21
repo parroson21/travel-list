@@ -80,6 +80,7 @@
                 <span class="recent-label">Recently Viewed</span>
                 @for (country of vm.recentCountries; track country.id) {
                 <a [routerLink]="['/explore', country.id]" class="recent-pill" (click)="filtersOpen = false">
+                    <span class="flag-emoji">{{ country.emoji }}</span>
                     <span class="recent-pill-name">{{ country.name }}</span>
                     @if (isCountryVisited(country.id, vm.profile)) {
                     <span class="recent-pill-dot" title="Visited"></span>
@@ -99,6 +100,7 @@
             <span class="recent-label">Recently Viewed</span>
             @for (country of vm.recentCountries; track country.id) {
             <a [routerLink]="['/explore', country.id]" class="recent-pill">
+                <span class="flag-emoji">{{ country.emoji }}</span>
                 <span class="recent-pill-name">{{ country.name }}</span>
                 @if (isCountryVisited(country.id, vm.profile)) {
                 <span class="recent-pill-dot" title="Visited"></span>
@@ -117,14 +119,10 @@
                 <div class="country-card">
                     <div class="country-card-header">
                         <div class="country-info">
-                            <a [routerLink]="['/explore', country.id]" class="country-link-wrapper">
-                                <img [src]="'https://flagcdn.com/w40/' + country.id.toLowerCase() + '.png'"
-                                    class="flag-icon flag-md" [alt]="country.name">
+                            <a [routerLink]="['/explore', country.id]" class="country-name-link">
+                                <span class="flag-emoji">{{ country.emoji }}</span>
                                 <h3 class="country-name">{{ country.name }}</h3>
                             </a>
-                            <div class="country-meta">
-                                <span class="country-id">{{ country.id }}</span>
-                            </div>
                         </div>
                         <button class="btn-visit" [class.visited]="isCountryVisited(country.id, vm.profile)"
                             (click)="toggleCountryVisited(country.id, vm.profile)">
