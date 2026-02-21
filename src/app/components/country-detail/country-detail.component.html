@@ -11,7 +11,8 @@
     <div class="country-header glass-panel fade-in">
         <div class="header-main">
             <div class="country-title-section">
-                <span class="country-emoji">{{ vm.country?.emoji }}</span>
+                <img *ngIf="vm.country?.id" [src]="'https://flagcdn.com/w80/' + vm.country?.id?.toLowerCase() + '.png'" 
+                     class="flag-icon flag-lg" [alt]="vm.country?.name">
                 <h1 class="country-title">{{ vm.country?.name }}</h1>
             </div>
             <button class="btn-visited" [class.visited]="vm.isVisited"
