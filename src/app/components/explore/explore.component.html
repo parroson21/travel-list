@@ -1,53 +1,134 @@
 <div class="explore-container fade-in" *ngIf="vm$ | async as vm">
-    <div class="header">
-        <h1>Explore the World</h1>
 
-        <!-- Search Bar -->
-        <div class="search-container">
-            <input type="text" class="search-input" placeholder="Search for a country..." [ngModel]="searchQuery"
+    <!-- Filter bar: single row -->
+    <div class="filter-bar">
+        <div class="search-wrapper">
+            <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" class="search-input" placeholder="Search countries..." [ngModel]="searchQuery"
                 (ngModelChange)="onSearchChange($event)">
+        </div>
+
+        <!-- Desktop: chips inline -->
+        <div class="chips-row desktop-chips">
+            <button class="filter-chip visited-chip" [class.active]="vm.showVisitedOnly" (click)="toggleVisitedOnly()">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Visited
+            </button>
+            <div class="chip-divider"></div>
+            @for (continent of vm.continents; track continent.id) {
+            <button class="filter-chip continent-chip"
+                [class.active]="isContinentActive(continent.name, vm.selectedContinents)"
+                (click)="toggleContinent(continent.name)">
+                {{ continent.name }}
+                <span class="chip-count">{{ vm.continentCounts.get(continent.name) || 0 }}</span>
+            </button>
+            }
+            @if (vm.selectedContinents.length < vm.continents.length) {
+            <button class="filter-chip reset-chip" (click)="selectAllContinents(vm.continents)">All</button>
+            }
+        </div>
+
+        <!-- Mobile: toggle button -->
+        <button class="mobile-filter-toggle" (click)="filtersOpen = !filtersOpen">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+            Filters
+            @if (vm.showVisitedOnly || vm.selectedContinents.length < vm.continents.length) {
+            <span class="active-dot"></span>
+            }
+        </button>
+
+        <!-- Mobile: collapsible chips + recent -->
+        <div class="mobile-filters" [class.open]="filtersOpen">
+            <div class="chips-row">
+                <button class="filter-chip visited-chip" [class.active]="vm.showVisitedOnly" (click)="toggleVisitedOnly()">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Visited
+                </button>
+                <div class="chip-divider"></div>
+                @for (continent of vm.continents; track continent.id) {
+                <button class="filter-chip continent-chip"
+                    [class.active]="isContinentActive(continent.name, vm.selectedContinents)"
+                    (click)="toggleContinent(continent.name)">
+                    {{ continent.name }}
+                    <span class="chip-count">{{ vm.continentCounts.get(continent.name) || 0 }}</span>
+                </button>
+                }
+                @if (vm.selectedContinents.length < vm.continents.length) {
+                <button class="filter-chip reset-chip" (click)="selectAllContinents(vm.continents)">All</button>
+                }
+            </div>
+
+            <!-- Recently Viewed (inside mobile panel) -->
+            @if (vm.recentCountries.length > 0) {
+            <div class="recent-viewed-strip">
+                <span class="recent-label">Recently Viewed</span>
+                @for (country of vm.recentCountries; track country.id) {
+                <a [routerLink]="['/explore', country.id]" class="recent-pill" (click)="filtersOpen = false">
+                    <span class="recent-pill-name">{{ country.name }}</span>
+                    @if (isCountryVisited(country.id, vm.profile)) {
+                    <span class="recent-pill-dot" title="Visited"></span>
+                    }
+                </a>
+                }
+            </div>
+            }
         </div>
     </div>
 
-    <!-- Main Content: Sidebar + Countries -->
-    <div class="content-layout">
-        <!-- Continent Filter Sidebar -->
-        <app-continent-filter [continents]="vm.continents" [continentCounts]="vm.continentCounts"
-            [selectedContinents]="vm.selectedContinents" [totalCount]="vm.totalCountries"
-            (continentToggled)="toggleContinent($event)" (filterCleared)="clearFilter()">
-        </app-continent-filter>
+    <main class="countries-section">
 
-        <!-- Countries Section -->
-        <main class="countries-section">
-            @for (group of vm.countryGroups; track group.continent) {
-            <div class="continent-section">
-                <h2 class="continent-header">{{ group.continent }}</h2>
-                <div class="grid">
-                    @for (country of group.countries; track country.id) {
-                    <div class="country-card">
-                        <div class="country-card-header">
-                            <div class="country-info">
-                                <a [routerLink]="['/explore', country.id]" class="country-name-link">
-                                    <h3 class="country-name">{{ country.name }}</h3>
-                                </a>
-                                <div class="country-meta">
-                                    <span class="country-id">{{ country.id }}</span>
-                                </div>
-                            </div>
-                            <button class="btn-visit" [class.visited]="isCountryVisited(country.id, vm.profile)"
-                                (click)="toggleCountryVisited(country.id, vm.profile)">
-                                {{ isCountryVisited(country.id, vm.profile) ? 'Visited' : 'Add to List' }}
-                            </button>
-                        </div>
-
-                        <div class="country-body">
-                            <p class="country-subinfo">{{ country.region }} - {{ country.native }}</p>
-                        </div>
-                    </div>
-                    }
-                </div>
-            </div>
+        <!-- Recently Viewed (desktop only) -->
+        @if (vm.recentCountries.length > 0) {
+        <div class="recent-viewed-strip desktop-recent">
+            <span class="recent-label">Recently Viewed</span>
+            @for (country of vm.recentCountries; track country.id) {
+            <a [routerLink]="['/explore', country.id]" class="recent-pill">
+                <span class="recent-pill-name">{{ country.name }}</span>
+                @if (isCountryVisited(country.id, vm.profile)) {
+                <span class="recent-pill-dot" title="Visited"></span>
+                }
+            </a>
             }
-        </main>
-    </div>
+        </div>
+        }
+
+        <!-- Country groups -->
+        @for (group of vm.countryGroups; track group.continent) {
+        <div class="continent-section">
+            <h2 class="continent-header">{{ group.continent }}</h2>
+            <div class="grid">
+                @for (country of group.countries; track country.id) {
+                <div class="country-card">
+                    <div class="country-card-header">
+                        <div class="country-info">
+                            <a [routerLink]="['/explore', country.id]" class="country-name-link">
+                                <h3 class="country-name">{{ country.name }}</h3>
+                            </a>
+                            <div class="country-meta">
+                                <span class="country-id">{{ country.id }}</span>
+                            </div>
+                        </div>
+                        <button class="btn-visit" [class.visited]="isCountryVisited(country.id, vm.profile)"
+                            (click)="toggleCountryVisited(country.id, vm.profile)">
+                            {{ isCountryVisited(country.id, vm.profile) ? 'Visited' : 'Add' }}
+                        </button>
+                    </div>
+                    <div class="country-body">
+                        <p class="country-subinfo">{{ country.region }} · {{ country.native }}</p>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+        }
+
+        @if (vm.countryGroups.length === 0) {
+        <div class="empty-state glass-panel">
+            <p>No countries match your filters.</p>
+        </div>
+        }
+
+    </main>
 </div>

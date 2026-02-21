@@ -181,3 +181,99 @@
         }
     }
 }
+
+/* ── Mobile: hide nav-links ─────────────────────────────── */
+@media (max-width: 640px) {
+    .nav-links {
+        display: none;
+    }
+
+    .user-display-name {
+        display: none;
+    }
+}
+
+/* ── Mobile FAB ──────────────────────────────────────────── */
+.mobile-fab-container {
+    display: none;
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 2000;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+    .mobile-fab-container {
+        display: flex;
+    }
+}
+
+.fab-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+    flex-shrink: 0;
+
+    &:hover {
+        background: var(--glass-hover);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    }
+}
+
+.fab-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.6rem;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+
+    &.open {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: all;
+    }
+}
+
+.fab-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    color: var(--text-main);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    transition: background 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+
+    svg {
+        flex-shrink: 0;
+        color: var(--primary);
+    }
+
+    &:hover {
+        background: var(--glass-hover);
+        color: var(--primary);
+    }
+}

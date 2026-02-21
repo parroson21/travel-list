@@ -23,6 +23,7 @@ import { WorldMapComponent } from '../world-map/world-map.component';
 })
 export class CountryDetailComponent implements OnInit {
     activeTab: 'subdivisions' | 'heritage' = 'subdivisions';
+    infoExpanded = false;
 
     vm$: Observable<{
         country: Country | null,
@@ -42,6 +43,15 @@ export class CountryDetailComponent implements OnInit {
     ) { }
 
     ngOnInit() {
+        this.route.params.pipe(take(1)).subscribe(params => {
+            const id = params['countryId'];
+            if (id) {
+                const stored = JSON.parse(localStorage.getItem('recentlyViewed') || '[]') as string[];
+                const updated = [id, ...stored.filter(v => v !== id)].slice(0, 5);
+                localStorage.setItem('recentlyViewed', JSON.stringify(updated));
+            }
+        });
+
         this.vm$ = combineLatest([
             this.route.params.pipe(
                 switchMap(params => this.travel.getCountries().pipe(

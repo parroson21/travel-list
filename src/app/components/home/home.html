@@ -1,72 +1,60 @@
 <div class="home-container" *ngIf="vm$ | async as vm">
-    <!-- Header with Stats -->
-    <header class="dashboard-header fade-in">
-        <h1>Welcome back, <span class="highlight">{{ (auth.user$ | async)?.displayName || 'Traveler' }}</span></h1>
-        <p class="subtitle">Your travel journey at a glance</p>
 
-        <div class="stats-grid">
-            <div class="glass-panel stat-card">
-                <div class="stat-value">{{ vm.stats.countriesVisited }} / 197</div>
-                <div class="stat-label">Countries Visited</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" [style.width.%]="(vm.stats.countriesVisited / 197) * 100"></div>
+    <!-- Compact top bar: greeting + stats -->
+    <header class="top-bar fade-in">
+        <div class="greeting">
+            <h1>Hi, <span class="highlight">{{ firstName$ | async }}</span></h1>
+        </div>
+        <div class="stats-row">
+            <div class="stat-pill glass-panel">
+                <span class="stat-value">{{ vm.stats.countriesVisited }}</span>
+                <span class="stat-sep">/</span>
+                <span class="stat-total">197</span>
+                <span class="stat-label">countries</span>
+                <div class="mini-progress">
+                    <div class="mini-progress-fill" [style.width.%]="(vm.stats.countriesVisited / 197) * 100"></div>
                 </div>
             </div>
-            <div class="glass-panel stat-card">
-                <div class="stat-value">{{ vm.stats.poisVisited }}</div>
-                <div class="stat-label">Heritage Sites Visited</div>
+            <div class="stat-pill glass-panel">
+                <span class="stat-value">{{ vm.stats.poisVisited }}</span>
+                <span class="stat-label">heritage <span class="label-full">sites</span></span>
             </div>
         </div>
     </header>
 
-    <!-- World Map Section -->
-    <section class="map-section glass-panel fade-in">
-        <h2 class="section-title">Your Travel Map</h2>
-        <app-world-map [visitedCountryNames]="vm.visitedCountryNames" [heritageSites]="vm.heritageSites"
-            [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true" [height]="'500px'"
-            (poiToggled)="togglePOIVisited($event, vm.profile)">
-        </app-world-map>
-    </section>
+    <!-- Main split: map + countries list -->
+    <div class="main-split">
 
-    <!-- Main Content: Sidebar + Countries -->
-    <div class="content-layout">
-        <!-- Continent Filter Sidebar -->
-        <app-continent-filter [continents]="vm.continents" [continentCounts]="vm.continentCounts"
-            [selectedContinents]="vm.selectedContinents" [totalCount]="vm.stats.countriesVisited"
-            (continentToggled)="toggleContinent($event)" (filterCleared)="clearFilter()">
-        </app-continent-filter>
+        <!-- Map -->
+        <section class="map-panel glass-panel">
+            <app-world-map [visitedCountryNames]="vm.visitedCountryNames" [heritageSites]="vm.heritageSites"
+                [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true" [height]="'600px'"
+                (poiToggled)="togglePOIVisited($event, vm.profile)">
+            </app-world-map>
+        </section>
 
-        <!-- Countries List -->
-        <main class="countries-section">
-            <div class="section-header">
-                <h2>
-                    <span *ngIf="vm.selectedContinents.length === 0">All Visited Countries</span>
-                    <span *ngIf="vm.selectedContinents.length > 0">{{ vm.selectedContinents.join(', ') }}</span>
-                </h2>
-                <p class="count">{{ vm.visitedCountries.length }} {{ vm.visitedCountries.length === 1 ? 'country' :
-                    'countries' }}</p>
+        <!-- Scrollable countries list -->
+        <aside class="countries-panel glass-panel">
+            <div class="countries-panel-header">
+                <h2>Visited</h2>
+                <span class="count-badge">{{ vm.visitedCountries.length }}</span>
             </div>
 
-            <div class="countries-grid" *ngIf="vm.visitedCountries.length > 0">
-                <div class="glass-panel country-card" *ngFor="let country of vm.visitedCountries"
-                    (click)="navigateToCountry(country.id)" style="cursor: pointer;">
-                    <div class="country-emoji">{{ country.emoji }}</div>
-                    <div class="country-info">
-                        <h3 class="country-name">{{ country.name }}</h3>
-                        <p class="country-details">
-                            <span class="detail-item">{{ country.capital }}</span>
-                            <span class="detail-separator">•</span>
-                            <span class="detail-item">{{ country.continent }}</span>
-                        </p>
+            <div class="countries-scroll">
+                <div class="country-row" *ngFor="let country of vm.visitedCountries"
+                    (click)="navigateToCountry(country.id)">
+                    <span class="country-flag">{{ country.emoji }}</span>
+                    <div class="country-row-info">
+                        <span class="country-row-name">{{ country.name }}</span>
+                        <span class="country-row-sub">{{ country.continent }}</span>
                     </div>
                 </div>
-            </div>
 
-            <div class="empty-state glass-panel" *ngIf="vm.visitedCountries.length === 0">
-                <p *ngIf="vm.selectedContinents.length === 0">You haven't visited any countries yet. Head to the Explore page to
-                    start tracking!</p>
-                <p *ngIf="vm.selectedContinents.length > 0">You haven't visited any countries in the selected continents yet.</p>
+                <div class="empty-state" *ngIf="vm.visitedCountries.length === 0">
+                    <p>No countries visited yet.<br>Head to Explore to start tracking!</p>
+                </div>
             </div>
-        </main>
+        </aside>
+
     </div>
 </div>

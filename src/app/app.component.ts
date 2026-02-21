@@ -28,9 +28,6 @@ import { Subscription } from 'rxjs';
     </div>
   `,
   styles: [`
-    main {
-      padding-top: 2rem;
-    }
     .toast-container {
       position: fixed;
       bottom: 2rem;

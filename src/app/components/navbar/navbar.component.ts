@@ -13,6 +13,7 @@ import { ThemeService } from '../../services/theme.service';
 })
 export class NavbarComponent {
   menuOpen = false;
+  fabOpen = false;
 
   constructor(
     public auth: AuthService,
@@ -26,6 +27,20 @@ export class NavbarComponent {
       setTimeout(() => {
         const close = () => {
           this.menuOpen = false;
+          document.removeEventListener('click', close);
+        };
+        document.addEventListener('click', close);
+      });
+    }
+  }
+
+  toggleFab(event: Event) {
+    event.stopPropagation();
+    this.fabOpen = !this.fabOpen;
+    if (this.fabOpen) {
+      setTimeout(() => {
+        const close = () => {
+          this.fabOpen = false;
           document.removeEventListener('click', close);
         };
         document.addEventListener('click', close);
