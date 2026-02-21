@@ -48,6 +48,11 @@
     overflow: hidden;
 }
 
+.stat-icon {
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
 .stat-value {
     font-size: 1.15rem;
     font-weight: 800;
@@ -62,15 +67,6 @@
 .stat-total {
     color: var(--text-muted);
     font-size: 0.9rem;
-}
-
-.stat-label {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 600;
-    margin-left: 0.2rem;
 }
 
 .mini-progress {
@@ -279,6 +275,7 @@
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
