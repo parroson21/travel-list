@@ -14,12 +14,20 @@
 
         <!-- Desktop: chips inline -->
         <div class="chips-row desktop-chips">
-            <button class="filter-chip visited-chip" [class.active]="vm.showVisitedOnly" (click)="toggleVisitedOnly()">
+            <button class="filter-chip visited-chip" [class.active]="vm.visitedFilter !== 'all'"
+                [class.unvisited]="vm.visitedFilter === 'unvisited'" (click)="toggleVisitedOnly()">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                     stroke-linecap="round">
+                    @if (vm.visitedFilter === 'unvisited') {
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                    } @else {
                     <polyline points="20 6 9 17 4 12" />
+                    }
                 </svg>
-                Visited
+                {{ vm.visitedFilter === 'all' ? 'Visited' : (vm.visitedFilter === 'visited' ? 'Visited' : 'Unvisited')
+                }}
             </button>
             <div class="chip-divider"></div>
             @for (continent of vm.continents; track continent.id) {
@@ -30,9 +38,15 @@
                 <span class="chip-count">{{ vm.continentCounts.get(continent.name) || 0 }}</span>
             </button>
             }
-            @if (vm.selectedContinents.length < vm.continents.length) { <button class="filter-chip reset-chip"
-                (click)="selectAllContinents(vm.continents)">All</button>
-                }
+            @if (vm.selectedContinents.length > 0 || vm.visitedFilter !== 'all' || searchQuery) {
+            <button class="filter-chip clear-all-btn" (click)="clearAllFilters()" title="Clear all filters">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                    stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+            }
         </div>
 
         <!-- Mobile: toggle button -->
@@ -44,21 +58,28 @@
                 <line x1="11" y1="18" x2="13" y2="18" />
             </svg>
             Filters
-            @if (vm.showVisitedOnly || vm.selectedContinents.length < vm.continents.length) { <span class="active-dot">
-                </span>
-                }
+            @if (vm.visitedFilter !== 'all' || vm.selectedContinents.length > 0) {
+            <span class="active-dot"></span>
+            }
         </button>
 
         <!-- Mobile: collapsible chips + recent -->
         <div class="mobile-filters" [class.open]="filtersOpen">
             <div class="chips-row">
-                <button class="filter-chip visited-chip" [class.active]="vm.showVisitedOnly"
-                    (click)="toggleVisitedOnly()">
+                <button class="filter-chip visited-chip" [class.active]="vm.visitedFilter !== 'all'"
+                    [class.unvisited]="vm.visitedFilter === 'unvisited'" (click)="toggleVisitedOnly()">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                         stroke-linecap="round">
+                        @if (vm.visitedFilter === 'unvisited') {
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                        <line x1="9" y1="9" x2="15" y2="15" />
+                        } @else {
                         <polyline points="20 6 9 17 4 12" />
+                        }
                     </svg>
-                    Visited
+                    {{ vm.visitedFilter === 'all' ? 'Visited' : (vm.visitedFilter === 'visited' ? 'Visited' :
+                    'Unvisited') }}
                 </button>
                 <div class="chip-divider"></div>
                 @for (continent of vm.continents; track continent.id) {
@@ -69,9 +90,15 @@
                     <span class="chip-count">{{ vm.continentCounts.get(continent.name) || 0 }}</span>
                 </button>
                 }
-                @if (vm.selectedContinents.length < vm.continents.length) { <button class="filter-chip reset-chip"
-                    (click)="selectAllContinents(vm.continents)">All</button>
-                    }
+                @if (vm.selectedContinents.length > 0 || vm.visitedFilter !== 'all' || searchQuery) {
+                <button class="filter-chip clear-all-btn" (click)="clearAllFilters()" title="Clear all filters">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                        stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+                }
             </div>
 
             <!-- Recently Viewed (inside mobile panel) -->

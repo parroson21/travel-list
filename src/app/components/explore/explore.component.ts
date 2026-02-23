@@ -26,14 +26,14 @@ export class ExploreComponent implements OnInit {
   filtersOpen = false;
   private searchSubject = new BehaviorSubject<string>('');
   private selectedContinentsSubject = new BehaviorSubject<string[]>([]);
-  private showVisitedOnlySubject = new BehaviorSubject<boolean>(false);
+  private visitedFilterSubject = new BehaviorSubject<'all' | 'visited' | 'unvisited'>('all');
 
   vm$: Observable<{
     countryGroups: CountryGroup[],
     continents: Continent[],
     continentCounts: Map<string, number>,
     selectedContinents: string[],
-    showVisitedOnly: boolean,
+    visitedFilter: 'all' | 'visited' | 'unvisited',
     totalCountries: number,
     profile: UserProfile | null,
     recentCountries: Country[]
@@ -47,24 +47,20 @@ export class ExploreComponent implements OnInit {
       this.travel.getContinents(),
       this.searchSubject,
       this.selectedContinentsSubject,
-      this.showVisitedOnlySubject,
+      this.visitedFilterSubject,
       this.travel.getUserProfile().pipe(startWith(null))
     ]).pipe(
-      map(([countries, continents, query, selectedContinents, showVisitedOnly, profile]) => {
-        // Initialise selectedContinents to all on first load
-        if (selectedContinents.length === 0 && continents.length > 0) {
-          const allNames = continents.map(c => c.name);
-          this.selectedContinentsSubject.next(allNames);
-          selectedContinents = allNames;
-        }
-
+      map(([countries, continents, query, selectedContinents, visitedFilter, profile]) => {
         const q = query.toLowerCase();
         const visitedIds = new Set(profile?.visitedCountries || []);
 
         // Apply search + visited filter
         let filteredCountries = countries.filter(c => (c.name || '').toLowerCase().includes(q));
-        if (showVisitedOnly) {
+
+        if (visitedFilter === 'visited') {
           filteredCountries = filteredCountries.filter(c => visitedIds.has(c.id));
+        } else if (visitedFilter === 'unvisited') {
+          filteredCountries = filteredCountries.filter(c => !visitedIds.has(c.id));
         }
 
         // Continent counts (from filtered list, before continent filter)
@@ -74,15 +70,20 @@ export class ExploreComponent implements OnInit {
           continentCounts.set(continent, (continentCounts.get(continent) || 0) + 1);
         });
 
-        // Group by continent, only include selected continents
+        // Group by continent
         const countryMap = new Map<string, Country[]>();
+        const isAllContinents = selectedContinents.length === 0;
+
         filteredCountries
-          .filter(c => selectedContinents.includes(c.continent || 'Unknown'))
+          .filter(c => isAllContinents || selectedContinents.includes(c.continent || 'Unknown'))
           .forEach(country => {
             const continent = country.continent || 'Unknown';
             if (!countryMap.has(continent)) countryMap.set(continent, []);
             countryMap.get(continent)!.push(country);
           });
+
+        // Remove empty continents if they were explicitly selected but contain no matching countries
+        // Actually, the current logic only adds continents that HAVE countries to the countryGroups list based on countryMap keys.
 
         const countryGroups: CountryGroup[] = Array.from(countryMap.keys())
           .sort()
@@ -104,7 +105,7 @@ export class ExploreComponent implements OnInit {
           continents,
           continentCounts,
           selectedContinents,
-          showVisitedOnly,
+          visitedFilter,
           totalCountries: filteredCountries.length,
           profile,
           recentCountries
@@ -120,18 +121,39 @@ export class ExploreComponent implements OnInit {
 
   toggleContinent(continent: string) {
     const current = this.selectedContinentsSubject.getValue();
-    const updated = current.includes(continent)
-      ? current.filter(c => c !== continent)
-      : [...current, continent];
+
+    let updated: string[];
+    if (current.length === 0) {
+      // If none selected (all mode), clicking one makes it the only selected
+      updated = [continent];
+    } else {
+      updated = current.includes(continent)
+        ? current.filter(c => c !== continent)
+        : [...current, continent];
+    }
+
     this.selectedContinentsSubject.next(updated);
   }
 
-  selectAllContinents(continents: Continent[]) {
-    this.selectedContinentsSubject.next(continents.map(c => c.name));
+  selectAllContinents() {
+    this.selectedContinentsSubject.next([]);
+  }
+
+  clearAllFilters() {
+    this.selectedContinentsSubject.next([]);
+    this.visitedFilterSubject.next('all');
+    this.onSearchChange('');
   }
 
   toggleVisitedOnly() {
-    this.showVisitedOnlySubject.next(!this.showVisitedOnlySubject.getValue());
+    const current = this.visitedFilterSubject.getValue();
+    if (current === 'all') {
+      this.visitedFilterSubject.next('visited');
+    } else if (current === 'visited') {
+      this.visitedFilterSubject.next('unvisited');
+    } else {
+      this.visitedFilterSubject.next('all');
+    }
   }
 
   isContinentActive(continent: string, selectedContinents: string[]): boolean {
