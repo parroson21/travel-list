@@ -13,6 +13,7 @@ interface SubdivisionGroup {
 import { Observable, combineLatest, firstValueFrom } from 'rxjs';
 import { map, switchMap, startWith, take } from 'rxjs/operators';
 import { WorldMapComponent } from '../world-map/world-map.component';
+import { Location } from '@angular/common';
 
 @Component({
     selector: 'app-country-detail',
@@ -39,7 +40,8 @@ export class CountryDetailComponent implements OnInit {
         private route: ActivatedRoute,
         private router: Router,
         private travel: TravelService,
-        private auth: AuthService
+        private auth: AuthService,
+        private location: Location
     ) { }
 
     ngOnInit() {
@@ -149,6 +151,6 @@ export class CountryDetailComponent implements OnInit {
     }
 
     goBack() {
-        this.router.navigate(['/explore']);
+        this.location.back();
     }
 }

@@ -5,8 +5,9 @@ import { RouterLink } from '@angular/router';
 import { TravelService } from '../../services/travel.service';
 import { AuthService } from '../../services/auth.service';
 import { Country, UserProfile, Continent } from '../../models/travel.model';
-import { Observable, combineLatest, BehaviorSubject, firstValueFrom } from 'rxjs';
-import { map, startWith, take } from 'rxjs/operators';
+import { Observable, combineLatest, BehaviorSubject, firstValueFrom, Subscription } from 'rxjs';
+import { map, startWith, take, distinctUntilChanged } from 'rxjs/operators';
+import { ActivatedRoute, Router } from '@angular/router';
 
 interface CountryGroup {
   continent: string;
@@ -39,9 +40,37 @@ export class ExploreComponent implements OnInit {
     recentCountries: Country[]
   }> | undefined;
 
-  constructor(private travel: TravelService, private auth: AuthService) { }
+  constructor(
+    private travel: TravelService,
+    private auth: AuthService,
+    private route: ActivatedRoute,
+    private router: Router
+  ) { }
 
   ngOnInit() {
+    // 1. Initialize from query params (priority) or Service state
+    const params = this.route.snapshot.queryParamMap;
+    const hasParams = params.has('q') || params.has('c') || params.has('v');
+
+    const q = hasParams ? (params.get('q') || '') : this.travel.exploreState.searchQuery;
+    const c = hasParams
+      ? (params.get('c') ? params.get('c')!.split(',').filter(x => x) : [])
+      : this.travel.exploreState.selectedContinents;
+    const v = hasParams
+      ? ((params.get('v') as any) || 'all')
+      : this.travel.exploreState.visitedFilter;
+
+    this.searchQuery = q;
+    this.searchSubject.next(q);
+    this.selectedContinentsSubject.next(c);
+    this.visitedFilterSubject.next(['all', 'visited', 'unvisited'].includes(v) ? v : 'all');
+
+    // Sync subjects back to service state
+    this.searchSubject.subscribe(val => this.travel.exploreState.searchQuery = val);
+    this.selectedContinentsSubject.subscribe(val => this.travel.exploreState.selectedContinents = val);
+    this.visitedFilterSubject.subscribe(val => this.travel.exploreState.visitedFilter = val);
+
+    // 2. Setup VM
     this.vm$ = combineLatest([
       this.travel.getCountries(),
       this.travel.getContinents(),
@@ -114,9 +143,27 @@ export class ExploreComponent implements OnInit {
     );
   }
 
+  private updateUrl() {
+    const q = this.searchQuery;
+    const c = this.selectedContinentsSubject.getValue().join(',');
+    const v = this.visitedFilterSubject.getValue();
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        q: q || null,
+        c: c || null,
+        v: v === 'all' ? null : v
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true // Using replaceUrl to avoid cluttering history with every keystroke
+    });
+  }
+
   onSearchChange(val: string) {
     this.searchQuery = val;
     this.searchSubject.next(val);
+    this.updateUrl();
   }
 
   toggleContinent(continent: string) {
@@ -124,7 +171,6 @@ export class ExploreComponent implements OnInit {
 
     let updated: string[];
     if (current.length === 0) {
-      // If none selected (all mode), clicking one makes it the only selected
       updated = [continent];
     } else {
       updated = current.includes(continent)
@@ -133,16 +179,19 @@ export class ExploreComponent implements OnInit {
     }
 
     this.selectedContinentsSubject.next(updated);
+    this.updateUrl();
   }
 
   selectAllContinents() {
     this.selectedContinentsSubject.next([]);
+    this.updateUrl();
   }
 
   clearAllFilters() {
     this.selectedContinentsSubject.next([]);
     this.visitedFilterSubject.next('all');
     this.onSearchChange('');
+    // onSearchChange already calls updateUrl
   }
 
   toggleVisitedOnly() {
@@ -154,6 +203,7 @@ export class ExploreComponent implements OnInit {
     } else {
       this.visitedFilterSubject.next('all');
     }
+    this.updateUrl();
   }
 
   isContinentActive(continent: string, selectedContinents: string[]): boolean {

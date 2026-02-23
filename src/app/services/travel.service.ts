@@ -9,6 +9,13 @@ import { of, Observable } from 'rxjs';
     providedIn: 'root'
 })
 export class TravelService {
+    // Persistent state for Explore page
+    exploreState = {
+        searchQuery: '',
+        selectedContinents: [] as string[],
+        visitedFilter: 'all' as 'all' | 'visited' | 'unvisited'
+    };
+
     constructor(private firestore: Firestore, private auth: Auth, private zone: NgZone) { }
 
     // User Profile
@@ -121,7 +128,7 @@ export class TravelService {
     }
 
     async wipeAllCountryData(onLog?: (msg: string) => void): Promise<void> {
-        const log = onLog || (() => {});
+        const log = onLog || (() => { });
 
         log('Deleting all countries...');
         const deletedCountries = await this.deleteCollection('countries');
@@ -131,7 +138,7 @@ export class TravelService {
     }
 
     async resetAllUserData(onLog?: (msg: string) => void): Promise<void> {
-        const log = onLog || (() => {});
+        const log = onLog || (() => { });
         const usersCol = collection(this.firestore, 'users');
         const snapshot = await getDocs(usersCol);
         let count = 0;
@@ -160,7 +167,7 @@ export class TravelService {
 
     async seedCountries(jsonContent: string, onLog?: (msg: string) => void) {
         const countriesData = JSON.parse(jsonContent) as Record<string, any>;
-        const log = onLog || (() => {});
+        const log = onLog || (() => { });
 
         let countryCount = 0;
 
