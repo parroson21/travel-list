@@ -25,6 +25,7 @@ import { Location } from '@angular/common';
 export class CountryDetailComponent implements OnInit {
     activeTab: 'subdivisions' | 'heritage' = 'subdivisions';
     infoExpanded = false;
+    selectedSite: any = null;
 
     vm$: Observable<{
         country: Country | null,
@@ -129,7 +130,10 @@ export class CountryDetailComponent implements OnInit {
         this.travel.toggleSubdivisionVisited(subdivisionId, profile, countryId);
     }
 
-    async togglePOIVisited(poiId: string, profile: UserProfile | null, countryId?: string) {
+    async togglePOIVisited(poiId: string, profile: UserProfile | null, countryId?: string, event?: Event) {
+        if (event) {
+            event.stopPropagation();
+        }
         const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
         if (!user) {
             this.auth.loginWithGoogle();
@@ -137,6 +141,17 @@ export class CountryDetailComponent implements OnInit {
         }
         const visited = this.isPOIVisited(poiId, profile);
         this.travel.markPOIVisited(poiId, !visited, countryId);
+    }
+
+    openSiteDetails(site: any) {
+        this.selectedSite = site;
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeSiteDetails() {
+        this.selectedSite = null;
+        document.body.style.overflow = 'auto';
     }
 
     private pluralizeDivisionType(type: string): string {

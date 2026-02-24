@@ -100,8 +100,7 @@
             <div *ngIf="activeTab === 'heritage'" class="tab-panel fade-in">
                 <div *ngIf="vm.heritageSites.length > 0" class="items-grid">
                     <div *ngFor="let site of vm.heritageSites" class="item-card glass-panel heritage-card"
-                        [class.visited]="isPOIVisited(site.id_no, vm.profile)"
-                        (click)="togglePOIVisited(site.id_no, vm.profile, vm.country?.id)">
+                        [class.visited]="isPOIVisited(site.id_no, vm.profile)" (click)="openSiteDetails(site)">
                         <div class="heritage-header">
                             <div class="item-name">{{ site.name_en }}</div>
                             <span class="heritage-badge" [class.badge-cultural]="site.category_short === 'C'"
@@ -112,11 +111,45 @@
                             </span>
                         </div>
                         <p class="heritage-description">{{ site.short_description_en }}</p>
-                        <div class="visit-indicator"></div>
+                        <button class="visit-indicator-btn" [class.visited]="isPOIVisited(site.id_no, vm.profile)"
+                            (click)="togglePOIVisited(site.id_no, vm.profile, vm.country?.id, $event)"
+                            [title]="isPOIVisited(site.id_no, vm.profile) ? 'Mark as unvisited' : 'Mark as visited'">
+                        </button>
                     </div>
                 </div>
                 <div *ngIf="vm.heritageSites.length === 0" class="empty-state glass-panel">
                     <p>No World Heritage Sites found for this country.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Heritage Site Detail Modal -->
+    <div class="modal-overlay" *ngIf="selectedSite" (click)="closeSiteDetails()">
+        <div class="modal-content glass-panel fade-in" (click)="$event.stopPropagation()">
+            <button class="modal-close" (click)="closeSiteDetails()">×</button>
+
+            <div class="modal-header">
+                <span class="heritage-badge" [class.badge-cultural]="selectedSite.category_short === 'C'"
+                    [class.badge-natural]="selectedSite.category_short === 'N'"
+                    [class.badge-mixed]="selectedSite.category_short === 'C/N' || selectedSite.category_short === 'N/C'">
+                    {{ selectedSite.category_short === 'C' ? 'Cultural' : selectedSite.category_short === 'N' ?
+                    'Natural' : 'Mixed' }}
+                </span>
+                <h2 class="modal-title">{{ selectedSite.name_en }}</h2>
+            </div>
+
+            <div class="modal-body">
+                <div class="modal-description">
+                    <h3>Description</h3>
+                    <p>{{ selectedSite.short_description_en }}</p>
+                </div>
+
+                <div class="modal-actions" *ngIf="vm$ | async as vm">
+                    <button class="btn-visited" [class.visited]="isPOIVisited(selectedSite.id_no, vm.profile)"
+                        (click)="togglePOIVisited(selectedSite.id_no, vm.profile, vm.country?.id)">
+                        {{ isPOIVisited(selectedSite.id_no, vm.profile) ? '✓ Visited' : 'Mark Visited' }}
+                    </button>
                 </div>
             </div>
         </div>
