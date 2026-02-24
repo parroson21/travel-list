@@ -85,8 +85,8 @@
 }
 
 .btn-visited.visited {
-    background: var(--accent-gradient);
-    border-color: transparent;
+    background: var(--primary);
+    border-color: var(--primary);
     color: white;
 }
 
@@ -196,7 +196,7 @@
 }
 
 .tab-btn.active {
-    background: var(--accent-gradient);
+    background: var(--primary);
     color: white;
 }
 
@@ -376,6 +376,13 @@
 
 /* Animations */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

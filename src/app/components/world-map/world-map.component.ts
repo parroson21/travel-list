@@ -4,12 +4,7 @@ import { Router } from '@angular/router';
 import { Country } from '../../models/travel.model';
 import { ThemeService } from '../../services/theme.service';
 
-const HERITAGE_COLORS = {
-    cultural: '#4A90D9',
-    natural: '#27AE60',
-    mixed: '#E67E22',
-    fallback: '#888888'
-};
+
 
 @Component({
     selector: 'app-world-map',
@@ -48,7 +43,11 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
         // React to theme changes
         effect(() => {
             const isDark = this.themeService.darkMode();
+            const palette = this.themeService.selectedPaletteName();
+
             if (this.map && this.mapReady) {
+                // If dark mode toggled, switch style (which calls rebuildLayers)
+                // Otherwise just rebuild layers to pick up new colors
                 this.switchMapStyle(isDark);
             }
         });
@@ -195,13 +194,15 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
         } else if (this.visitedSubdivisionCodes.length > 0 && this.map.getSource(sourceId)) {
             // Add the visited subdivisions layer if it doesn't exist but we have visited subdivisions
             const primaryColor = this.getCssVar('--primary');
+            const fillColorExpression = this.getPrimaryColorExpression(primaryColor);
+
             this.map.addLayer({
                 id: visitedFillLayerId,
                 type: 'fill',
                 source: sourceId,
                 filter: ['in', ['get', 'code'], ['literal', this.visitedSubdivisionCodes]],
                 paint: {
-                    'fill-color': primaryColor,
+                    'fill-color': fillColorExpression,
                     'fill-opacity': 0.4
                 }
             });
@@ -224,11 +225,18 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
         }
     }
 
+    private lastIsDark: boolean | null = null;
     /**
      * Switch the map basemap style between dark and light
      */
     private switchMapStyle(isDark: boolean) {
         if (!this.map) return;
+
+        if (this.lastIsDark === isDark) {
+            this.rebuildLayers();
+            return;
+        }
+        this.lastIsDark = isDark;
 
         const style = isDark
             ? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
@@ -320,6 +328,7 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
      */
     private async rebuildLayers() {
         if (!this.map) return;
+        this.clearLayers();
 
         const primaryColor = this.getCssVar('--primary');
         const mapUnvisited = this.getCssVar('--map-unvisited');
@@ -366,13 +375,15 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
                 // Add visited subdivisions layer
                 if (this.visitedSubdivisionCodes.length > 0) {
                     const visitedFillLayerId = `${sourceId}-visited-fill`;
+                    const fillColorExpression = this.getPrimaryColorExpression(primaryColor);
+
                     this.map.addLayer({
                         id: visitedFillLayerId,
                         type: 'fill',
                         source: sourceId,
                         filter: ['in', ['get', 'code'], ['literal', this.visitedSubdivisionCodes]],
                         paint: {
-                            'fill-color': primaryColor,
+                            'fill-color': fillColorExpression,
                             'fill-opacity': 0.4
                         }
                     });
@@ -397,6 +408,37 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
         this.setupClickHandler();
     }
 
+    private clearLayers() {
+        if (!this.map) return;
+
+        const layersToRemove = [
+            'countries-visited-fill',
+            'countries-focused-fill',
+            'countries-borders',
+            'heritage-sites-visited',
+            'heritage-sites-unvisited'
+        ];
+
+        // Add dynamic region layers to removal list
+        if (this.countryId) {
+            const sourceId = `${this.countryId.toLowerCase()}-regions`;
+            layersToRemove.push(`${sourceId}-borders`, `${sourceId}-fill`, `${sourceId}-visited-fill`);
+        }
+
+        layersToRemove.forEach(layer => {
+            if (this.map.getLayer(layer)) this.map.removeLayer(layer);
+        });
+
+        const sourcesToRemove = ['world-countries', 'heritage-sites'];
+        if (this.countryId) {
+            sourcesToRemove.push(`${this.countryId.toLowerCase()}-regions`);
+        }
+
+        sourcesToRemove.forEach(source => {
+            if (this.map.getSource(source)) this.map.removeSource(source);
+        });
+    }
+
     /**
      * Add standard country-level layers
      */
@@ -409,6 +451,8 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
             data: '/countries.geojson'
         });
 
+        const fillColorExpression = this.getPrimaryColorExpression(primaryColor);
+
         // Visited countries fill
         this.map.addLayer({
             id: 'countries-visited-fill',
@@ -416,7 +460,7 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
             source: 'world-countries',
             filter: ['in', ['get', 'name'], ['literal', this.visitedCountryNames]],
             paint: {
-                'fill-color': primaryColor,
+                'fill-color': fillColorExpression,
                 'fill-opacity': 0.4
             }
         });
@@ -448,17 +492,67 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
         });
     }
 
+    private getPrimaryColorExpression(defaultColor: string): any {
+        const colorsStr = this.getCssVar('--primary-colors');
+        if (!colorsStr) return defaultColor;
+
+        const colors = colorsStr.split(',').map(c => c.trim());
+        if (colors.length <= 1) return defaultColor;
+
+        // Build a concrete match expression mapping each visited country/subdivision
+        // to a color, using a hash of the name to distribute colors evenly.
+        const names = this.visitedCountryNames.length > 0
+            ? this.visitedCountryNames
+            : this.visitedSubdivisionCodes;
+
+        if (names.length === 0) return defaultColor;
+
+        // Simple string hash: sum of char codes * prime
+        const hashName = (s: string): number => {
+            let h = 0;
+            for (let i = 0; i < s.length; i++) {
+                h = (h * 31 + s.charCodeAt(i)) | 0;
+            }
+            return Math.abs(h);
+        };
+
+        // Use 'name' property for countries, 'code' for subdivisions
+        const prop = this.visitedCountryNames.length > 0 ? 'name' : 'code';
+
+        const matchArgs: any[] = ['match', ['get', prop]];
+        names.forEach((name) => {
+            matchArgs.push(name, colors[hashName(name) % colors.length]);
+        });
+        matchArgs.push(defaultColor);
+
+        return matchArgs;
+    }
+
     /**
-     * Get the data-driven color expression for heritage site categories
+     * Get the color expression for heritage site pins using theme primary colors.
+     * Cycles through the primary color array based on category.
      */
-    private getCategoryColorExpression(opacity: number = 1.0): any[] {
+    private getHeritagePinColor(): string {
+        const colorsStr = this.getCssVar('--primary-colors');
+        if (!colorsStr) return this.getCssVar('--primary') || '#888888';
+        const colors = colorsStr.split(',').map(c => c.trim());
+        return colors[0] || '#888888';
+    }
+
+    private getHeritagePinColorExpression(): any {
+        const colorsStr = this.getCssVar('--primary-colors');
+        if (!colorsStr) return this.getCssVar('--primary') || '#888888';
+        const colors = colorsStr.split(',').map(c => c.trim());
+        if (colors.length <= 1) return colors[0] || '#888888';
+
+        // Cycle through primary colors by category
         return [
             'match',
             ['get', 'category'],
-            'cultural', HERITAGE_COLORS.cultural,
-            'natural', HERITAGE_COLORS.natural,
-            'mixed', HERITAGE_COLORS.mixed,
-            HERITAGE_COLORS.fallback
+            'cultural', colors[0],
+            'natural', colors[1 % colors.length],
+            'mixed', colors[2 % colors.length],
+            colors[0]
         ];
     }
 
@@ -469,7 +563,7 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
         if (!this.map) return;
 
         const mapBorder = this.getCssVar('--map-border');
-        const colorExpr = this.getCategoryColorExpression();
+        const colorExpr = this.getHeritagePinColorExpression();
 
         this.map.addSource('heritage-sites', {
             type: 'geojson',
@@ -547,7 +641,7 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
                     const name = props?.name;
                     const category = props?.category;
                     const visited = props?.visited;
-                    const color = HERITAGE_COLORS[category as keyof typeof HERITAGE_COLORS] || HERITAGE_COLORS.fallback;
+                    const color = this.getHeritagePinColor();
                     const label = category === 'cultural' ? 'Cultural' : category === 'natural' ? 'Natural' : 'Mixed';
                     const visitedBadge = visited ? ' ✓' : '';
 

@@ -109,7 +109,7 @@ h4,
 }
 
 .btn-primary {
-  background: var(--accent-gradient);
+  background: var(--primary);
   color: white;
 }
 
@@ -176,4 +176,162 @@ h4,
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+/* ── Neon Theme: Glow Hover Effects ─────────────────────── */
+[data-theme="Neon"] {
+  --neon-glow: var(--primary);
+  --neon-glow-rgb: var(--primary-rgb);
+}
+
+/* Navbar & dropdown: translucent glass instead of solid bg-card */
+[data-theme="Neon"] .navbar {
+  background: rgba(10, 10, 10, 0.85) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(var(--neon-glow-rgb), 0.15) !important;
+}
+
+[data-theme="Neon"] .dropdown-menu {
+  background: rgba(10, 10, 10, 0.9) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(var(--neon-glow-rgb), 0.2) !important;
+  box-shadow: 0 0 12px rgba(var(--neon-glow-rgb), 0.1);
+}
+
+/* Buttons */
+[data-theme="Neon"] .btn:hover,
+[data-theme="Neon"] .btn-primary:hover {
+  background: var(--primary) !important;
+  box-shadow:
+    0 0 8px rgba(var(--neon-glow-rgb), 0.6),
+    0 0 20px rgba(var(--neon-glow-rgb), 0.35),
+    0 0 40px rgba(var(--neon-glow-rgb), 0.15) !important;
+  border-color: transparent !important;
+}
+
+[data-theme="Neon"] .btn-outline:hover {
+  background: transparent !important;
+  box-shadow:
+    0 0 8px rgba(var(--neon-glow-rgb), 0.5),
+    0 0 20px rgba(var(--neon-glow-rgb), 0.25) !important;
+  border-color: var(--primary) !important;
+}
+
+[data-theme="Neon"] .btn-visited:hover,
+[data-theme="Neon"] .btn-visit:hover {
+  box-shadow:
+    0 0 8px rgba(var(--neon-glow-rgb), 0.5),
+    0 0 20px rgba(var(--neon-glow-rgb), 0.3) !important;
+  border-color: transparent !important;
+}
+
+/* Cards */
+[data-theme="Neon"] .glass-panel:hover,
+[data-theme="Neon"] .country-card:hover,
+[data-theme="Neon"] .stat-pill:hover {
+  background: var(--glass) !important;
+  border-color: rgba(var(--neon-glow-rgb), 0.3) !important;
+  box-shadow:
+    0 0 6px rgba(var(--neon-glow-rgb), 0.3),
+    0 0 18px rgba(var(--neon-glow-rgb), 0.12),
+    inset 0 0 12px rgba(var(--neon-glow-rgb), 0.04) !important;
+}
+
+/* Nav links */
+[data-theme="Neon"] .nav-links a {
+  color: var(--secondary) !important;
+}
+
+[data-theme="Neon"] .nav-links a.active {
+  color: var(--primary) !important;
+  text-shadow: 0 0 8px rgba(var(--neon-glow-rgb), 0.5);
+}
+
+[data-theme="Neon"] .nav-links a:hover {
+  color: var(--primary) !important;
+  text-shadow: 0 0 10px rgba(var(--neon-glow-rgb), 0.6);
+}
+
+/* Icon buttons (settings gear, etc.) */
+[data-theme="Neon"] .icon-btn:hover {
+  background: transparent !important;
+  border-color: rgba(var(--neon-glow-rgb), 0.5) !important;
+  box-shadow:
+    0 0 8px rgba(var(--neon-glow-rgb), 0.5),
+    0 0 16px rgba(var(--neon-glow-rgb), 0.2) !important;
+  color: var(--primary) !important;
+}
+
+/* User trigger */
+[data-theme="Neon"] .user-trigger:hover {
+  background: transparent !important;
+  border-color: rgba(var(--neon-glow-rgb), 0.5) !important;
+  box-shadow:
+    0 0 8px rgba(var(--neon-glow-rgb), 0.4),
+    0 0 18px rgba(var(--neon-glow-rgb), 0.15) !important;
+}
+
+/* Dropdown items */
+[data-theme="Neon"] .dropdown-item:hover {
+  background: transparent !important;
+  box-shadow:
+    inset 0 0 12px rgba(var(--neon-glow-rgb), 0.08),
+    0 0 6px rgba(var(--neon-glow-rgb), 0.2) !important;
+}
+
+/* Theme cards in settings */
+[data-theme="Neon"] .theme-card:hover {
+  border-color: rgba(var(--neon-glow-rgb), 0.4) !important;
+  box-shadow:
+    0 0 8px rgba(var(--neon-glow-rgb), 0.4),
+    0 0 16px rgba(var(--neon-glow-rgb), 0.15) !important;
+}
+
+/* Filter chips */
+[data-theme="Neon"] .filter-chip:hover,
+[data-theme="Neon"] .reset-chip:hover,
+[data-theme="Neon"] .recent-pill:hover,
+[data-theme="Neon"] .clear-all-btn:hover {
+  background: transparent !important;
+  box-shadow:
+    0 0 6px rgba(var(--neon-glow-rgb), 0.4),
+    0 0 14px rgba(var(--neon-glow-rgb), 0.15) !important;
+  border-color: rgba(var(--neon-glow-rgb), 0.4) !important;
+}
+
+/* Search / select inputs */
+[data-theme="Neon"] input:focus,
+[data-theme="Neon"] select:focus,
+[data-theme="Neon"] .continent-select:hover {
+  box-shadow:
+    0 0 6px rgba(var(--neon-glow-rgb), 0.4),
+    0 0 14px rgba(var(--neon-glow-rgb), 0.15) !important;
+  border-color: rgba(var(--neon-glow-rgb), 0.5) !important;
+  outline: none;
+}
+
+/* FAB mobile button */
+[data-theme="Neon"] .fab-btn:hover {
+  box-shadow:
+    0 0 10px rgba(var(--neon-glow-rgb), 0.6),
+    0 0 25px rgba(var(--neon-glow-rgb), 0.3) !important;
+}
+
+[data-theme="Neon"] .fab-item:hover {
+  background: transparent !important;
+  box-shadow:
+    0 0 8px rgba(var(--neon-glow-rgb), 0.4),
+    0 0 16px rgba(var(--neon-glow-rgb), 0.15) !important;
+}
+
+/* Scrollbar glow */
+[data-theme="Neon"] ::-webkit-scrollbar-thumb:hover {
+  box-shadow: 0 0 6px rgba(var(--neon-glow-rgb), 0.5);
+}
+
+/* Country name link hover */
+[data-theme="Neon"] .country-name-link:hover .country-name {
+  text-shadow: 0 0 8px rgba(var(--neon-glow-rgb), 0.5);
 }

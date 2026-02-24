@@ -13,6 +13,8 @@ import { ThemeService } from '../../services/theme.service';
 })
 export class NavbarComponent {
   menuOpen = false;
+  settingsOpen = false;
+  showThemes = false;
   fabOpen = false;
 
   constructor(
@@ -23,28 +25,40 @@ export class NavbarComponent {
   toggleMenu(event: Event) {
     event.stopPropagation();
     this.menuOpen = !this.menuOpen;
+    this.settingsOpen = false;
     if (this.menuOpen) {
-      setTimeout(() => {
-        const close = () => {
-          this.menuOpen = false;
-          document.removeEventListener('click', close);
-        };
-        document.addEventListener('click', close);
-      });
+      this.addCloseListener(() => this.menuOpen = false);
     }
+  }
+
+  toggleSettings(event: Event) {
+    event.stopPropagation();
+    this.settingsOpen = !this.settingsOpen;
+    this.menuOpen = false;
+    if (this.settingsOpen) {
+      this.addCloseListener(() => this.settingsOpen = false);
+    }
+  }
+
+  getPrimaryColor(palette: any): string {
+    return Array.isArray(palette.primary) ? palette.primary[0] : palette.primary;
+  }
+
+  private addCloseListener(closeFn: () => void) {
+    setTimeout(() => {
+      const close = () => {
+        closeFn();
+        document.removeEventListener('click', close);
+      };
+      document.addEventListener('click', close);
+    });
   }
 
   toggleFab(event: Event) {
     event.stopPropagation();
     this.fabOpen = !this.fabOpen;
     if (this.fabOpen) {
-      setTimeout(() => {
-        const close = () => {
-          this.fabOpen = false;
-          document.removeEventListener('click', close);
-        };
-        document.addEventListener('click', close);
-      });
+      this.addCloseListener(() => this.fabOpen = false);
     }
   }
 }

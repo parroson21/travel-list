@@ -50,9 +50,7 @@ import { Router } from '@angular/router';
       margin-bottom: 0.5rem;
     }
     .highlight {
-      background: var(--accent-gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--primary);
     }
     p {
       color: var(--text-muted);
