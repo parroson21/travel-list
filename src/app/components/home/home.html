@@ -6,7 +6,7 @@
             <h1>Hi, <span class="highlight">{{ firstName$ | async }}</span></h1>
         </div>
         <div class="stats-row">
-            <div class="stat-pill glass-panel" title="Countries Visited">
+            <div class="stat-pill glass-panel" [class.stat-pill-active]="listMode === 'countries'" title="Countries Visited" (click)="setListMode('countries')">
                 <svg class="stat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10" />
@@ -21,7 +21,7 @@
                     <div class="mini-progress-fill" [style.width.%]="(vm.stats.countriesVisited / 197) * 100"></div>
                 </div>
             </div>
-            <div class="stat-pill glass-panel" title="Heritage Sites Visited">
+            <div class="stat-pill glass-panel" [class.stat-pill-active]="listMode === 'heritage'" title="Heritage Sites Visited" (click)="setListMode('heritage')">
                 <svg class="stat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="3" y1="22" x2="21" y2="22" />
@@ -50,25 +50,75 @@
         <!-- Scrollable countries list -->
         <aside class="countries-panel glass-panel">
             <div class="countries-panel-header">
-                <h2>Visited</h2>
-                <span class="count-badge">{{ vm.visitedCountries.length }}</span>
+                <h2>{{ listMode === 'countries' ? 'Visited' : 'Heritage Sites' }}</h2>
+                <span class="count-badge" *ngIf="listMode === 'countries'">{{ vm.visitedCountries.length }}</span>
+                <span class="count-badge" *ngIf="listMode === 'heritage'">{{ vm.visitedHeritageSites.length }}</span>
             </div>
 
             <div class="countries-scroll">
-                <div class="country-row" *ngFor="let country of vm.visitedCountries"
-                    (click)="navigateToCountry(country.id)">
-                    <span class="country-flag flag-emoji">{{ country.emoji }}</span>
-                    <div class="country-row-info">
-                        <span class="country-row-name">{{ country.name }}</span>
-                        <span class="country-row-sub">{{ country.continent }}</span>
+                <!-- Countries list -->
+                <ng-container *ngIf="listMode === 'countries'">
+                    <div class="country-row" *ngFor="let country of vm.visitedCountries"
+                        (click)="navigateToCountry(country.id)">
+                        <span class="country-flag flag-emoji">{{ country.emoji }}</span>
+                        <div class="country-row-info">
+                            <span class="country-row-name">{{ country.name }}</span>
+                            <span class="country-row-sub">{{ country.continent }}</span>
+                        </div>
                     </div>
-                </div>
 
-                <div class="empty-state" *ngIf="vm.visitedCountries.length === 0">
-                    <p>No countries visited yet.<br>Head to Explore to start tracking!</p>
-                </div>
+                    <div class="empty-state" *ngIf="vm.visitedCountries.length === 0">
+                        <p>No countries visited yet.<br>Head to Explore to start tracking!</p>
+                    </div>
+                </ng-container>
+
+                <!-- Heritage Sites list -->
+                <ng-container *ngIf="listMode === 'heritage'">
+                    <div class="heritage-row" *ngFor="let h of vm.visitedHeritageSites"
+                        (click)="openSiteDetails(h.site)">
+                        <div class="heritage-row-info">
+                            <span class="heritage-row-name">{{ h.site.name_en }}</span>
+                            <span class="heritage-row-sub">{{ h.countryEmoji }} {{ h.countryName }}</span>
+                        </div>
+                    </div>
+
+                    <div class="empty-state" *ngIf="vm.visitedHeritageSites.length === 0">
+                        <p>No heritage sites visited yet.<br>Mark heritage sites as visited on country pages!</p>
+                    </div>
+                </ng-container>
             </div>
         </aside>
 
+    </div>
+
+    <!-- Heritage Site Detail Modal -->
+    <div class="modal-overlay" *ngIf="selectedSite" (click)="closeSiteDetails()">
+        <div class="modal-content glass-panel fade-in" (click)="$event.stopPropagation()">
+            <button class="modal-close" (click)="closeSiteDetails()">×</button>
+
+            <div class="modal-header">
+                <span class="heritage-badge" [class.badge-cultural]="selectedSite.category_short === 'C'"
+                    [class.badge-natural]="selectedSite.category_short === 'N'"
+                    [class.badge-mixed]="selectedSite.category_short === 'C/N' || selectedSite.category_short === 'N/C'">
+                    {{ selectedSite.category_short === 'C' ? 'Cultural' : selectedSite.category_short === 'N' ?
+                    'Natural' : 'Mixed' }}
+                </span>
+                <h2 class="modal-title">{{ selectedSite.name_en }}</h2>
+            </div>
+
+            <div class="modal-body">
+                <div class="modal-description">
+                    <h3>Description</h3>
+                    <p>{{ selectedSite.short_description_en }}</p>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn-visited visited"
+                        (click)="togglePOIVisited(selectedSite.id_no, vm.profile)">
+                        ✓ Visited
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

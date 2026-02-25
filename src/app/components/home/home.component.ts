@@ -18,10 +18,13 @@ import { WorldMapComponent } from '../world-map/world-map.component';
 })
 export class HomeComponent implements OnInit {
 
+  listMode: 'countries' | 'heritage' = 'countries';
+
   vm$: Observable<{
     visitedCountries: Country[],
     visitedCountryNames: string[],
     heritageSites: any[],
+    visitedHeritageSites: { site: any; countryName: string; countryEmoji: string }[],
     visitedPOIIds: string[],
     stats: { countriesVisited: number, poisVisited: number },
     profile: UserProfile | null
@@ -54,11 +57,27 @@ export class HomeComponent implements OnInit {
         const heritageSites = visitedCountries
           .flatMap(country => country.worldHeritageSites || []);
 
+        const visitedPOIIds = profile?.visitedPOIs || [];
+
+        // Only visited heritage sites
+        const visitedHeritageSites = visitedCountries
+          .flatMap(country =>
+            (country.worldHeritageSites || [])
+              .filter((site: any) => visitedPOIIds.includes(site.id_no))
+              .map((site: any) => ({
+                site,
+                countryName: country.name,
+                countryEmoji: country.emoji
+              }))
+          )
+          .sort((a, b) => a.site.name_en.localeCompare(b.site.name_en));
+
         return {
           visitedCountries,
           visitedCountryNames: visitedCountries.map(c => c.name),
           heritageSites,
-          visitedPOIIds: profile?.visitedPOIs || [],
+          visitedHeritageSites,
+          visitedPOIIds,
           stats,
           profile
         };
@@ -66,8 +85,28 @@ export class HomeComponent implements OnInit {
     );
   }
 
+  setListMode(mode: 'countries' | 'heritage') {
+    this.listMode = mode;
+  }
+
+  selectedSite: any = null;
+
   navigateToCountry(countryId: string) {
     this.router.navigate(['/explore', countryId]);
+  }
+
+  openSiteDetails(site: any) {
+    this.selectedSite = site;
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeSiteDetails() {
+    this.selectedSite = null;
+    document.body.style.overflow = 'auto';
+  }
+
+  isPOIVisited(poiId: string, profile: UserProfile | null): boolean {
+    return profile?.visitedPOIs?.includes(poiId) || false;
   }
 
   async togglePOIVisited(poiId: string, profile: UserProfile | null) {

@@ -207,6 +207,69 @@
     line-height: 1.6;
 }
 
+/* ── Stat pill as toggle ─────────────────────────────────── */
+.stat-pill {
+    cursor: pointer;
+    user-select: none;
+}
+
+.stat-pill-active {
+    outline: 2px solid var(--primary);
+    outline-offset: -1px;
+}
+
+/* ── Heritage site rows ──────────────────────────────────── */
+.heritage-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.55rem 1.25rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.heritage-row:hover {
+    background: var(--glass-hover);
+}
+
+.heritage-category-badge {
+    font-size: 1.15rem;
+    line-height: 1;
+    flex-shrink: 0;
+    width: 1.6rem;
+    text-align: center;
+}
+
+.heritage-row-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.heritage-row-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.heritage-row-sub {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.heritage-visited-icon {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #22c55e;
+    flex-shrink: 0;
+    width: 1.2rem;
+    text-align: center;
+}
+
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 900px) {
     .home-container {
@@ -261,6 +324,133 @@
     }
 }
 
+
+/* ── Modal ────────────────────────────────────────────────── */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+    z-index: 10;
+    transition: color 0.2s ease;
+}
+
+.modal-close:hover {
+    color: var(--text-main);
+}
+
+.modal-header {
+    padding: 2.5rem 2rem 1.5rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.modal-title {
+    font-size: 1.75rem;
+    margin-top: 0.75rem;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-description h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-main);
+}
+
+.modal-description p {
+    color: var(--text-muted);
+    line-height: 1.7;
+    font-size: 0.95rem;
+}
+
+.modal-actions {
+    margin-top: 2.5rem;
+    display: flex;
+    gap: 1rem;
+    border-top: 1px solid var(--glass-border);
+    padding-top: 1.5rem;
+}
+
+/* Badge + button styles for modal */
+.heritage-badge {
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.badge-cultural {
+    background: rgba(74, 144, 217, 0.15);
+    color: #4A90D9;
+    border: 1px solid rgba(74, 144, 217, 0.3);
+}
+
+.badge-natural {
+    background: rgba(39, 174, 96, 0.15);
+    color: #27AE60;
+    border: 1px solid rgba(39, 174, 96, 0.3);
+}
+
+.badge-mixed {
+    background: rgba(230, 126, 34, 0.15);
+    color: #E67E22;
+    border: 1px solid rgba(230, 126, 34, 0.3);
+}
+
+.btn-visited {
+    padding: 0.55rem 1.1rem;
+    border-radius: 10px;
+    border: 2px solid var(--glass-border);
+    background: transparent;
+    color: var(--text-main);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-visited.visited {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
 
 /* Animations */
 .fade-in {
