@@ -149,6 +149,11 @@ export class CountryDetailComponent implements OnInit {
         document.body.style.overflow = 'hidden';
     }
 
+    openSiteFromPin(poiId: string, heritageSites: any[]) {
+        const site = heritageSites.find(s => s.id_no === poiId);
+        if (site) this.openSiteDetails(site);
+    }
+
     closeSiteDetails() {
         this.selectedSite = null;
         document.body.style.overflow = 'auto';

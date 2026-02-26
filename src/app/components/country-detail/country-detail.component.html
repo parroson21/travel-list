@@ -56,7 +56,7 @@
             [visitedCountryNames]="vm.isVisited ? [vm.country?.name || ''] : []" [heritageSites]="vm.heritageSites"
             [visitedPOIIds]="vm.profile?.visitedPOIs || []" [countryId]="vm.country?.id || ''" [height]="'360px'"
             [visitedSubdivisionCodes]="vm.profile?.visitedSubdivisions || []"
-            (poiToggled)="togglePOIVisited($event, vm.profile, vm.country?.id)">
+            (poiToggled)="openSiteFromPin($event, vm.heritageSites)">
         </app-world-map>
     </div>
 

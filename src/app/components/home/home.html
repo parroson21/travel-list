@@ -6,7 +6,8 @@
             <h1>Hi, <span class="highlight">{{ firstName$ | async }}</span></h1>
         </div>
         <div class="stats-row">
-            <div class="stat-pill glass-panel" [class.stat-pill-active]="listMode === 'countries'" title="Countries Visited" (click)="setListMode('countries')">
+            <div class="stat-pill glass-panel" [class.stat-pill-active]="listMode === 'countries'"
+                title="Countries Visited" (click)="setListMode('countries')">
                 <svg class="stat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10" />
@@ -21,7 +22,8 @@
                     <div class="mini-progress-fill" [style.width.%]="(vm.stats.countriesVisited / 197) * 100"></div>
                 </div>
             </div>
-            <div class="stat-pill glass-panel" [class.stat-pill-active]="listMode === 'heritage'" title="Heritage Sites Visited" (click)="setListMode('heritage')">
+            <div class="stat-pill glass-panel" [class.stat-pill-active]="listMode === 'heritage'"
+                title="Heritage Sites Visited" (click)="setListMode('heritage')">
                 <svg class="stat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="3" y1="22" x2="21" y2="22" />
@@ -43,7 +45,7 @@
         <section class="map-panel glass-panel">
             <app-world-map [visitedCountryNames]="vm.visitedCountryNames" [heritageSites]="vm.heritageSites"
                 [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true" [height]="'600px'"
-                (poiToggled)="togglePOIVisited($event, vm.profile)">
+                (poiToggled)="openSiteFromPin($event, vm.heritageSites)">
             </app-world-map>
         </section>
 
@@ -78,7 +80,8 @@
                         (click)="openSiteDetails(h.site)">
                         <div class="heritage-row-info">
                             <span class="heritage-row-name">{{ h.site.name_en }}</span>
-                            <span class="heritage-row-sub">{{ h.countryEmoji }} {{ h.countryName }}</span>
+                            <span class="heritage-row-sub"><span class="flag-emoji">{{ h.countryEmoji }}</span> {{
+                                h.countryName }}</span>
                         </div>
                     </div>
 
@@ -113,8 +116,7 @@
                 </div>
 
                 <div class="modal-actions">
-                    <button class="btn-visited visited"
-                        (click)="togglePOIVisited(selectedSite.id_no, vm.profile)">
+                    <button class="btn-visited visited" (click)="togglePOIVisited(selectedSite.id_no, vm.profile)">
                         ✓ Visited
                     </button>
                 </div>
