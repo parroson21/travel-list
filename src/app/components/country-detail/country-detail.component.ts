@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TravelService } from '../../services/travel.service';
@@ -26,6 +26,7 @@ export class CountryDetailComponent implements OnInit {
     activeTab: 'subdivisions' | 'heritage' = 'subdivisions';
     infoExpanded = false;
     selectedSite: any = null;
+    statusMenuOpen = false;
 
     vm$: Observable<{
         country: Country | null,
@@ -111,6 +112,43 @@ export class CountryDetailComponent implements OnInit {
             return;
         }
         this.travel.markCountryVisited(countryId, !isVisited);
+    }
+
+    getCountryStatus(countryId: string, profile: UserProfile | null): 'visited' | 'planned' | 'none' {
+        if (profile?.visitedCountries?.includes(countryId)) return 'visited';
+        if (profile?.plannedCountries?.includes(countryId)) return 'planned';
+        return 'none';
+    }
+
+    async cycleCountryStatus(countryId: string, profile: UserProfile | null) {
+        const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
+        if (!user) {
+            this.auth.loginWithGoogle();
+            return;
+        }
+        const current = this.getCountryStatus(countryId, profile);
+        const next = current === 'none' ? 'planned' : current === 'planned' ? 'visited' : 'none';
+        this.travel.setCountryStatus(countryId, next);
+    }
+
+    openStatusMenu(event: Event) {
+        event.stopPropagation();
+        this.statusMenuOpen = !this.statusMenuOpen;
+    }
+
+    async setStatus(status: 'visited' | 'planned' | 'none', countryId: string, profile: UserProfile | null) {
+        this.statusMenuOpen = false;
+        const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
+        if (!user) {
+            this.auth.loginWithGoogle();
+            return;
+        }
+        this.travel.setCountryStatus(countryId, status);
+    }
+
+    @HostListener('document:click')
+    onDocumentClick() {
+        this.statusMenuOpen = false;
     }
 
     isSubdivisionVisited(subdivisionId: string, profile: UserProfile | null): boolean {

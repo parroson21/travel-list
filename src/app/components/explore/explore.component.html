@@ -15,19 +15,23 @@
         <!-- Desktop: chips inline -->
         <div class="chips-row desktop-chips">
             <button class="filter-chip visited-chip" [class.active]="vm.visitedFilter !== 'all'"
-                [class.unvisited]="vm.visitedFilter === 'unvisited'" (click)="toggleVisitedOnly()">
+                [class.planned]="vm.visitedFilter === 'planned'" [class.unvisited]="vm.visitedFilter === 'unvisited'"
+                (click)="toggleVisitedOnly()">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                     stroke-linecap="round">
                     @if (vm.visitedFilter === 'unvisited') {
                     <circle cx="12" cy="12" r="10" />
                     <line x1="15" y1="9" x2="9" y2="15" />
                     <line x1="9" y1="9" x2="15" y2="15" />
+                    } @else if (vm.visitedFilter === 'planned') {
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 8 12 12 14 14" />
                     } @else {
                     <polyline points="20 6 9 17 4 12" />
                     }
                 </svg>
-                {{ vm.visitedFilter === 'all' ? 'Visited' : (vm.visitedFilter === 'visited' ? 'Visited' : 'Unvisited')
-                }}
+                {{ vm.visitedFilter === 'all' ? 'Status' : vm.visitedFilter === 'visited' ? 'Visited' : vm.visitedFilter
+                === 'planned' ? 'Planned' : 'Unvisited' }}
             </button>
             <div class="chip-divider"></div>
             @for (continent of vm.continents; track continent.id) {
@@ -67,6 +71,7 @@
         <div class="mobile-filters" [class.open]="filtersOpen">
             <div class="chips-row">
                 <button class="filter-chip visited-chip" [class.active]="vm.visitedFilter !== 'all'"
+                    [class.planned]="vm.visitedFilter === 'planned'"
                     [class.unvisited]="vm.visitedFilter === 'unvisited'" (click)="toggleVisitedOnly()">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                         stroke-linecap="round">
@@ -74,12 +79,15 @@
                         <circle cx="12" cy="12" r="10" />
                         <line x1="15" y1="9" x2="9" y2="15" />
                         <line x1="9" y1="9" x2="15" y2="15" />
+                        } @else if (vm.visitedFilter === 'planned') {
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 8 12 12 14 14" />
                         } @else {
                         <polyline points="20 6 9 17 4 12" />
                         }
                     </svg>
-                    {{ vm.visitedFilter === 'all' ? 'Visited' : (vm.visitedFilter === 'visited' ? 'Visited' :
-                    'Unvisited') }}
+                    {{ vm.visitedFilter === 'all' ? 'Status' : vm.visitedFilter === 'visited' ? 'Visited' :
+                    vm.visitedFilter === 'planned' ? 'Planned' : 'Unvisited' }}
                 </button>
                 <div class="chip-divider"></div>
                 @for (continent of vm.continents; track continent.id) {
@@ -151,9 +159,17 @@
                                 <h3 class="country-name">{{ country.name }}</h3>
                             </a>
                         </div>
-                        <button class="btn-visit" [class.visited]="isCountryVisited(country.id, vm.profile)"
-                            (click)="toggleCountryVisited(country.id, vm.profile)">
-                            {{ isCountryVisited(country.id, vm.profile) ? 'Visited' : 'Add' }}
+                        <button class="btn-visit"
+                            [class.visited]="getCountryStatus(country.id, vm.profile) === 'visited'"
+                            [class.planned]="getCountryStatus(country.id, vm.profile) === 'planned'"
+                            (click)="cycleCountryStatus(country.id, vm.profile)">
+                            @if (getCountryStatus(country.id, vm.profile) === 'visited') {
+                            Visited
+                            } @else if (getCountryStatus(country.id, vm.profile) === 'planned') {
+                            Planned
+                            } @else {
+                            Add
+                            }
                         </button>
                     </div>
                     <div class="country-body">

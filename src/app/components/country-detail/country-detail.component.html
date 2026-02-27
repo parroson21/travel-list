@@ -15,10 +15,45 @@
                 <span class="country-emoji flag-emoji">{{ vm.country?.emoji }}</span>
                 <h1 class="country-title">{{ vm.country?.name }}</h1>
             </div>
-            <button class="btn-visited" [class.visited]="vm.isVisited"
-                (click)="toggleCountryVisited(vm.country?.id || '', vm.isVisited)">
-                {{ vm.isVisited ? '✓ Visited' : 'Mark Visited' }}
-            </button>
+            <!-- Status dropdown -->
+            <div class="status-dropdown-wrap" (click)="$event.stopPropagation()">
+                <button class="btn-visited"
+                    [class.visited]="getCountryStatus(vm.country?.id || '', vm.profile) === 'visited'"
+                    [class.planned]="getCountryStatus(vm.country?.id || '', vm.profile) === 'planned'"
+                    (click)="openStatusMenu($event)">
+                    @if (getCountryStatus(vm.country?.id || '', vm.profile) === 'visited') {
+                    Visited
+                    } @else if (getCountryStatus(vm.country?.id || '', vm.profile) === 'planned') {
+                    Planned
+                    } @else {
+                    Add
+                    }
+                    <svg class="dropdown-caret" [class.open]="statusMenuOpen" width="11" height="11" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                </button>
+
+                <div class="status-menu" [class.open]="statusMenuOpen">
+                    <button class="status-option"
+                        [class.active]="getCountryStatus(vm.country?.id || '', vm.profile) === 'planned'"
+                        (click)="setStatus('planned', vm.country?.id || '', vm.profile)">
+                        Planned
+                    </button>
+                    <button class="status-option"
+                        [class.active]="getCountryStatus(vm.country?.id || '', vm.profile) === 'visited'"
+                        (click)="setStatus('visited', vm.country?.id || '', vm.profile)">
+                        Visited
+                    </button>
+                    @if (getCountryStatus(vm.country?.id || '', vm.profile) !== 'none') {
+                    <div class="status-divider"></div>
+                    <button class="status-remove status-option"
+                        (click)="setStatus('none', vm.country?.id || '', vm.profile)">
+                        Remove
+                    </button>
+                    }
+                </div>
+            </div>
         </div>
 
         <!-- Collapsible info section -->
@@ -148,7 +183,7 @@
                 <div class="modal-actions" *ngIf="vm$ | async as vm">
                     <button class="btn-visited" [class.visited]="isPOIVisited(selectedSite.id_no, vm.profile)"
                         (click)="togglePOIVisited(selectedSite.id_no, vm.profile, vm.country?.id)">
-                        {{ isPOIVisited(selectedSite.id_no, vm.profile) ? '✓ Visited' : 'Mark Visited' }}
+                        {{ isPOIVisited(selectedSite.id_no, vm.profile) ? 'Visited' : 'Mark Visited' }}
                     </button>
                 </div>
             </div>

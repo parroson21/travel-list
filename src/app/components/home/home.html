@@ -2,12 +2,11 @@
 
     <!-- Compact top bar: greeting + stats -->
     <header class="top-bar fade-in">
-        <div class="greeting">
-            <h1>Hi, <span class="highlight">{{ firstName$ | async }}</span></h1>
-        </div>
         <div class="stats-row">
-            <div class="stat-pill glass-panel" [class.stat-pill-active]="listMode === 'countries'"
-                title="Countries Visited" (click)="setListMode('countries')">
+            <!-- Countries pill -->
+            <div class="stat-pill glass-panel"
+                [class.stat-pill-active]="listMode === 'countries' || listMode === 'planned'" title="Countries"
+                (click)="listMode === 'heritage' ? setListMode('countries') : null">
                 <svg class="stat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10" />
@@ -22,8 +21,9 @@
                     <div class="mini-progress-fill" [style.width.%]="(vm.stats.countriesVisited / 197) * 100"></div>
                 </div>
             </div>
-            <div class="stat-pill glass-panel" [class.stat-pill-active]="listMode === 'heritage'"
-                title="Heritage Sites Visited" (click)="setListMode('heritage')">
+            <!-- Heritage pill -->
+            <div class="stat-pill glass-panel" [class.stat-pill-active]="listMode === 'heritage'" title="Heritage Sites"
+                (click)="setListMode('heritage')">
                 <svg class="stat-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="3" y1="22" x2="21" y2="22" />
@@ -43,7 +43,10 @@
 
         <!-- Map -->
         <section class="map-panel glass-panel">
-            <app-world-map [visitedCountryNames]="vm.visitedCountryNames" [heritageSites]="vm.heritageSites"
+            <app-world-map
+                [visitedCountryNames]="listMode === 'planned' ? vm.plannedCountryNames : vm.visitedCountryNames"
+                [plannedCountryNames]="listMode === 'planned' ? vm.visitedCountryNames : vm.plannedCountryNames"
+                [focusedCountry]="highlightedCountry" [heritageSites]="vm.heritageSites"
                 [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true" [height]="'600px'"
                 (poiToggled)="openSiteFromPin($event, vm.heritageSites)">
             </app-world-map>
@@ -52,21 +55,35 @@
         <!-- Scrollable countries list -->
         <aside class="countries-panel glass-panel">
             <div class="countries-panel-header">
-                <h2>{{ listMode === 'countries' ? 'Visited' : 'Heritage Sites' }}</h2>
-                <span class="count-badge" *ngIf="listMode === 'countries'">{{ vm.visitedCountries.length }}</span>
-                <span class="count-badge" *ngIf="listMode === 'heritage'">{{ vm.visitedHeritageSites.length }}</span>
+                <h2>
+                    @if (listMode === 'countries' || listMode === 'planned') { Countries }
+                    @else { Heritage Sites }
+                </h2>
+                <!-- Visited / Planned toggle, shown only in country mode -->
+                @if (listMode === 'countries' || listMode === 'planned') {
+                <div class="panel-mode-toggle">
+                    <button class="panel-mode-btn" [class.active]="listMode === 'countries'"
+                        (click)="setListMode('countries')">Visited</button>
+                    <button class="panel-mode-btn" [class.active]="listMode === 'planned'"
+                        (click)="setListMode('planned')">Planned</button>
+                </div>
+                } @else {
+                <span class="count-badge">{{ vm.visitedHeritageSites.length }}</span>
+                }
             </div>
 
             <div class="countries-scroll">
-                <!-- Countries list -->
+                <!-- Visited Countries list -->
                 <ng-container *ngIf="listMode === 'countries'">
-                    <div class="country-row" *ngFor="let country of vm.visitedCountries"
-                        (click)="navigateToCountry(country.id)">
+                    <div class="country-row" *ngFor="let country of vm.visitedCountries" (click)="focusOnMap(country)">
                         <span class="country-flag flag-emoji">{{ country.emoji }}</span>
                         <div class="country-row-info">
-                            <span class="country-row-name">{{ country.name }}</span>
+                            <span class="country-row-name row-link"
+                                (click)="$event.stopPropagation(); navigateToCountry(country.id)"
+                                title="Open country page">{{ country.name }}</span>
                             <span class="country-row-sub">{{ country.continent }}</span>
                         </div>
+                        <span class="row-arrow">›</span>
                     </div>
 
                     <div class="empty-state" *ngIf="vm.visitedCountries.length === 0">
@@ -74,15 +91,36 @@
                     </div>
                 </ng-container>
 
+                <!-- Planned Countries list -->
+                <ng-container *ngIf="listMode === 'planned'">
+                    <div class="country-row" *ngFor="let country of vm.plannedCountries" (click)="focusOnMap(country)">
+                        <span class="country-flag flag-emoji">{{ country.emoji }}</span>
+                        <div class="country-row-info">
+                            <span class="country-row-name row-link"
+                                (click)="$event.stopPropagation(); navigateToCountry(country.id)"
+                                title="Open country page">{{ country.name }}</span>
+                            <span class="country-row-sub">{{ country.continent }}</span>
+                        </div>
+                        <span class="row-arrow">›</span>
+                    </div>
+
+                    <div class="empty-state" *ngIf="vm.plannedCountries.length === 0">
+                        <p>No trips planned yet.<br>Use the Explore page to plan your next adventure!</p>
+                    </div>
+                </ng-container>
+
                 <!-- Heritage Sites list -->
                 <ng-container *ngIf="listMode === 'heritage'">
                     <div class="heritage-row" *ngFor="let h of vm.visitedHeritageSites"
-                        (click)="openSiteDetails(h.site)">
+                        (click)="focusHeritageSite(h.site)">
                         <div class="heritage-row-info">
-                            <span class="heritage-row-name">{{ h.site.name_en }}</span>
+                            <span class="heritage-row-name row-link"
+                                (click)="$event.stopPropagation(); openSiteDetails(h.site)" title="Open site details">{{
+                                h.site.name_en }}</span>
                             <span class="heritage-row-sub"><span class="flag-emoji">{{ h.countryEmoji }}</span> {{
                                 h.countryName }}</span>
                         </div>
+                        <span class="row-arrow">›</span>
                     </div>
 
                     <div class="empty-state" *ngIf="vm.visitedHeritageSites.length === 0">
@@ -117,7 +155,7 @@
 
                 <div class="modal-actions">
                     <button class="btn-visited visited" (click)="togglePOIVisited(selectedSite.id_no, vm.profile)">
-                        ✓ Visited
+                        Visited
                     </button>
                 </div>
             </div>

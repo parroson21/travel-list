@@ -27,14 +27,14 @@ export class ExploreComponent implements OnInit {
   filtersOpen = false;
   private searchSubject = new BehaviorSubject<string>('');
   private selectedContinentsSubject = new BehaviorSubject<string[]>([]);
-  private visitedFilterSubject = new BehaviorSubject<'all' | 'visited' | 'unvisited'>('all');
+  private visitedFilterSubject = new BehaviorSubject<'all' | 'visited' | 'planned' | 'unvisited'>('all');
 
   vm$: Observable<{
     countryGroups: CountryGroup[],
     continents: Continent[],
     continentCounts: Map<string, number>,
     selectedContinents: string[],
-    visitedFilter: 'all' | 'visited' | 'unvisited',
+    visitedFilter: 'all' | 'visited' | 'planned' | 'unvisited',
     totalCountries: number,
     profile: UserProfile | null,
     recentCountries: Country[]
@@ -63,7 +63,7 @@ export class ExploreComponent implements OnInit {
     this.searchQuery = q;
     this.searchSubject.next(q);
     this.selectedContinentsSubject.next(c);
-    this.visitedFilterSubject.next(['all', 'visited', 'unvisited'].includes(v) ? v : 'all');
+    this.visitedFilterSubject.next(['all', 'visited', 'planned', 'unvisited'].includes(v) ? v as any : 'all');
 
     // Sync subjects back to service state
     this.searchSubject.subscribe(val => this.travel.exploreState.searchQuery = val);
@@ -82,14 +82,17 @@ export class ExploreComponent implements OnInit {
       map(([countries, continents, query, selectedContinents, visitedFilter, profile]) => {
         const q = query.toLowerCase();
         const visitedIds = new Set(profile?.visitedCountries || []);
+        const plannedIds = new Set(profile?.plannedCountries || []);
 
-        // Apply search + visited filter
+        // Apply search + status filter
         let filteredCountries = countries.filter(c => (c.name || '').toLowerCase().includes(q));
 
         if (visitedFilter === 'visited') {
           filteredCountries = filteredCountries.filter(c => visitedIds.has(c.id));
+        } else if (visitedFilter === 'planned') {
+          filteredCountries = filteredCountries.filter(c => plannedIds.has(c.id));
         } else if (visitedFilter === 'unvisited') {
-          filteredCountries = filteredCountries.filter(c => !visitedIds.has(c.id));
+          filteredCountries = filteredCountries.filter(c => !visitedIds.has(c.id) && !plannedIds.has(c.id));
         }
 
         // Continent counts (from filtered list, before continent filter)
@@ -199,6 +202,8 @@ export class ExploreComponent implements OnInit {
     if (current === 'all') {
       this.visitedFilterSubject.next('visited');
     } else if (current === 'visited') {
+      this.visitedFilterSubject.next('planned');
+    } else if (current === 'planned') {
       this.visitedFilterSubject.next('unvisited');
     } else {
       this.visitedFilterSubject.next('all');
@@ -212,6 +217,27 @@ export class ExploreComponent implements OnInit {
 
   isCountryVisited(countryId: string, profile: UserProfile | null): boolean {
     return profile?.visitedCountries?.includes(countryId) || false;
+  }
+
+  isCountryPlanned(countryId: string, profile: UserProfile | null): boolean {
+    return profile?.plannedCountries?.includes(countryId) || false;
+  }
+
+  getCountryStatus(countryId: string, profile: UserProfile | null): 'visited' | 'planned' | 'none' {
+    if (profile?.visitedCountries?.includes(countryId)) return 'visited';
+    if (profile?.plannedCountries?.includes(countryId)) return 'planned';
+    return 'none';
+  }
+
+  async cycleCountryStatus(countryId: string, profile: UserProfile | null) {
+    const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
+    if (!user) {
+      this.auth.loginWithGoogle();
+      return;
+    }
+    const current = this.getCountryStatus(countryId, profile);
+    const next = current === 'none' ? 'planned' : current === 'planned' ? 'visited' : 'none';
+    this.travel.setCountryStatus(countryId, next);
   }
 
   async toggleCountryVisited(countryId: string, profile: UserProfile | null) {

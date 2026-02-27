@@ -18,15 +18,17 @@ import { WorldMapComponent } from '../world-map/world-map.component';
 })
 export class HomeComponent implements OnInit {
 
-  listMode: 'countries' | 'heritage' = 'countries';
+  listMode: 'countries' | 'heritage' | 'planned' = 'countries';
 
   vm$: Observable<{
     visitedCountries: Country[],
     visitedCountryNames: string[],
+    plannedCountries: Country[],
+    plannedCountryNames: string[],
     heritageSites: any[],
     visitedHeritageSites: { site: any; countryName: string; countryEmoji: string }[],
     visitedPOIIds: string[],
-    stats: { countriesVisited: number, poisVisited: number },
+    stats: { countriesVisited: number, poisVisited: number, countriesPlanned: number },
     profile: UserProfile | null
   }> | undefined;
 
@@ -45,13 +47,18 @@ export class HomeComponent implements OnInit {
     ]).pipe(
       map(([countries, profile]) => {
         const visitedCountryIds = profile?.visitedCountries || [];
+        const plannedCountryIds = profile?.plannedCountries || [];
         const visitedCountries = countries
           .filter(c => visitedCountryIds.includes(c.id))
           .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        const plannedCountries = countries
+          .filter(c => plannedCountryIds.includes(c.id))
+          .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         const stats = {
-          countriesVisited: profile?.visitedCountries?.length || 0,
-          poisVisited: profile?.visitedPOIs?.length || 0
+          countriesVisited: visitedCountryIds.length,
+          poisVisited: profile?.visitedPOIs?.length || 0,
+          countriesPlanned: plannedCountryIds.length
         };
 
         const heritageSites = visitedCountries
@@ -75,6 +82,8 @@ export class HomeComponent implements OnInit {
         return {
           visitedCountries,
           visitedCountryNames: visitedCountries.map(c => c.name),
+          plannedCountries,
+          plannedCountryNames: plannedCountries.map(c => c.name),
           heritageSites,
           visitedHeritageSites,
           visitedPOIIds,
@@ -85,8 +94,24 @@ export class HomeComponent implements OnInit {
     );
   }
 
-  setListMode(mode: 'countries' | 'heritage') {
+  setListMode(mode: 'countries' | 'heritage' | 'planned') {
     this.listMode = mode;
+  }
+
+  highlightedCountry: Country | null = null;
+
+  focusOnMap(country: Country) {
+    this.highlightedCountry = country;
+  }
+
+  focusHeritageSite(site: any) {
+    if (site?.latitude && site?.longitude) {
+      this.highlightedCountry = {
+        latitude: site.latitude,
+        longitude: site.longitude,
+        name: site.name_en
+      } as any;
+    }
   }
 
   selectedSite: any = null;

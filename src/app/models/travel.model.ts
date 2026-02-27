@@ -46,6 +46,7 @@ export interface Subdivision {
 export interface UserProfile {
     uid: string;
     visitedCountries: string[]; // List of country IDs
+    plannedCountries: string[]; // List of country IDs the user plans to visit
     visitedSubdivisions: string[]; // List of subdivision codes
     visitedPOIs: string[]; // List of POI IDs
     dataResetNotification?: boolean; // Set to true when admin resets user data

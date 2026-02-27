@@ -13,7 +13,7 @@ export class TravelService {
     exploreState = {
         searchQuery: '',
         selectedContinents: [] as string[],
-        visitedFilter: 'all' as 'all' | 'visited' | 'unvisited'
+        visitedFilter: 'all' as 'all' | 'visited' | 'planned' | 'unvisited'
     };
 
     constructor(private firestore: Firestore, private auth: Auth, private zone: NgZone) { }
@@ -33,6 +33,7 @@ export class TravelService {
                                 const newProfile: UserProfile = {
                                     uid: u.uid,
                                     visitedCountries: [],
+                                    plannedCountries: [],
                                     visitedSubdivisions: [],
                                     visitedPOIs: []
                                 };
@@ -54,6 +55,29 @@ export class TravelService {
             await updateDoc(userDoc, { visitedCountries: arrayUnion(countryId) });
         } else {
             await updateDoc(userDoc, { visitedCountries: arrayRemove(countryId) });
+        }
+    }
+
+    /** Set a country's status: 'visited' | 'planned' | 'none' */
+    async setCountryStatus(countryId: string, status: 'visited' | 'planned' | 'none') {
+        const u = this.auth.currentUser;
+        if (!u) return;
+        const userDoc = doc(this.firestore, `users/${u.uid}`);
+        if (status === 'visited') {
+            await updateDoc(userDoc, {
+                visitedCountries: arrayUnion(countryId),
+                plannedCountries: arrayRemove(countryId)
+            });
+        } else if (status === 'planned') {
+            await updateDoc(userDoc, {
+                plannedCountries: arrayUnion(countryId),
+                visitedCountries: arrayRemove(countryId)
+            });
+        } else {
+            await updateDoc(userDoc, {
+                visitedCountries: arrayRemove(countryId),
+                plannedCountries: arrayRemove(countryId)
+            });
         }
     }
 
@@ -147,6 +171,7 @@ export class TravelService {
         for (const userSnap of snapshot.docs) {
             await updateDoc(userSnap.ref, {
                 visitedCountries: [],
+                plannedCountries: [],
                 visitedSubdivisions: [],
                 dataResetNotification: true
             });

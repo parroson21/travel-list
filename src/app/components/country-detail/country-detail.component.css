@@ -35,6 +35,8 @@
 .country-header {
     padding: 1.25rem 1.5rem;
     margin-bottom: 1.25rem;
+    position: relative;
+    z-index: 10;
 }
 
 .header-main {
@@ -91,6 +93,107 @@
     background: var(--primary);
     border-color: var(--primary);
     color: white;
+}
+
+.btn-visited.planned {
+    background: rgba(128, 128, 128, 0.08);
+    border-color: var(--glass-border);
+    border-style: dashed;
+    color: var(--text-muted);
+}
+
+.btn-visited.planned:hover {
+    background: rgba(128, 128, 128, 0.16);
+    color: var(--text-main);
+}
+
+/* ── Status dropdown ─────────────────────────────────── */
+.status-dropdown-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.btn-visited {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.dropdown-caret {
+    transition: transform 0.2s ease;
+    opacity: 0.7;
+}
+
+.dropdown-caret.open {
+    transform: rotate(180deg);
+}
+
+.status-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 140px;
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 0.35rem;
+    z-index: 1100;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.status-menu.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.status-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 7px;
+    border: none;
+    background: transparent;
+    color: var(--text-main);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: background 0.15s ease;
+}
+
+.status-option:hover {
+    background: var(--glass-hover);
+}
+
+.status-option.active {
+    background: rgba(var(--primary-rgb), 0.12);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.status-divider {
+    height: 1px;
+    background: var(--glass-border);
+    margin: 0.25rem 0;
+}
+
+.status-remove {
+    color: #ef4444;
+}
+
+.status-remove:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
 }
 
 /* Info toggle */

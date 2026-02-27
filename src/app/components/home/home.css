@@ -142,6 +142,38 @@
     border-radius: 20px;
 }
 
+/* ── Visited / Planned toggle in sidebar header ────────── */
+.panel-mode-toggle {
+    display: flex;
+    background: var(--glass-border);
+    border-radius: 8px;
+    padding: 2px;
+    gap: 0;
+}
+
+.panel-mode-btn {
+    padding: 0.2rem 0.65rem;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+}
+
+.panel-mode-btn:hover {
+    color: var(--text-main);
+}
+
+.panel-mode-btn.active {
+    background: var(--bg-card);
+    color: var(--primary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
 /* Scrollable list */
 .countries-scroll {
     overflow-y: auto;
@@ -172,6 +204,7 @@
     background: var(--glass-hover);
 }
 
+
 .country-flag {
     font-size: 1.4rem;
     line-height: 1;
@@ -198,6 +231,43 @@
     color: var(--text-muted);
 }
 
+/* Clickable name text inside a row */
+.row-link {
+    cursor: pointer;
+    transition: color 0.15s ease;
+    display: inline-block;
+}
+
+.row-link:hover {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* Chevron on the right edge of each row */
+.row-arrow {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    opacity: 0;
+    margin-left: auto;
+    padding-left: 0.5rem;
+    flex-shrink: 0;
+    transition: opacity 0.15s ease, color 0.15s ease;
+    line-height: 1;
+}
+
+.country-row:hover .row-arrow,
+.heritage-row:hover .row-arrow {
+    opacity: 0.5;
+}
+
+.row-link:hover~.row-arrow,
+.country-row:has(.row-link:hover) .row-arrow,
+.heritage-row:has(.row-link:hover) .row-arrow {
+    color: var(--primary);
+    opacity: 0.8;
+}
+
 /* Empty state */
 .empty-state {
     padding: 2rem 1.25rem;
@@ -216,6 +286,12 @@
 .stat-pill-active {
     outline: 2px solid var(--primary);
     outline-offset: -1px;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 600;
 }
 
 /* ── Heritage site rows ──────────────────────────────────── */

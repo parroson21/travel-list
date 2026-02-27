@@ -15,6 +15,7 @@ import { ThemeService } from '../../services/theme.service';
 })
 export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
     @Input() visitedCountryNames: string[] = [];
+    @Input() plannedCountryNames: string[] = [];
     @Input() focusedCountry: Country | null = null;
     @Input() height: string = '500px';
     @Input() heritageSites: any[] = [];
@@ -66,6 +67,10 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
 
         if (changes['visitedCountryNames'] && !changes['visitedCountryNames'].firstChange) {
             this.updateCountryLayers();
+        }
+
+        if (changes['plannedCountryNames'] && !changes['plannedCountryNames'].firstChange) {
+            this.updatePlannedLayer();
         }
 
         if (changes['visitedSubdivisionCodes'] && !changes['visitedSubdivisionCodes'].firstChange) {
@@ -134,6 +139,19 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
                     }
                 }))
         };
+    }
+
+    /**
+     * Update the planned country layer filter
+     */
+    private updatePlannedLayer() {
+        if (!this.map) return;
+
+        if (this.map.getLayer('countries-planned-fill')) {
+            this.map.setFilter('countries-planned-fill',
+                ['in', ['get', 'name'], ['literal', this.plannedCountryNames]]
+            );
+        }
     }
 
     /**
@@ -413,6 +431,7 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
 
         const layersToRemove = [
             'countries-visited-fill',
+            'countries-planned-fill',
             'countries-focused-fill',
             'countries-borders',
             'heritage-sites-visited',
@@ -464,6 +483,20 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
                 'fill-opacity': 0.4
             }
         });
+
+        // Planned countries fill — grey with low opacity to indicate intent without clashing
+        if (this.plannedCountryNames.length > 0) {
+            this.map.addLayer({
+                id: 'countries-planned-fill',
+                type: 'fill',
+                source: 'world-countries',
+                filter: ['in', ['get', 'name'], ['literal', this.plannedCountryNames]],
+                paint: {
+                    'fill-color': '#888888',
+                    'fill-opacity': 0.25
+                }
+            });
+        }
 
         // Focused country fill
         if (this.focusedCountry && !this.visitedCountryNames.includes(this.focusedCountry.name)) {
