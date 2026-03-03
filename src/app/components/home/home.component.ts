@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TravelService } from '../../services/travel.service';
@@ -17,6 +17,8 @@ import { WorldMapComponent } from '../world-map/world-map.component';
   styleUrls: ['./home.css']
 })
 export class HomeComponent implements OnInit {
+
+  @ViewChild(WorldMapComponent) worldMap?: WorldMapComponent;
 
   listMode: 'countries' | 'heritage' | 'planned' = 'countries';
 
@@ -99,30 +101,47 @@ export class HomeComponent implements OnInit {
   }
 
   highlightedCountry: Country | null = null;
+  hoveredSiteId: string | null = null;
+  selectedSite: any = null;
+  bottomSheetExpanded = false;
+
+  // ── Mobile bottom sheet touch gestures ──────────────────
+  private sheetTouchStartY = 0;
+  private sheetContentScrollTop = 0;
+
+  onSheetTouchStart(e: TouchEvent) {
+    this.sheetTouchStartY = e.touches[0].clientY;
+  }
+
+  onSheetTouchEnd(e: TouchEvent) {
+    const deltaY = e.changedTouches[0].clientY - this.sheetTouchStartY;
+    const threshold = 50;
+    if (deltaY < -threshold) {
+      this.bottomSheetExpanded = true;
+    } else if (deltaY > threshold) {
+      if (this.bottomSheetExpanded) {
+        if (this.sheetContentScrollTop <= 0) this.bottomSheetExpanded = false;
+      } else {
+        this.closeSiteDetails();
+      }
+    }
+  }
+
+  onSheetContentScroll(e: Event) {
+    this.sheetContentScrollTop = (e.target as HTMLElement).scrollTop;
+  }
 
   focusOnMap(country: Country) {
     this.highlightedCountry = country;
   }
 
-  focusHeritageSite(site: any) {
-    if (site?.latitude && site?.longitude) {
-      this.highlightedCountry = {
-        latitude: site.latitude,
-        longitude: site.longitude,
-        name: site.name_en
-      } as any;
-    }
-  }
-
-  selectedSite: any = null;
-
-  navigateToCountry(countryId: string) {
-    this.router.navigate(['/explore', countryId]);
-  }
-
   openSiteDetails(site: any) {
     this.selectedSite = site;
-    document.body.style.overflow = 'hidden';
+    this.bottomSheetExpanded = false;
+    // Fly map to the site
+    if (this.worldMap) {
+      this.worldMap.flyToSite(site.id_no);
+    }
   }
 
   openSiteFromPin(poiId: string, heritageSites: any[]) {
@@ -132,14 +151,32 @@ export class HomeComponent implements OnInit {
 
   closeSiteDetails() {
     this.selectedSite = null;
-    document.body.style.overflow = 'auto';
+    this.bottomSheetExpanded = false;
+  }
+
+  setSiteHover(siteId: string | null) {
+    this.hoveredSiteId = siteId;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (this.selectedSite) {
+      const target = event.target as HTMLElement;
+      const inPanel = target.closest('.home-site-panel');
+      const inRow = target.closest('.heritage-row');
+      const inMap = target.closest('.map-panel');
+      if (!inPanel && !inRow && !inMap) {
+        this.closeSiteDetails();
+      }
+    }
   }
 
   isPOIVisited(poiId: string, profile: UserProfile | null): boolean {
     return profile?.visitedPOIs?.includes(poiId) || false;
   }
 
-  async togglePOIVisited(poiId: string, profile: UserProfile | null) {
+  async togglePOIVisited(poiId: string, profile: UserProfile | null, event?: Event) {
+    if (event) event.stopPropagation();
     const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
     if (!user) {
       this.auth.loginWithGoogle();
@@ -147,5 +184,9 @@ export class HomeComponent implements OnInit {
     }
     const visited = profile?.visitedPOIs?.includes(poiId) || false;
     this.travel.markPOIVisited(poiId, !visited);
+  }
+
+  navigateToCountry(countryId: string) {
+    this.router.navigate(['/explore', countryId]);
   }
 }
