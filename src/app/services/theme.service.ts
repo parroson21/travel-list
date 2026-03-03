@@ -148,6 +148,7 @@ export class ThemeService {
 
         const primary = palette.primary[0];
         root.style.setProperty('--primary', primary);
+        root.style.setProperty('--primary-hover', this.darkenHex(primary, 0.15));
         root.style.setProperty('--primary-rgb', this.hexToRgb(primary));
         root.style.setProperty('--accent-color', primary);
         root.style.setProperty('--accent-gradient', `linear-gradient(135deg, ${primary} 0%, ${palette.secondary} 100%)`);
@@ -177,5 +178,14 @@ export class ThemeService {
         const g = parseInt(hex.substring(2, 4), 16);
         const b = parseInt(hex.substring(4, 6), 16);
         return `${r}, ${g}, ${b}`;
+    }
+
+    /** Darken a hex colour by `amount` (0–1 fraction). */
+    private darkenHex(hex: string, amount: number): string {
+        hex = hex.replace('#', '');
+        const r = Math.max(0, Math.round(parseInt(hex.substring(0, 2), 16) * (1 - amount)));
+        const g = Math.max(0, Math.round(parseInt(hex.substring(2, 4), 16) * (1 - amount)));
+        const b = Math.max(0, Math.round(parseInt(hex.substring(4, 6), 16) * (1 - amount)));
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     }
 }

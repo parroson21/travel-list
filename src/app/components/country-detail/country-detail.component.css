@@ -517,7 +517,15 @@
 
 .visit-indicator-btn:hover {
     background: var(--glass-hover);
+    border-color: var(--text-muted);
     transform: scale(1.1)
+}
+
+/* On card hover, nudge the button to show it's clickable without using primary colour */
+.item-card:hover .visit-indicator-btn:not(.visited),
+.item-card.hovered .visit-indicator-btn:not(.visited) {
+    border-color: var(--text-muted);
+    background: var(--glass-hover)
 }
 
 .visit-indicator-btn.visited:hover {
