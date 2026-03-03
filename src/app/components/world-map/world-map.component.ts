@@ -164,7 +164,7 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
             this.map.setFilter('countries-visited-fill',
                 ['in', ['get', 'name'], ['literal', this.visitedCountryNames]]
             );
-            // Also rebuild the color expression — the match table is keyed on country
+            // Rebuild the color expression — the match table is keyed on country
             // names, so it must be regenerated whenever the country list changes
             // (e.g. toggling between Visited / Planned mode).
             const primaryColor = this.getCssVar('--primary');
