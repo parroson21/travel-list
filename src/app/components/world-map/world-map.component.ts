@@ -47,9 +47,11 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
             const palette = this.themeService.selectedPaletteName();
 
             if (this.map && this.mapReady) {
-                // If dark mode toggled, switch style (which calls rebuildLayers)
-                // Otherwise just rebuild layers to pick up new colors
-                this.switchMapStyle(isDark);
+                // Defer by one task so ThemeService's applyTheme() effect has
+                // already flushed its CSS-variable updates before we read them
+                // with getCssVar(). Without this deferral the two effects race
+                // and we can still see the previous palette's colours.
+                setTimeout(() => this.switchMapStyle(isDark), 0);
             }
         });
     }
@@ -164,6 +166,12 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
             this.map.setFilter('countries-visited-fill',
                 ['in', ['get', 'name'], ['literal', this.visitedCountryNames]]
             );
+            // Also rebuild the color expression — the match table is keyed on country
+            // names, so it must be regenerated whenever the country list changes
+            // (e.g. toggling between Visited / Planned mode).
+            const primaryColor = this.getCssVar('--primary');
+            const fillColorExpression = this.getPrimaryColorExpression(primaryColor);
+            this.map.setPaintProperty('countries-visited-fill', 'fill-color', fillColorExpression);
         }
 
         if (this.focusedCountry) {
