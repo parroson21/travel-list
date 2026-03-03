@@ -47,8 +47,8 @@
                 [visitedCountryNames]="listMode === 'planned' ? vm.plannedCountryNames : vm.visitedCountryNames"
                 [plannedCountryNames]="listMode === 'planned' ? vm.visitedCountryNames : vm.plannedCountryNames"
                 [focusedCountry]="highlightedCountry" [heritageSites]="vm.heritageSites"
-                [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true" [height]="'600px'"
-                (poiToggled)="openSiteFromPin($event, vm.heritageSites)">
+                [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true" [height]="'100%'"
+                [highlightedSiteId]="hoveredSiteId" (poiToggled)="openSiteFromPin($event, vm.heritageSites)">
             </app-world-map>
         </section>
 
@@ -112,11 +112,11 @@
                 <!-- Heritage Sites list -->
                 <ng-container *ngIf="listMode === 'heritage'">
                     <div class="heritage-row" *ngFor="let h of vm.visitedHeritageSites"
-                        (click)="focusHeritageSite(h.site)">
+                        [class.heritage-row-selected]="selectedSite?.id_no === h.site.id_no"
+                        (mouseenter)="setSiteHover(h.site.id_no)" (mouseleave)="setSiteHover(null)"
+                        (click)="openSiteDetails(h.site)">
                         <div class="heritage-row-info">
-                            <span class="heritage-row-name row-link"
-                                (click)="$event.stopPropagation(); openSiteDetails(h.site)" title="Open site details">{{
-                                h.site.name_en }}</span>
+                            <span class="heritage-row-name">{{ h.site.name_en }}</span>
                             <span class="heritage-row-sub"><span class="flag-emoji">{{ h.countryEmoji }}</span> {{
                                 h.countryName }}</span>
                         </div>
@@ -132,33 +132,75 @@
 
     </div>
 
-    <!-- Heritage Site Detail Modal -->
-    <div class="modal-overlay" *ngIf="selectedSite" (click)="closeSiteDetails()">
-        <div class="modal-content glass-panel fade-in" (click)="$event.stopPropagation()">
-            <button class="modal-close" (click)="closeSiteDetails()">×</button>
-
-            <div class="modal-header">
+    <!-- Fixed side panel for heritage site details (desktop) -->
+    <div class="home-site-panel" *ngIf="selectedSite">
+        <div class="detail-panel-header">
+            <div class="detail-panel-title-row">
                 <span class="heritage-badge" [class.badge-cultural]="selectedSite.category_short === 'C'"
                     [class.badge-natural]="selectedSite.category_short === 'N'"
                     [class.badge-mixed]="selectedSite.category_short === 'C/N' || selectedSite.category_short === 'N/C'">
                     {{ selectedSite.category_short === 'C' ? 'Cultural' : selectedSite.category_short === 'N' ?
                     'Natural' : 'Mixed' }}
                 </span>
-                <h2 class="modal-title">{{ selectedSite.name_en }}</h2>
+                <button class="detail-close-btn" (click)="closeSiteDetails()" title="Close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
             </div>
+            <h2 class="detail-panel-name">{{ selectedSite.name_en }}</h2>
+        </div>
+        <div class="detail-panel-body" *ngIf="vm$ | async as vm2">
+            <p class="detail-panel-desc">{{ selectedSite.short_description_en }}</p>
+            <div class="detail-panel-actions">
+                <button class="btn-visited" [class.visited]="isPOIVisited(selectedSite.id_no, vm2.profile)"
+                    (click)="togglePOIVisited(selectedSite.id_no, vm2.profile, $event)">
+                    {{ isPOIVisited(selectedSite.id_no, vm2.profile) ? 'Visited ✓' : 'Mark Visited' }}
+                </button>
+            </div>
+        </div>
+    </div>
 
-            <div class="modal-body">
-                <div class="modal-description">
-                    <h3>Description</h3>
-                    <p>{{ selectedSite.short_description_en }}</p>
+    <!-- Mobile bottom sheet (shown ≤600px, hidden on desktop) -->
+    <div class="home-bottom-sheet" *ngIf="selectedSite" [class.expanded]="bottomSheetExpanded"
+        (touchstart)="onSheetTouchStart($event)" (touchend)="onSheetTouchEnd($event)">
+
+        <div class="sheet-handle-wrap">
+            <div class="sheet-handle"></div>
+        </div>
+
+        <div class="sheet-content" (scroll)="onSheetContentScroll($event)">
+            <div class="sheet-header">
+                <div class="sheet-title-row">
+                    <span class="heritage-badge" [class.badge-cultural]="selectedSite.category_short === 'C'"
+                        [class.badge-natural]="selectedSite.category_short === 'N'"
+                        [class.badge-mixed]="selectedSite.category_short === 'C/N' || selectedSite.category_short === 'N/C'">
+                        {{ selectedSite.category_short === 'C' ? 'Cultural' : selectedSite.category_short === 'N' ?
+                        'Natural' : 'Mixed' }}
+                    </span>
+                    <h2 class="sheet-name">{{ selectedSite.name_en }}</h2>
+                    <button class="detail-close-btn" (click)="closeSiteDetails(); $event.stopPropagation()"
+                        title="Close">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
                 </div>
-
-                <div class="modal-actions">
-                    <button class="btn-visited visited" (click)="togglePOIVisited(selectedSite.id_no, vm.profile)">
-                        Visited
+            </div>
+            <div class="sheet-body" *ngIf="vm$ | async as vm2">
+                <p class="detail-panel-desc">{{ selectedSite.short_description_en }}</p>
+                <div class="detail-panel-actions">
+                    <button class="btn-visited" [class.visited]="isPOIVisited(selectedSite.id_no, vm2.profile)"
+                        (click)="togglePOIVisited(selectedSite.id_no, vm2.profile, $event)">
+                        {{ isPOIVisited(selectedSite.id_no, vm2.profile) ? 'Visited ✓' : 'Mark Visited' }}
                     </button>
                 </div>
             </div>
         </div>
     </div>
+
 </div>

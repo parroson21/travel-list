@@ -47,7 +47,7 @@ html.light {
 
 body {
   background-color: var(--bg-dark);
-  min-height: 100vh;
+  min-height: 100%;
   color: var(--text-main);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.6;
@@ -182,14 +182,6 @@ h4,
 [data-theme="Neon"] {
   --neon-glow: var(--primary);
   --neon-glow-rgb: var(--primary-rgb);
-}
-
-/* Navbar & dropdown: translucent glass instead of solid bg-card */
-[data-theme="Neon"] .navbar {
-  background: rgba(10, 10, 10, 0.85) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(var(--neon-glow-rgb), 0.15) !important;
 }
 
 [data-theme="Neon"] .dropdown-menu {
