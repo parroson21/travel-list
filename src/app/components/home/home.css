@@ -2,10 +2,10 @@
 .home-container {
     max-width: 1600px;
     margin: 0 auto;
-    padding: 0.5rem 1.5rem 0.5rem;
+    padding: 0 1.5rem 0;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 80px);
+    height: calc(100vh - 160px);
     gap: 0.6rem;
     box-sizing: border-box;
 }
@@ -87,7 +87,6 @@
     grid-template-columns: 1fr 280px;
     gap: 1rem;
     flex: 1;
-    max-height: 72vh;
     min-height: 0;
 }
 

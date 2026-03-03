@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TravelService } from '../../services/travel.service';
@@ -13,20 +13,27 @@ interface SubdivisionGroup {
 import { Observable, combineLatest, firstValueFrom } from 'rxjs';
 import { map, switchMap, startWith, take } from 'rxjs/operators';
 import { WorldMapComponent } from '../world-map/world-map.component';
+import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 
 @Component({
     selector: 'app-country-detail',
     standalone: true,
-    imports: [CommonModule, WorldMapComponent],
+    imports: [CommonModule, WorldMapComponent, FormsModule],
     templateUrl: './country-detail.component.html',
     styleUrls: ['./country-detail.component.css']
 })
 export class CountryDetailComponent implements OnInit {
+    @ViewChild(WorldMapComponent) worldMap?: WorldMapComponent;
+
     activeTab: 'subdivisions' | 'heritage' = 'subdivisions';
     infoExpanded = false;
     selectedSite: any = null;
     statusMenuOpen = false;
+    hoveredSiteId: string | null = null;
+    hoveredSubdivisionCode: string | null = null;
+    /** Controls the mobile bottom-sheet expansion */
+    bottomSheetExpanded = false;
 
     vm$: Observable<{
         country: Country | null,
@@ -146,9 +153,19 @@ export class CountryDetailComponent implements OnInit {
         this.travel.setCountryStatus(countryId, status);
     }
 
-    @HostListener('document:click')
-    onDocumentClick() {
+    @HostListener('document:click', ['$event'])
+    onDocumentClick(event: MouseEvent) {
         this.statusMenuOpen = false;
+        // Close the site detail panel when clicking outside of it
+        if (this.selectedSite) {
+            const target = event.target as HTMLElement;
+            const inPanel = target.closest('.site-detail-panel');
+            const inCard = target.closest('.heritage-card');
+            const inMap = target.closest('.country-map-section'); // pin clicks open the panel, don't re-close
+            if (!inPanel && !inCard && !inMap) {
+                this.closeSiteDetails();
+            }
+        }
     }
 
     isSubdivisionVisited(subdivisionId: string, profile: UserProfile | null): boolean {
@@ -183,8 +200,11 @@ export class CountryDetailComponent implements OnInit {
 
     openSiteDetails(site: any) {
         this.selectedSite = site;
-        // Prevent body scroll when modal is open
-        document.body.style.overflow = 'hidden';
+        this.bottomSheetExpanded = false;
+        // Fly the map to the selected site
+        if (this.worldMap) {
+            this.worldMap.flyToSite(site.id_no);
+        }
     }
 
     openSiteFromPin(poiId: string, heritageSites: any[]) {
@@ -194,7 +214,46 @@ export class CountryDetailComponent implements OnInit {
 
     closeSiteDetails() {
         this.selectedSite = null;
-        document.body.style.overflow = 'auto';
+    }
+
+    setSiteHover(siteId: string | null) {
+        this.hoveredSiteId = siteId;
+    }
+
+    setSubdivisionHover(code: string | null) {
+        this.hoveredSubdivisionCode = code;
+    }
+
+    // ── Mobile bottom sheet touch gestures ──────────────────
+    private sheetTouchStartY = 0;
+    private sheetContentScrollTop = 0;
+
+    onSheetTouchStart(e: TouchEvent) {
+        this.sheetTouchStartY = e.touches[0].clientY;
+    }
+
+    onSheetTouchEnd(e: TouchEvent) {
+        const deltaY = e.changedTouches[0].clientY - this.sheetTouchStartY;
+        const threshold = 50;
+
+        if (deltaY < -threshold) {
+            // Swipe up — expand
+            this.bottomSheetExpanded = true;
+        } else if (deltaY > threshold) {
+            if (this.bottomSheetExpanded) {
+                // Swipe down while expanded — only collapse if content is at top
+                if (this.sheetContentScrollTop <= 0) {
+                    this.bottomSheetExpanded = false;
+                }
+            } else {
+                // Swipe down while peeking — dismiss
+                this.closeSiteDetails();
+            }
+        }
+    }
+
+    onSheetContentScroll(e: Event) {
+        this.sheetContentScrollTop = (e.target as HTMLElement).scrollTop;
     }
 
     private pluralizeDivisionType(type: string): string {

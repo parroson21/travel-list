@@ -23,6 +23,8 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
     @Input() showOnlyVisitedSites: boolean = false;
     @Input() countryId: string = '';
     @Input() visitedSubdivisionCodes: string[] = [];
+    @Input() highlightedSiteId: string | null = null;
+    @Input() highlightedSubdivisionCode: string | null = null;
 
     @Output() poiToggled = new EventEmitter<string>();
 
@@ -80,6 +82,14 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
         if ((changes['visitedPOIIds'] || changes['heritageSites']) &&
             !(changes['visitedPOIIds']?.firstChange && changes['heritageSites']?.firstChange)) {
             this.updateHeritageLayers();
+        }
+
+        if (changes['highlightedSiteId'] && !changes['highlightedSiteId'].firstChange) {
+            this.updateSiteHighlight();
+        }
+
+        if (changes['highlightedSubdivisionCode'] && !changes['highlightedSubdivisionCode'].firstChange) {
+            this.updateSubdivisionHighlight();
         }
     }
 
@@ -247,6 +257,93 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
         } else if (this.heritageSites.length > 0) {
             this.addHeritageLayers(geojson);
         }
+    }
+
+    /**
+     * Fly the map to a specific heritage site by its id_no
+     */
+    flyToSite(siteIdNo: string) {
+        if (!this.map) return;
+        const site = this.heritageSites.find(s => s.id_no === siteIdNo);
+        if (site && site.longitude && site.latitude) {
+            this.map.flyTo({
+                center: [site.longitude, site.latitude],
+                zoom: 8,
+                essential: true
+            });
+        }
+    }
+
+    /**
+     * Highlight (or un-highlight) a heritage site pin
+     */
+    private updateSiteHighlight() {
+        if (!this.map || !this.mapReady) return;
+
+        const highlightLayerId = 'heritage-sites-highlight';
+        if (this.map.getLayer(highlightLayerId)) {
+            this.map.removeLayer(highlightLayerId);
+        }
+        if (this.map.getSource('heritage-highlight')) {
+            this.map.removeSource('heritage-highlight');
+        }
+
+        if (!this.highlightedSiteId) return;
+
+        const site = this.heritageSites.find(s => s.id_no === this.highlightedSiteId);
+        if (!site || !site.longitude || !site.latitude) return;
+
+        const geojson: GeoJSON.FeatureCollection = {
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [site.longitude, site.latitude] },
+                properties: {}
+            }]
+        };
+
+        this.map.addSource('heritage-highlight', { type: 'geojson', data: geojson });
+        this.map.addLayer({
+            id: highlightLayerId,
+            type: 'circle',
+            source: 'heritage-highlight',
+            paint: {
+                'circle-radius': 14,
+                'circle-color': '#ffffff',
+                'circle-opacity': 0.25,
+                'circle-stroke-color': '#ffffff',
+                'circle-stroke-width': 2.5
+            }
+        });
+    }
+
+    /**
+     * Highlight (or un-highlight) a subdivision polygon
+     */
+    private updateSubdivisionHighlight() {
+        if (!this.map || !this.mapReady || !this.countryId) return;
+
+        const highlightLayerId = `${this.countryId.toLowerCase()}-regions-highlight`;
+        if (this.map.getLayer(highlightLayerId)) {
+            this.map.removeLayer(highlightLayerId);
+        }
+
+        if (!this.highlightedSubdivisionCode) return;
+
+        const sourceId = `${this.countryId.toLowerCase()}-regions`;
+        if (!this.map.getSource(sourceId)) return;
+
+        this.map.addLayer({
+            id: highlightLayerId,
+            type: 'line',
+            source: sourceId,
+            filter: ['==', ['get', 'code'], this.highlightedSubdivisionCode],
+            paint: {
+                'line-color': '#ffffff',
+                'line-width': 2.5,
+                'line-opacity': 0.9
+            }
+        });
     }
 
     private lastIsDark: boolean | null = null;
@@ -441,20 +538,26 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
             'countries-focused-fill',
             'countries-borders',
             'heritage-sites-visited',
-            'heritage-sites-unvisited'
+            'heritage-sites-unvisited',
+            'heritage-sites-highlight'
         ];
 
         // Add dynamic region layers to removal list
         if (this.countryId) {
             const sourceId = `${this.countryId.toLowerCase()}-regions`;
-            layersToRemove.push(`${sourceId}-borders`, `${sourceId}-fill`, `${sourceId}-visited-fill`);
+            layersToRemove.push(
+                `${sourceId}-borders`,
+                `${sourceId}-fill`,
+                `${sourceId}-visited-fill`,
+                `${sourceId}-highlight`
+            );
         }
 
         layersToRemove.forEach(layer => {
             if (this.map.getLayer(layer)) this.map.removeLayer(layer);
         });
 
-        const sourcesToRemove = ['world-countries', 'heritage-sites'];
+        const sourcesToRemove = ['world-countries', 'heritage-sites', 'heritage-highlight'];
         if (this.countryId) {
             sourcesToRemove.push(`${this.countryId.toLowerCase()}-regions`);
         }
