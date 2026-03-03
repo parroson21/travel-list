@@ -299,4 +299,18 @@ export class TravelService {
             await updateDoc(userDocRef, update);
         }
     }
+
+    /** Update scalar fields on a country document (does not touch subdivisions / worldHeritageSites arrays) */
+    async updateCountry(countryId: string, changes: Partial<Record<string, any>>): Promise<void> {
+        const countryDocRef = doc(this.firestore, `countries/${countryId}`);
+        await updateDoc(countryDocRef, changes);
+    }
+
+    /** Fetch a single country document by ID */
+    async getCountryById(countryId: string): Promise<any | null> {
+        const { getDoc } = await import('@angular/fire/firestore');
+        const countryDocRef = doc(this.firestore, `countries/${countryId}`);
+        const snap = await getDoc(countryDocRef);
+        return snap.exists() ? snap.data() : null;
+    }
 }

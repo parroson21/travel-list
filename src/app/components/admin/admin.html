@@ -1,1 +1,338 @@
-<p>admin works!</p>
+<div class="admin-container fade-in">
+
+    <!-- Tab bar -->
+    <nav class="admin-tabs glass-panel">
+        <button class="tab-btn" [class.active]="activeTab === 'seeding'" (click)="setTab('seeding')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+            Seeding Utility
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'countries'" (click)="setTab('countries')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+            Countries
+        </button>
+    </nav>
+
+    <!-- ── Seeding Tab ────────────────────────────────── -->
+    <div class="tab-content glass-panel" *ngIf="activeTab === 'seeding'">
+        <h2>Seeding Utility</h2>
+        <p class="tab-desc">Use the buttons below to manage the database.</p>
+
+        <div class="section">
+            <h3>Seed Data</h3>
+            <p class="section-desc">Seed countries from the JSON file. Subdivisions and heritage sites are included
+                within each country.</p>
+            <button class="btn btn-primary" (click)="seedCountries()" [disabled]="loadingSeeding">
+                {{ loadingSeeding ? 'Seeding...' : 'Seed Countries' }}
+            </button>
+        </div>
+
+        <div class="section danger-section">
+            <h3>Destructive Actions</h3>
+            <div class="action-row">
+                <p class="section-desc">Delete all countries from the database.</p>
+                <button class="btn btn-danger" (click)="wipeCountryData()" [disabled]="loadingWipe">
+                    {{ loadingWipe ? 'Wiping...' : 'Wipe All Country Data' }}
+                </button>
+            </div>
+            <div class="action-row">
+                <p class="section-desc">Clear all users' visited countries and subdivisions.</p>
+                <button class="btn btn-danger" (click)="resetUserData()" [disabled]="loadingReset">
+                    {{ loadingReset ? 'Resetting...' : 'Reset All User Data' }}
+                </button>
+            </div>
+        </div>
+
+        <div class="logs" *ngIf="logs.length > 0">
+            <h3>Logs</h3>
+            <ul>
+                <li *ngFor="let log of logs">{{ log }}</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ── Countries Tab ─────────────────────────────── -->
+    <div class="tab-content" *ngIf="activeTab === 'countries'">
+        <div class="countries-layout">
+
+            <!-- LEFT: Search + country list -->
+            <div class="country-list-panel glass-panel">
+                <div class="list-panel-header">
+                    <h2>Countries</h2>
+                    <span class="record-count" *ngIf="allCountries.length > 0">{{ allCountries.length }}</span>
+                </div>
+
+                <div class="search-wrap">
+                    <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input class="search-input" type="text" [(ngModel)]="searchQuery"
+                        placeholder="Name, ISO2 or capital…" autofocus />
+                    <button class="clear-btn" *ngIf="searchQuery" (click)="searchQuery = ''">✕</button>
+                </div>
+
+                <div class="loading-state" *ngIf="loadingCountries">
+                    <div class="spinner"></div>Loading countries…
+                </div>
+
+                <ul class="country-list" *ngIf="!loadingCountries">
+                    <li *ngFor="let c of filteredCountries" class="country-item"
+                        [class.selected]="selectedCountry?.id === c.id" (click)="selectCountry(c)">
+                        <span class="ci-flag flag-emoji">{{ c.emoji }}</span>
+                        <span class="ci-name">{{ c.name }}</span>
+                        <span class="ci-id">{{ c.id }}</span>
+                    </li>
+                    <li class="empty-hint" *ngIf="filteredCountries.length === 0 && !loadingCountries">
+                        No countries match "{{ searchQuery }}"
+                    </li>
+                </ul>
+            </div>
+
+            <!-- MIDDLE: Subdivision list (visible when a country is selected and a subdivision panel is shown) -->
+            <div class="sub-list-panel glass-panel" *ngIf="selectedCountry && editMode === 'subdivision'">
+                <div class="list-panel-header">
+                    <button class="back-crumb" (click)="clearSubdivision()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round">
+                            <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                        {{ selectedCountry.name }}
+                    </button>
+                    <span class="record-count">{{ subdivisions.length }}</span>
+                </div>
+
+                <div class="search-wrap">
+                    <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input class="search-input" type="text" [(ngModel)]="subdivisionSearch"
+                        placeholder="Name, code or type…" />
+                    <button class="clear-btn" *ngIf="subdivisionSearch" (click)="subdivisionSearch = ''">✕</button>
+                </div>
+
+                <ul class="country-list">
+                    <li *ngFor="let s of filteredSubdivisions; let i = index" class="country-item sub-item"
+                        [class.selected]="selectedSubdivision?.code === s.code"
+                        (click)="selectSubdivision(s, subdivisions.indexOf(s))">
+                        <div class="sub-item-info">
+                            <span class="si-name">{{ s.name }}</span>
+                            <span class="si-meta"><code>{{ s.code }}</code> · {{ s.division }}</span>
+                        </div>
+                    </li>
+                    <li class="empty-hint" *ngIf="filteredSubdivisions.length === 0">
+                        No subdivisions match "{{ subdivisionSearch }}"
+                    </li>
+                </ul>
+            </div>
+
+            <!-- RIGHT: Edit panel — country fields OR subdivision fields -->
+            <div class="edit-panel glass-panel" *ngIf="selectedCountry">
+
+                <!-- ── Breadcrumb ── -->
+                <div class="edit-header">
+                    <div class="breadcrumb">
+                        <span class="ce-flag flag-emoji">{{ selectedCountry.emoji }}</span>
+                        <button class="crumb-link" [class.active]="editMode === 'country'"
+                            (click)="clearSubdivision()">{{ selectedCountry.name }}</button>
+                        <ng-container *ngIf="editMode === 'subdivision' && selectedSubdivision">
+                            <span class="crumb-sep">›</span>
+                            <span class="crumb-current">{{ selectedSubdivision.name }}</span>
+                        </ng-container>
+                    </div>
+                    <button class="close-btn" (click)="clearSelection()" title="Close">✕</button>
+                </div>
+
+                <!-- ── Country fields view ── -->
+                <ng-container *ngIf="editMode === 'country'">
+                    <form class="edit-form" (ngSubmit)="saveCountry()">
+                        <div class="field-grid">
+                            <div class="field-group" *ngFor="let f of editableFields">
+                                <label class="field-label">{{ f.label }}</label>
+                                <input class="field-input" [type]="f.type === 'number' ? 'number' : 'text'"
+                                    [(ngModel)]="editForm[f.key]" [name]="f.key"
+                                    [step]="f.key === 'latitude' || f.key === 'longitude' ? '0.0001' : '1'" />
+                            </div>
+                        </div>
+
+                        <div class="form-footer">
+                            <div class="save-feedback">
+                                <span class="save-success" *ngIf="saveSuccess">✓ Saved</span>
+                                <span class="save-error" *ngIf="saveError">⚠ {{ saveError }}</span>
+                            </div>
+                            <button class="btn btn-primary" type="submit" [disabled]="saving">
+                                {{ saving ? 'Saving…' : 'Save Changes' }}
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Subdivisions — grouped by division type -->
+                    <div class="subdivisions-section" *ngIf="subdivisions.length > 0">
+                        <div class="sub-section-header">
+                            <h3>Subdivisions <span class="record-count">{{ subdivisions.length }}</span></h3>
+                        </div>
+
+                        <!-- One card per division group -->
+                        <div class="sub-group" *ngFor="let group of groupedSubdivisions">
+                            <!-- Group header -->
+                            <div class="sub-group-header">
+                                <!-- Inline rename input OR static label -->
+                                <ng-container *ngIf="renamingDivision === group.division; else staticLabel">
+                                    <input class="field-input group-rename-input" [(ngModel)]="divisionRenameValue"
+                                        [name]="'rename_' + group.division" (keydown.enter)="saveRenameGroup()"
+                                        (keydown.escape)="cancelRenameGroup()" autofocus />
+                                    <button class="icon-action save-action" title="Save rename"
+                                        (click)="saveRenameGroup()" [disabled]="savingGroupRename">✓</button>
+                                    <button class="icon-action" title="Cancel" (click)="cancelRenameGroup()">✕</button>
+                                </ng-container>
+                                <ng-template #staticLabel>
+                                    <span class="sub-group-title">{{ group.division }}</span>
+                                    <span class="record-count">{{ group.items.length }}</span>
+                                    <button class="icon-action rename-action" title="Rename this group type"
+                                        (click)="startRenameGroup(group.division)">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                        </svg>
+                                    </button>
+                                </ng-template>
+                            </div>
+
+                            <!-- Group members -->
+                            <ul class="sub-group-list">
+                                <li *ngFor="let item of group.items" class="sub-group-item"
+                                    [class.editing]="selectedSubdivisionIndex === item.index">
+                                    <div class="sub-item-info">
+                                        <span class="si-name">{{ item.sub.name }}</span>
+                                        <span class="si-meta"><code>{{ item.sub.code }}</code></span>
+                                    </div>
+                                    <div class="sub-item-actions">
+                                        <button class="icon-action" title="Edit"
+                                            (click)="selectSubdivision(item.sub, item.index)">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                            </svg>
+                                        </button>
+                                        <button class="icon-action delete-action" title="Delete"
+                                            [disabled]="deletingIndex === item.index"
+                                            (click)="deleteSubdivision(item.index)">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                                <polyline points="3 6 5 6 21 6" />
+                                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                                <path d="M10 11v6M14 11v6" />
+                                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </li>
+                            </ul>
+
+                            <!-- Inline add form for this group -->
+                            <div class="sub-add-form" *ngIf="showAddFormForDivision === group.division">
+                                <div class="add-form-fields">
+                                    <input class="field-input" placeholder="Code *" [(ngModel)]="addForm.code"
+                                        name="add_code" />
+                                    <input class="field-input" placeholder="Name *" [(ngModel)]="addForm.name"
+                                        name="add_name" />
+                                </div>
+                                <div class="add-form-footer">
+                                    <span class="save-error" *ngIf="addError">{{ addError }}</span>
+                                    <button class="btn btn-secondary" type="button"
+                                        (click)="closeAddForm()">Cancel</button>
+                                    <button class="btn btn-primary" type="button" (click)="saveNewSubdivision()"
+                                        [disabled]="savingAdd">
+                                        {{ savingAdd ? 'Adding…' : 'Add' }}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Add button -->
+                            <button class="add-sub-btn" *ngIf="showAddFormForDivision !== group.division"
+                                (click)="openAddForm(group.division)">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                Add {{ group.division }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="subdivisions-section" *ngIf="subdivisions.length === 0">
+                        <p class="section-desc">No subdivisions for this country.</p>
+                    </div>
+                </ng-container>
+
+                <!-- ── Subdivision edit view ── -->
+                <ng-container *ngIf="editMode === 'subdivision' && selectedSubdivision">
+                    <p class="edit-note">
+                        Editing <strong>{{ selectedSubdivision.name }}</strong>
+                        — <span class="division-badge">{{ selectedSubdivision.division }}</span>
+                        To rename the division type, use the ✏ icon on the group header.
+                    </p>
+
+                    <form class="edit-form" (ngSubmit)="saveSubdivision()">
+                        <div class="field-grid">
+                            <div class="field-group">
+                                <label class="field-label">Code</label>
+                                <input class="field-input" type="text" [(ngModel)]="subForm['code']" name="sub_code" />
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Name</label>
+                                <input class="field-input" type="text" [(ngModel)]="subForm['name']" name="sub_name" />
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Parent (ISO2)</label>
+                                <input class="field-input" type="text" [(ngModel)]="subForm['parent']"
+                                    name="sub_parent" />
+                            </div>
+                        </div>
+
+                        <div class="form-footer">
+                            <div class="save-feedback">
+                                <span class="save-success" *ngIf="subSaveSuccess">✓ Saved</span>
+                                <span class="save-error" *ngIf="subSaveError">⚠ {{ subSaveError }}</span>
+                            </div>
+                            <div style="display:flex;gap:.75rem">
+                                <button class="btn btn-secondary" type="button"
+                                    (click)="clearSubdivision()">Back</button>
+                                <button class="btn btn-primary" type="submit" [disabled]="savingSubdivision">
+                                    {{ savingSubdivision ? 'Saving…' : 'Save Subdivision' }}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </ng-container>
+            </div>
+
+            <!-- Placeholder when no country selected -->
+            <div class="edit-placeholder glass-panel" *ngIf="!selectedCountry && !loadingCountries">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path
+                        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
+                <p>Select a country from the list to edit its record</p>
+            </div>
+
+        </div>
+    </div>
+
+</div>
