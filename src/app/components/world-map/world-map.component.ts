@@ -47,11 +47,9 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
             const palette = this.themeService.selectedPaletteName();
 
             if (this.map && this.mapReady) {
-                // Defer by one task so ThemeService's applyTheme() effect has
-                // already flushed its CSS-variable updates before we read them
-                // with getCssVar(). Without this deferral the two effects race
-                // and we can still see the previous palette's colours.
-                setTimeout(() => this.switchMapStyle(isDark), 0);
+                // If dark mode toggled, switch style (which calls rebuildLayers)
+                // Otherwise just rebuild layers to pick up new colors
+                this.switchMapStyle(isDark);
             }
         });
     }
