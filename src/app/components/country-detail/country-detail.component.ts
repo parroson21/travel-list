@@ -32,8 +32,7 @@ export class CountryDetailComponent implements OnInit {
     statusMenuOpen = false;
     hoveredSiteId: string | null = null;
     hoveredSubdivisionCode: string | null = null;
-    /** Controls the mobile bottom-sheet expansion */
-    bottomSheetExpanded = false;
+
 
     vm$: Observable<{
         country: Country | null,
@@ -156,13 +155,13 @@ export class CountryDetailComponent implements OnInit {
     @HostListener('document:click', ['$event'])
     onDocumentClick(event: MouseEvent) {
         this.statusMenuOpen = false;
-        // Close the site detail panel when clicking outside of it
+        // Close the inline detail when clicking outside of it
         if (this.selectedSite) {
             const target = event.target as HTMLElement;
-            const inPanel = target.closest('.site-detail-panel');
+            const inDetail = target.closest('.inline-detail');
             const inCard = target.closest('.heritage-card');
-            const inMap = target.closest('.country-map-section'); // pin clicks open the panel, don't re-close
-            if (!inPanel && !inCard && !inMap) {
+            const inMap = target.closest('.country-map-section');
+            if (!inDetail && !inCard && !inMap) {
                 this.closeSiteDetails();
             }
         }
@@ -185,6 +184,13 @@ export class CountryDetailComponent implements OnInit {
         this.travel.toggleSubdivisionVisited(subdivisionId, profile, countryId);
     }
 
+    focusSubdivision(subdivision: any) {
+        this.hoveredSubdivisionCode = subdivision.code;
+        if (subdivision.lat && subdivision.lng && this.worldMap) {
+            this.worldMap.flyToSubdivision(subdivision.lat, subdivision.lng);
+        }
+    }
+
     async togglePOIVisited(poiId: string, profile: UserProfile | null, countryId?: string, event?: Event) {
         if (event) {
             event.stopPropagation();
@@ -200,11 +206,23 @@ export class CountryDetailComponent implements OnInit {
 
     openSiteDetails(site: any) {
         this.selectedSite = site;
-        this.bottomSheetExpanded = false;
+        this.activeTab = 'heritage';
         // Fly the map to the selected site
         if (this.worldMap) {
             this.worldMap.flyToSite(site.id_no);
         }
+    }
+
+    navigateSite(direction: 1 | -1, heritageSites: any[]) {
+        if (!this.selectedSite || heritageSites.length === 0) return;
+        const idx = heritageSites.findIndex(s => s.id_no === this.selectedSite.id_no);
+        const next = (idx + direction + heritageSites.length) % heritageSites.length;
+        this.openSiteDetails(heritageSites[next]);
+    }
+
+    getSiteIndex(heritageSites: any[]): number {
+        if (!this.selectedSite) return 0;
+        return heritageSites.findIndex(s => s.id_no === this.selectedSite.id_no);
     }
 
     openSiteFromPin(poiId: string, heritageSites: any[]) {
@@ -224,37 +242,7 @@ export class CountryDetailComponent implements OnInit {
         this.hoveredSubdivisionCode = code;
     }
 
-    // ── Mobile bottom sheet touch gestures ──────────────────
-    private sheetTouchStartY = 0;
-    private sheetContentScrollTop = 0;
 
-    onSheetTouchStart(e: TouchEvent) {
-        this.sheetTouchStartY = e.touches[0].clientY;
-    }
-
-    onSheetTouchEnd(e: TouchEvent) {
-        const deltaY = e.changedTouches[0].clientY - this.sheetTouchStartY;
-        const threshold = 50;
-
-        if (deltaY < -threshold) {
-            // Swipe up — expand
-            this.bottomSheetExpanded = true;
-        } else if (deltaY > threshold) {
-            if (this.bottomSheetExpanded) {
-                // Swipe down while expanded — only collapse if content is at top
-                if (this.sheetContentScrollTop <= 0) {
-                    this.bottomSheetExpanded = false;
-                }
-            } else {
-                // Swipe down while peeking — dismiss
-                this.closeSiteDetails();
-            }
-        }
-    }
-
-    onSheetContentScroll(e: Event) {
-        this.sheetContentScrollTop = (e.target as HTMLElement).scrollTop;
-    }
 
     private pluralizeDivisionType(type: string): string {
         const capitalized = type.charAt(0).toUpperCase() + type.slice(1);

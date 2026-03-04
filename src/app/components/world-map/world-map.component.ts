@@ -275,6 +275,18 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
     }
 
     /**
+     * Fly the map to a subdivision by lat/lng
+     */
+    flyToSubdivision(lat: number, lng: number) {
+        if (!this.map) return;
+        this.map.flyTo({
+            center: [lng, lat],
+            zoom: 7,
+            essential: true
+        });
+    }
+
+    /**
      * Highlight (or un-highlight) a heritage site pin
      */
     private updateSiteHighlight() {

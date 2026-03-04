@@ -1,11 +1,15 @@
+/* ── Page shell: full viewport height, no scroll ── */
 .country-detail-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-    overflow-x: hidden;
-    width: 100%
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 160px);
+    overflow: hidden;
+    padding: 1rem;
+    gap: .75rem;
+    box-sizing: border-box;
 }
 
+/* ── Back button (floating) ── */
 .back-btn {
     position: fixed;
     top: 5.5rem;
@@ -21,7 +25,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, .3);
+    box-shadow: 0 2px 12px rgba(0,0,0,.3);
     transition: background .2s ease, transform .2s ease
 }
 
@@ -30,9 +34,68 @@
     transform: translateX(-2px)
 }
 
+/* ── Mobile top-right group: chip + status FAB (hidden on desktop) ── */
+.mobile-top-right {
+    display: none;
+    position: fixed;
+    top: 5.5rem;
+    right: 1rem;
+    z-index: 100;
+    align-items: center;
+    gap: .5rem;
+}
+
+/* ── Mobile status FAB ── */
+.mobile-status-fab {
+    display: block;
+    position: relative;
+    top: auto;
+    left: auto;
+}
+
+.mobile-status-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border);
+    background: var(--bg-card);
+    color: var(--text-main);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,.3);
+    transition: background .2s ease, transform .2s ease
+}
+
+.mobile-status-btn.visited {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary)
+}
+
+.mobile-status-btn.planned {
+    background: var(--bg-card);
+    color: var(--text-muted);
+    border-color: var(--glass-border);
+    border-style: dotted;
+}
+
+.mobile-status-btn:hover {
+    background: var(--glass-hover)
+}
+
+.mobile-status-menu {
+    position: absolute;
+    right: 0;
+    left: auto;
+    top: calc(100% + .5rem);
+}
+
+/* ── Country Header ── */
 .country-header {
     padding: 1.25rem 1.5rem;
-    margin-bottom: 1.25rem;
+    flex-shrink: 0;
     position: relative;
     z-index: 10
 }
@@ -40,20 +103,26 @@
 .header-main {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: .75rem;
     justify-content: space-between
 }
 
 .country-title-section {
     display: flex;
     align-items: center;
-    gap: .75rem;
+    gap: .6rem;
     flex: 1;
     min-width: 0
 }
 
+/* When country-title-section is a direct child of the container
+   (the mobile chip), hide it on desktop */
+.country-detail-container > .mobile-top-right .country-title-section {
+    display: flex;
+}
+
 .country-title {
-    font-size: 1.75rem;
+    font-size: 1.35rem;
     margin: 0;
     color: var(--text-main);
     white-space: nowrap;
@@ -63,11 +132,12 @@
 }
 
 .country-emoji {
-    font-size: 2rem;
+    font-size: 1.6rem;
     line-height: 1;
     flex-shrink: 0
 }
 
+/* ── Status button ── */
 .btn-visited {
     padding: .55rem 1.1rem;
     border-radius: 10px;
@@ -97,17 +167,18 @@
 }
 
 .btn-visited.planned {
-    background: rgba(128, 128, 128, .08);
+    background: rgba(128,128,128,.08);
     border-color: var(--glass-border);
     border-style: dashed;
     color: var(--text-muted)
 }
 
 .btn-visited.planned:hover {
-    background: rgba(128, 128, 128, .16);
+    background: rgba(128,128,128,.16);
     color: var(--text-main)
 }
 
+/* ── Status dropdown ── */
 .status-dropdown-wrap {
     position: relative;
     flex-shrink: 0
@@ -137,7 +208,7 @@
     border-radius: 10px;
     padding: .35rem;
     z-index: 1100;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+    box-shadow: 0 8px 24px rgba(0,0,0,.25);
     display: flex;
     flex-direction: column;
     gap: .1rem;
@@ -175,7 +246,7 @@
 }
 
 .status-option.active {
-    background: rgba(var(--primary-rgb), .12);
+    background: rgba(var(--primary-rgb),.12);
     color: var(--primary);
     font-weight: 600
 }
@@ -191,10 +262,11 @@
 }
 
 .status-remove:hover {
-    background: rgba(239, 68, 68, .1);
+    background: rgba(239,68,68,.1);
     color: #ef4444
 }
 
+/* ── Info toggle / grid ── */
 .info-toggle {
     display: flex;
     align-items: center;
@@ -250,136 +322,57 @@
     font-weight: 500
 }
 
-/* ── Map wrapper — detail panel floats over it as an overlay ── */
-.map-detail-layout {
-    position: relative;
-    margin-bottom: 1.25rem
+/* ── Main split: map | right panel ── */
+.page-split {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1rem;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
 }
 
-/* Map always takes the full width — the panel never pushes it */
+/* ── Map section ── */
 .country-map-section {
-    padding: 1rem;
-    width: 100%
+    overflow: hidden;
+    height: 100%
 }
 
-/* ── Floating detail panel — fixed to right side of viewport ── */
-.site-detail-panel {
-    position: fixed;
-    top: 5.5rem;
-    right: 0;
-    width: 320px;
-    height: auto;
-    max-height: calc(100vh - 6.5rem);
+/* ── Right panel: tabs only ── */
+.right-panel {
     display: flex;
     flex-direction: column;
-    padding: 0;
+    min-height: 0;
     overflow: hidden;
-    background: var(--bg-card);
-    border-left: 1px solid var(--glass-border);
-    border-top: 1px solid var(--glass-border);
-    border-bottom: 1px solid var(--glass-border);
-    border-radius: 14px 0 0 14px;
-    box-shadow: -4px 4px 24px rgba(0, 0, 0, .25);
-    z-index: 200;
-    animation: slideInPanel .2s ease
 }
 
-@keyframes slideInPanel {
-    from {
-        opacity: 0;
-        transform: translateY(-8px)
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0)
-    }
-}
-
-.detail-panel-header {
-    padding: 1.25rem 1.25rem .75rem;
-    border-bottom: 1px solid var(--glass-border)
-}
-
-.detail-panel-title-row {
+/* ── Tabs panel ── */
+.tabs-panel {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: .5rem;
-    margin-bottom: .6rem
-}
-
-.detail-close-btn {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 1px solid var(--glass-border);
-    background: var(--bg-card);
-    color: var(--text-muted);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: background .15s ease, color .15s ease
-}
-
-.detail-close-btn:hover {
-    background: var(--glass-hover);
-    color: var(--text-main)
-}
-
-.detail-panel-name {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: var(--text-main);
-    margin: 0;
-    line-height: 1.35
-}
-
-.detail-panel-body {
-    padding: 1rem 1.25rem;
+    flex-direction: column;
     flex: 1;
-    overflow-y: auto
-}
-
-.detail-panel-desc {
-    font-size: .875rem;
-    color: var(--text-muted);
-    line-height: 1.65;
-    margin: 0 0 1.25rem
-}
-
-.detail-panel-actions {
-    display: flex;
-    gap: .75rem
-}
-
-.mobile-bottom-sheet {
-    display: none
-}
-
-.tabs-container {
-    margin-bottom: 2rem
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
 }
 
 .tabs {
     display: flex;
     gap: .5rem;
     padding: .4rem;
-    margin-bottom: 1.25rem;
+    flex-shrink: 0;
     flex-wrap: wrap
 }
 
 .tab-btn {
     flex: 1 1 auto;
-    min-width: 120px;
-    padding: .75rem 1rem;
+    min-width: 100px;
+    padding: .6rem .75rem;
     border: none;
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
-    font-size: .9rem;
+    font-size: .85rem;
     font-weight: 600;
     border-radius: 8px;
     transition: all .2s ease;
@@ -403,24 +396,131 @@
     background: var(--glass-border);
     padding: .15rem .55rem;
     border-radius: 10px;
-    font-size: .8rem;
+    font-size: .78rem;
     font-weight: 700
 }
 
 .tab-btn.active .tab-count {
-    background: rgba(255, 255, 255, .3)
+    background: rgba(255,255,255,.3)
 }
 
-.tab-content {
-    min-height: 300px
+/* ── Scrollable tab content ── */
+.tab-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: .5rem .6rem;
 }
 
 .tab-panel {
-    animation: fadeIn .3s ease-in
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    animation: fadeIn .3s ease-in;
 }
 
+/* ── Inline site detail (replaces list when a site is open) ── */
+.inline-detail {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.inline-detail-header {
+    padding: .75rem .75rem .5rem;
+    border-bottom: 1px solid var(--glass-border);
+    flex-shrink: 0;
+}
+
+.inline-detail-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .5rem;
+}
+
+.inline-detail-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0 0 .5rem;
+    line-height: 1.35
+}
+
+.detail-close-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background .15s ease, color .15s ease
+}
+
+.detail-close-btn:hover {
+    background: var(--glass-hover);
+    color: var(--text-main)
+}
+
+/* ── Prev / Next nav ── */
+.panel-nav {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.panel-nav-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s ease, color .15s ease;
+}
+
+.panel-nav-btn:hover {
+    background: var(--glass-hover);
+    color: var(--text-main)
+}
+
+.panel-nav-index {
+    font-size: .78rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    min-width: 2.5rem;
+    text-align: center;
+}
+
+.inline-detail-body {
+    padding: .75rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.inline-detail-footer {
+    padding: .75rem;
+    border-top: 1px solid var(--glass-border);
+    flex-shrink: 0;
+    display: flex;
+    gap: .75rem;
+}
+
+/* ── Subdivision groups ── */
 .subdivision-group {
-    margin-bottom: 1.5rem
+    margin-bottom: 1.25rem
 }
 
 .division-type-header {
@@ -434,42 +534,41 @@
     border-bottom: 1px solid var(--glass-border)
 }
 
+/* ── Item grid ── */
 .items-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.25rem
+    grid-template-columns: 100%;
+    gap: .6rem
 }
 
 .item-card {
-    padding: 1rem 1.25rem;
+    padding: .65rem .75rem;
     cursor: pointer;
     transition: all .2s ease;
     position: relative;
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: .5rem;
     min-width: 0
 }
 
 .item-card:hover,
 .item-card.hovered {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px var(--shadow-color);
     background: var(--glass-hover)
 }
 
 .item-card.visited {
-    background: rgba(var(--primary-rgb), .1);
-    border-color: rgba(var(--primary-rgb), .4)
+    background: rgba(var(--primary-rgb),.1);
+    border-color: rgba(var(--primary-rgb),.4)
 }
 
 .item-card.selected {
     border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), .3)
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb),.3)
 }
 
 .item-name {
-    font-size: 1rem;
+    font-size: .9rem;
     font-weight: 600;
     color: var(--text-main);
     flex: 1;
@@ -479,27 +578,25 @@
     min-width: 0
 }
 
+/* ── Visited checkbox button ── */
 .visit-indicator-btn {
-    width: 32px;
-    height: 32px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     background: var(--glass-border);
     border: 1px solid var(--glass-border);
     transition: all .2s ease;
-    position: absolute;
-    top: .75rem;
-    right: .75rem;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    z-index: 5
 }
 
 .visit-indicator-btn::after {
     content: '✓';
     color: #fff;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 700;
     opacity: 0;
     transition: opacity .2s ease
@@ -508,7 +605,7 @@
 .visit-indicator-btn.visited {
     background: var(--primary);
     border-color: var(--primary);
-    box-shadow: 0 0 10px rgba(var(--primary-rgb), .5)
+    box-shadow: 0 0 8px rgba(var(--primary-rgb),.5)
 }
 
 .visit-indicator-btn.visited::after {
@@ -521,7 +618,6 @@
     transform: scale(1.1)
 }
 
-/* On card hover, nudge the button to show it's clickable without using primary colour */
 .item-card:hover .visit-indicator-btn:not(.visited),
 .item-card.hovered .visit-indicator-btn:not(.visited) {
     border-color: var(--text-muted);
@@ -532,17 +628,12 @@
     background: var(--primary-hover)
 }
 
-.heritage-card {
-    padding-right: 3.5rem
-}
-
-.heritage-header {
+/* ── Heritage cards ── */
+.heritage-card-right {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: .75rem;
-    margin-bottom: .4rem;
-    min-width: 0
+    align-items: center;
+    gap: .5rem;
+    flex-shrink: 0;
 }
 
 .heritage-badge {
@@ -555,36 +646,32 @@
 }
 
 .badge-cultural {
-    background: rgba(74, 144, 217, .15);
+    background: rgba(74,144,217,.15);
     color: #4A90D9;
-    border: 1px solid rgba(74, 144, 217, .3)
+    border: 1px solid rgba(74,144,217,.3)
 }
 
 .badge-natural {
-    background: rgba(39, 174, 96, .15);
+    background: rgba(39,174,96,.15);
     color: #27AE60;
-    border: 1px solid rgba(39, 174, 96, .3)
+    border: 1px solid rgba(39,174,96,.3)
 }
 
 .badge-mixed {
-    background: rgba(230, 126, 34, .15);
+    background: rgba(230,126,34,.15);
     color: #E67E22;
-    border: 1px solid rgba(230, 126, 34, .3)
+    border: 1px solid rgba(230,126,34,.3)
 }
 
-.heritage-description {
-    font-size: .85rem;
+/* ── Detail description (inside inline-detail-body) ── */
+.detail-panel-desc {
+    font-size: .875rem;
     color: var(--text-muted);
-    line-height: 1.5;
-    margin: 0;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    word-break: break-word
+    line-height: 1.65;
+    margin: 0
 }
 
+/* ── Empty state ── */
 .empty-state {
     padding: 2rem;
     text-align: center
@@ -596,149 +683,169 @@
     margin: 0
 }
 
-@media(max-width:900px) {
-
-    /* Floating overlay panel switches to rendering below the map */
-    .site-detail-panel {
-        position: static;
-        width: 100%;
-        max-height: none;
-        border-radius: 14px;
-        margin-top: 1rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, .2)
-    }
-
-    /* On mobile (<=600px) hide the static panel and use the bottom sheet */
-}
-
-@media(max-width:600px) {
-    .site-detail-panel {
-        display: none
-    }
-
-    /* Show mobile bottom sheet */
-    .mobile-bottom-sheet {
-        display: flex;
-        flex-direction: column;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 500;
-        background: var(--bg-card);
-        border-top: 1px solid var(--glass-border);
-        border-radius: 18px 18px 0 0;
-        box-shadow: 0 -8px 32px rgba(0, 0, 0, .25);
-        /* Start peeked — shows handle + badge + title + partial description */
-        max-height: 45vh;
-        transition: max-height .3s cubic-bezier(.4, 0, .2, 1);
-        /* Let vertical swipes pass through to our handler, block horizontal */
-        touch-action: pan-y
-    }
-
-    .mobile-bottom-sheet.expanded {
-        max-height: 88vh
-    }
-
-    .sheet-handle-wrap {
-        padding: .75rem;
-        display: flex;
-        justify-content: center;
-        flex-shrink: 0;
-        /* Prevent browser from stealing the drag gesture on the handle */
-        touch-action: none;
-        user-select: none
-    }
-
-    .sheet-handle {
-        width: 44px;
-        height: 4px;
-        background: var(--glass-border);
-        border-radius: 2px
-    }
-
-    .sheet-content {
-        overflow-y: auto;
-        flex: 1;
-        /* Stop iOS rubber-banding from conflicting with the collapse gesture */
-        overscroll-behavior: contain
-    }
-
-    .sheet-header {
-        padding: 0 1.25rem .9rem;
-        border-bottom: 1px solid var(--glass-border)
-    }
-
-    .sheet-title-row {
-        display: flex;
-        align-items: flex-start;
-        gap: .5rem
-    }
-
-    .sheet-name {
-        font-size: .95rem;
-        font-weight: 700;
-        color: var(--text-main);
-        margin: 0;
-        flex: 1;
-        min-width: 0;
-        line-height: 1.35
-    }
-
-    .sheet-body {
-        padding: 1rem 1.25rem
-    }
-}
-
-@media(max-width:768px) {
-    .country-detail-container {
-        padding: 1.25rem .75rem .75rem
-    }
-
-    .tabs-container {
-        /* Small baseline breathing room */
-        padding-bottom: 1.5rem
-    }
-
-    /* When the bottom sheet is open, push content up so the last item is reachable */
-    .country-detail-container.sheet-open .tabs-container {
-        padding-bottom: 1.5rem
-    }
-
-    .items-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: .75rem
-    }
-}
-
-@media(max-width:480px) {
-    .items-grid {
-        grid-template-columns: 100%
-    }
-
-    .country-header {
-        padding: 1rem
-    }
-
-    .header-main {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem
-    }
-
-    .btn-visited {
-        width: 100%
-    }
-}
-
+/* ── Fade animation ── */
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(8px)
+    from { opacity: 0; transform: translateY(8px) }
+    to { opacity: 1; transform: translateY(0) }
+}
+
+/* ── Tablet ── */
+@media(max-width:900px) {
+    .country-detail-container {
+        height: calc(100dvh - 120px);
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0)
+    .page-split {
+        grid-template-columns: 1fr 300px;
+    }
+}
+
+/* ── Mobile ── */
+@media(max-width:600px) {
+    .country-detail-container {
+        height: calc(100dvh - 80px);
+        overflow: hidden;
+        padding: .6rem;
+    }
+
+    /* Show the grouped chip + status button */
+    .mobile-top-right {
+        display: flex;
+    }
+
+    /* Chip pill styling inside the wrapper */
+    .mobile-top-right .country-title-section {
+        display: flex;
+        background: var(--bg-card);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: .3rem .7rem .3rem .4rem;
+        gap: .4rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,.3);
+        max-width: calc(100vw - 8rem);
+    }
+
+    .mobile-top-right .country-title {
+        font-size: .85rem;
+        font-weight: 600;
+    }
+
+    .mobile-top-right .country-emoji {
+        font-size: 1.1rem;
+    }
+
+    /* Country header fully hidden on mobile */
+    .country-header {
+        display: none;
+    }
+
+    /* Stack vertically, distribute by flex proportion */
+    .page-split {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        gap: .6rem;
+    }
+
+    /* Map takes ~50% of available height */
+    .country-map-section {
+        flex: 3;
+        min-height: 0;
+    }
+
+    /* Right panel takes ~50% */
+    .right-panel {
+        flex: 3;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: .4rem;
+        overflow: hidden;
+    }
+
+    /* ── Bigger tab buttons ── */
+    .tab-btn {
+        padding: .75rem .6rem;
+        font-size: .95rem;
+    }
+
+    .tabs {
+        gap: .4rem;
+        padding: .35rem;
+    }
+
+    .tab-scroll {
+        padding: .4rem .35rem;
+    }
+
+    /* ── Cards: more room to tap ── */
+    .items-grid {
+        grid-template-columns: 100%;
+        gap: .5rem;
+    }
+
+    .item-card {
+        padding: .85rem 1rem;
+        min-height: 48px; /* iOS recommended minimum */
+    }
+
+    .item-name {
+        font-size: 1rem;
+    }
+
+    /* ── Bigger visited checkbox ── */
+    .visit-indicator-btn {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+    }
+
+    .visit-indicator-btn::after {
+        font-size: 15px;
+    }
+
+    /* ── Inline detail header ── */
+    .inline-detail-header {
+        padding: .9rem .9rem .6rem;
+    }
+
+    .inline-detail-name {
+        font-size: 1.05rem;
+    }
+
+    .detail-close-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    /* ── Footer: compact single row ── */
+    .inline-detail-footer {
+        flex-direction: row;
+        gap: .5rem;
+        padding: .75rem;
+        align-items: center;
+    }
+
+    .panel-nav {
+        justify-content: flex-start;
+        gap: .75rem;
+    }
+
+    .panel-nav-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .panel-nav-index {
+        font-size: .9rem;
+        min-width: 4rem;
+    }
+
+    /* Visited button fills remaining space in the row */
+    .inline-detail-footer .btn-visited {
+        flex: 1;
+        justify-content: center;
+        padding: .7rem .5rem;
+        font-size: .95rem;
     }
 }
