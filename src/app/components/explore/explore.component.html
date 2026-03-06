@@ -1,75 +1,102 @@
 <div class="explore-container fade-in" *ngIf="vm$ | async as vm">
 
-    <!-- Filter bar: single row -->
+    <!-- ── Filter bar ── -->
     <div class="filter-bar">
-        <div class="search-wrapper">
-            <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <input type="text" class="search-input" placeholder="Search countries..." [ngModel]="searchQuery"
-                (ngModelChange)="onSearchChange($event)">
+
+        <!-- Search type dropdown + input: always visible together -->
+        <div class="search-row">
+
+            <!-- Custom search-type dropdown -->
+            <div class="search-type-wrap">
+                <button class="search-type-btn" (click)="dropdownOpen = !dropdownOpen; $event.stopPropagation()"
+                    [class.open]="dropdownOpen">
+                    {{ modeLabels[searchMode] }}
+                    <svg class="select-caret" [class.open]="dropdownOpen" width="11" height="11" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                </button>
+                <div class="search-type-menu" [class.open]="dropdownOpen" (click)="$event.stopPropagation()">
+                    <button class="search-type-option" [class.active]="searchMode === 'countries'"
+                        (click)="selectMode('countries')">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="2" y1="12" x2="22" y2="12" />
+                            <path
+                                d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                        </svg>
+                        Country
+                    </button>
+                    <button class="search-type-option" [class.active]="searchMode === 'heritage'"
+                        (click)="selectMode('heritage')">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round">
+                            <line x1="3" y1="22" x2="21" y2="22" />
+                            <line x1="6" y1="18" x2="6" y2="11" />
+                            <line x1="10" y1="18" x2="10" y2="11" />
+                            <line x1="14" y1="18" x2="14" y2="11" />
+                            <line x1="18" y1="18" x2="18" y2="11" />
+                            <polygon points="12 2 20 7 4 7 12 2" />
+                        </svg>
+                        Heritage Site
+                    </button>
+                    <button class="search-type-option" [class.active]="searchMode === 'users'"
+                        (click)="selectMode('users')">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        User
+                    </button>
+                </div>
+            </div>
+
+            <!-- Country search input -->
+            <div class="search-wrapper" *ngIf="searchMode === 'countries'">
+                <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input type="text" class="search-input" placeholder="Search countries…" [ngModel]="searchQuery"
+                    (ngModelChange)="onSearchChange($event)">
+            </div>
+
+            <!-- Heritage search input -->
+            <div class="search-wrapper" *ngIf="searchMode === 'heritage'">
+                <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input type="text" class="search-input" placeholder="Search heritage sites…" [ngModel]="heritageQuery"
+                    (ngModelChange)="onHeritageQueryChange($event, vm.allCountries)" autofocus>
+            </div>
+
+            <!-- User search input -->
+            <div class="search-wrapper search-wrapper-user" *ngIf="searchMode === 'users'">
+                <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input type="text" class="search-input" placeholder="Search by name or email…" [ngModel]="userQuery"
+                    (ngModelChange)="onUserQueryChange($event)" autofocus>
+                <svg *ngIf="userSearching" class="search-spinner" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5">
+                    <path
+                        d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                </svg>
+            </div>
         </div>
 
-        <!-- Desktop: chips inline -->
-        <div class="chips-row desktop-chips">
-            <button class="filter-chip visited-chip" [class.active]="vm.visitedFilter !== 'all'"
-                [class.planned]="vm.visitedFilter === 'planned'" [class.unvisited]="vm.visitedFilter === 'unvisited'"
-                (click)="toggleVisitedOnly()">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round">
-                    @if (vm.visitedFilter === 'unvisited') {
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="15" y1="9" x2="9" y2="15" />
-                    <line x1="9" y1="9" x2="15" y2="15" />
-                    } @else if (vm.visitedFilter === 'planned') {
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 8 12 12 14 14" />
-                    } @else {
-                    <polyline points="20 6 9 17 4 12" />
-                    }
-                </svg>
-                {{ vm.visitedFilter === 'all' ? 'Status' : vm.visitedFilter === 'visited' ? 'Visited' : vm.visitedFilter
-                === 'planned' ? 'Planned' : 'Unvisited' }}
-            </button>
-            <div class="chip-divider"></div>
-            @for (continent of vm.continents; track continent.id) {
-            <button class="filter-chip continent-chip"
-                [class.active]="isContinentActive(continent.name, vm.selectedContinents)"
-                (click)="toggleContinent(continent.name)">
-                {{ continent.name }}
-                <span class="chip-count">{{ vm.continentCounts.get(continent.name) || 0 }}</span>
-            </button>
-            }
-            @if (vm.selectedContinents.length > 0 || vm.visitedFilter !== 'all' || searchQuery) {
-            <button class="filter-chip clear-all-btn" (click)="clearAllFilters()" title="Clear all filters">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                    stroke-linecap="round">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-            </button>
-            }
-        </div>
+        <!-- Country filters (only in country mode) -->
+        <ng-container *ngIf="searchMode === 'countries'">
 
-        <!-- Mobile: toggle button -->
-        <button class="mobile-filter-toggle" (click)="filtersOpen = !filtersOpen">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round">
-                <line x1="4" y1="6" x2="20" y2="6" />
-                <line x1="8" y1="12" x2="16" y2="12" />
-                <line x1="11" y1="18" x2="13" y2="18" />
-            </svg>
-            Filters
-            @if (vm.visitedFilter !== 'all' || vm.selectedContinents.length > 0) {
-            <span class="active-dot"></span>
-            }
-        </button>
-
-        <!-- Mobile: collapsible chips + recent -->
-        <div class="mobile-filters" [class.open]="filtersOpen">
-            <div class="chips-row">
+            <!-- Desktop chips -->
+            <div class="chips-row desktop-chips">
                 <button class="filter-chip visited-chip" [class.active]="vm.visitedFilter !== 'all'"
                     [class.planned]="vm.visitedFilter === 'planned'"
                     [class.unvisited]="vm.visitedFilter === 'unvisited'" (click)="toggleVisitedOnly()">
@@ -99,7 +126,7 @@
                 </button>
                 }
                 @if (vm.selectedContinents.length > 0 || vm.visitedFilter !== 'all' || searchQuery) {
-                <button class="filter-chip clear-all-btn" (click)="clearAllFilters()" title="Clear all filters">
+                <button class="filter-chip clear-all-btn" (click)="clearAllFilters()" title="Clear filters">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
                         stroke-linecap="round">
                         <line x1="18" y1="6" x2="6" y2="18" />
@@ -109,27 +136,82 @@
                 }
             </div>
 
-            <!-- Recently Viewed (inside mobile panel) -->
-            @if (vm.recentCountries.length > 0) {
-            <div class="recent-viewed-strip">
-                <span class="recent-label">Recently Viewed</span>
-                @for (country of vm.recentCountries; track country.id) {
-                <a [routerLink]="['/explore', country.id]" class="recent-pill" (click)="filtersOpen = false">
-                    <span class="flag-emoji">{{ country.emoji }}</span>
-                    <span class="recent-pill-name">{{ country.name }}</span>
-                    @if (isCountryVisited(country.id, vm.profile)) {
-                    <span class="recent-pill-dot" title="Visited"></span>
+            <!-- Mobile filter toggle -->
+            <button class="mobile-filter-toggle" (click)="filtersOpen = !filtersOpen">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round">
+                    <line x1="4" y1="6" x2="20" y2="6" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                    <line x1="11" y1="18" x2="13" y2="18" />
+                </svg>
+                Filters
+                @if (vm.visitedFilter !== 'all' || vm.selectedContinents.length > 0) {
+                <span class="active-dot"></span>
+                }
+            </button>
+
+            <!-- Mobile: collapsible chips + recent -->
+            <div class="mobile-filters" [class.open]="filtersOpen">
+                <div class="chips-row">
+                    <button class="filter-chip visited-chip" [class.active]="vm.visitedFilter !== 'all'"
+                        [class.planned]="vm.visitedFilter === 'planned'"
+                        [class.unvisited]="vm.visitedFilter === 'unvisited'" (click)="toggleVisitedOnly()">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round">
+                            @if (vm.visitedFilter === 'unvisited') {
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="15" y1="9" x2="9" y2="15" />
+                            <line x1="9" y1="9" x2="15" y2="15" />
+                            } @else if (vm.visitedFilter === 'planned') {
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 8 12 12 14 14" />
+                            } @else {
+                            <polyline points="20 6 9 17 4 12" />
+                            }
+                        </svg>
+                        {{ vm.visitedFilter === 'all' ? 'Status' : vm.visitedFilter === 'visited' ? 'Visited' :
+                        vm.visitedFilter === 'planned' ? 'Planned' : 'Unvisited' }}
+                    </button>
+                    <div class="chip-divider"></div>
+                    @for (continent of vm.continents; track continent.id) {
+                    <button class="filter-chip continent-chip"
+                        [class.active]="isContinentActive(continent.name, vm.selectedContinents)"
+                        (click)="toggleContinent(continent.name)">
+                        {{ continent.name }}
+                        <span class="chip-count">{{ vm.continentCounts.get(continent.name) || 0 }}</span>
+                    </button>
                     }
-                </a>
+                    @if (vm.selectedContinents.length > 0 || vm.visitedFilter !== 'all' || searchQuery) {
+                    <button class="filter-chip clear-all-btn" (click)="clearAllFilters()">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="3" stroke-linecap="round">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                    }
+                </div>
+                @if (vm.recentCountries.length > 0) {
+                <div class="recent-viewed-strip">
+                    <span class="recent-label">Recently Viewed</span>
+                    @for (country of vm.recentCountries; track country.id) {
+                    <a [routerLink]="['/explore', country.id]" class="recent-pill" (click)="filtersOpen = false">
+                        <span class="flag-emoji">{{ country.emoji }}</span>
+                        <span class="recent-pill-name">{{ country.name }}</span>
+                        @if (isCountryVisited(country.id, vm.profile)) {
+                        <span class="recent-pill-dot" title="Visited"></span>
+                        }
+                    </a>
+                    }
+                </div>
                 }
             </div>
-            }
-        </div>
-    </div>
+        </ng-container>
 
-    <main class="countries-section">
+    </div><!-- /filter-bar -->
 
-        <!-- Recently Viewed (desktop only) -->
+    <!-- ══ Country results ══════════════════════════════════════════════ -->
+    <main class="countries-section" *ngIf="searchMode === 'countries'">
         @if (vm.recentCountries.length > 0) {
         <div class="recent-viewed-strip desktop-recent">
             <span class="recent-label">Recently Viewed</span>
@@ -145,7 +227,6 @@
         </div>
         }
 
-        <!-- Country groups -->
         @for (group of vm.countryGroups; track group.continent) {
         <div class="continent-section">
             <h2 class="continent-header">{{ group.continent }}</h2>
@@ -163,13 +244,9 @@
                             [class.visited]="getCountryStatus(country.id, vm.profile) === 'visited'"
                             [class.planned]="getCountryStatus(country.id, vm.profile) === 'planned'"
                             (click)="cycleCountryStatus(country.id, vm.profile)">
-                            @if (getCountryStatus(country.id, vm.profile) === 'visited') {
-                            Visited
-                            } @else if (getCountryStatus(country.id, vm.profile) === 'planned') {
-                            Planned
-                            } @else {
-                            Add
-                            }
+                            @if (getCountryStatus(country.id, vm.profile) === 'visited') { Visited
+                            } @else if (getCountryStatus(country.id, vm.profile) === 'planned') { Planned
+                            } @else { Add }
                         </button>
                     </div>
                     <div class="country-body">
@@ -186,6 +263,96 @@
             <p>No countries match your filters.</p>
         </div>
         }
+    </main>
+
+    <!-- ══ Heritage site results ════════════════════════════════════════ -->
+    <main class="search-results-section" *ngIf="searchMode === 'heritage'">
+
+        <div *ngIf="!heritageQuery.trim()" class="search-prompt glass-panel">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" style="color: var(--text-muted)">
+                <line x1="3" y1="22" x2="21" y2="22" />
+                <line x1="6" y1="18" x2="6" y2="11" />
+                <line x1="10" y1="18" x2="10" y2="11" />
+                <line x1="14" y1="18" x2="14" y2="11" />
+                <line x1="18" y1="18" x2="18" y2="11" />
+                <polygon points="12 2 20 7 4 7 12 2" />
+            </svg>
+            <p>Search UNESCO World Heritage Sites by name. Click a result to open its country page.</p>
+        </div>
+
+        <div *ngIf="heritageQuery.trim() && heritageResults.length > 0" class="heritage-results-list">
+            <div *ngFor="let r of heritageResults" class="heritage-result-card glass-panel"
+                (click)="navigateToCountry(r.countryId)">
+                <div class="heritage-result-info">
+                    <span class="heritage-result-name">{{ r.site.name_en }}</span>
+                    <span class="heritage-result-country">
+                        <span class="flag-emoji">{{ r.countryEmoji }}</span> {{ r.countryName }}
+                    </span>
+                </div>
+                <div class="heritage-result-right">
+                    <span class="heritage-badge" [class.badge-cultural]="r.site.category_short === 'C'"
+                        [class.badge-natural]="r.site.category_short === 'N'"
+                        [class.badge-mixed]="r.site.category_short === 'C/N' || r.site.category_short === 'N/C'">
+                        {{ r.site.category_short === 'C' ? 'Cultural' : r.site.category_short === 'N' ? 'Natural' :
+                        'Mixed' }}
+                    </span>
+                    <svg class="result-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="heritageQuery.trim() && heritageResults.length === 0" class="search-prompt glass-panel">
+            <p>No heritage sites found for "<strong>{{ heritageQuery }}</strong>".</p>
+        </div>
 
     </main>
+
+    <!-- ══ User search results ══════════════════════════════════════════ -->
+    <main class="search-results-section" *ngIf="searchMode === 'users'">
+
+        <div *ngIf="!userQuery.trim()" class="search-prompt glass-panel">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" style="color: var(--text-muted)">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+            </svg>
+            <p>Search for other travelers by name or email to view their profile and travel map.</p>
+        </div>
+
+        <div *ngIf="userQuery.trim() && userSearching" class="search-status">Searching…</div>
+
+        <div *ngIf="!userSearching && userSearchDone" class="user-results-list">
+            <div *ngFor="let user of userResults" class="user-result-card glass-panel"
+                (click)="navigateToUser(user.uid)">
+                <div class="user-result-avatar">
+                    <img *ngIf="user.photoURL" [src]="user.photoURL" class="user-avatar-img" alt="avatar"
+                        referrerpolicy="no-referrer" />
+                    <div *ngIf="!user.photoURL" class="user-avatar-fallback">
+                        {{ (user.displayName || user.email || '?').charAt(0).toUpperCase() }}
+                    </div>
+                </div>
+                <div class="user-result-info">
+                    <span class="user-result-name">{{ user.displayName || 'Traveler' }}</span>
+                    <span class="user-result-email">{{ user.email }}</span>
+                </div>
+                <div class="user-result-stats">
+                    <span class="user-stat-pill">🌍 {{ (user.visitedCountries || []).length }} countries</span>
+                </div>
+                <svg class="result-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </div>
+
+            <div *ngIf="userResults.length === 0" class="search-prompt glass-panel">
+                <p>No users found for "<strong>{{ userQuery }}</strong>".</p>
+            </div>
+        </div>
+
+    </main>
+
 </div>

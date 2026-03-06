@@ -1,0 +1,247 @@
+<div class="profile-container" *ngIf="vm$ | async as vm">
+
+    <!-- Not found -->
+    <div *ngIf="!vm.targetProfile" class="not-found glass-panel">
+        <p>User not found.</p>
+        <button class="back-link" (click)="goBack()">← Go back</button>
+    </div>
+
+    <ng-container *ngIf="vm.targetProfile">
+
+        <!-- Back button -->
+        <button class="back-btn" (click)="goBack()" title="Back">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round">
+                <polyline points="15 18 9 12 15 6" />
+            </svg>
+        </button>
+
+        <!-- ── Hero: map + list side by side ── -->
+        <div class="page-split">
+
+            <!-- Left: World Map (read-only, no POI toggling) -->
+            <div class="profile-map-section glass-panel fade-in">
+                <app-world-map
+                    [visitedCountryNames]="activeTab === 'planned' ? vm.plannedCountryNames : vm.visitedCountryNames"
+                    [plannedCountryNames]="activeTab === 'planned' ? vm.visitedCountryNames : vm.plannedCountryNames"
+                    [focusedCountry]="highlightedCountry" [heritageSites]="vm.heritageSites"
+                    [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true" [height]="'100%'"
+                    [highlightedSiteId]="hoveredSiteId" (poiToggled)="openSiteFromPin($event, vm.heritageSites)">
+                </app-world-map>
+            </div>
+
+            <!-- Right panel -->
+            <div class="right-panel">
+                <div class="tabs-panel glass-panel fade-in">
+
+                    <div class="tabs">
+                        <button class="tab-btn" [class.active]="activeTab === 'countries' || activeTab === 'planned'"
+                            (click)="activeTab === 'heritage' ? setActiveTab('countries') : null">
+                            Countries
+                            <span class="tab-count">{{ vm.visitedCountries.length }}</span>
+                        </button>
+                        <button class="tab-btn" [class.active]="activeTab === 'heritage'"
+                            (click)="setActiveTab('heritage')">
+                            Heritage
+                            <span class="tab-count">{{ vm.visitedHeritageSites.length }}</span>
+                        </button>
+                    </div>
+
+                    <div class="tab-scroll">
+
+                        <!-- Countries tab -->
+                        <div *ngIf="activeTab === 'countries' || activeTab === 'planned'" class="tab-panel fade-in">
+                            <div class="sub-toggle">
+                                <button class="sub-toggle-btn" [class.active]="activeTab === 'countries'"
+                                    (click)="setActiveTab('countries')">Visited</button>
+                                <button class="sub-toggle-btn" [class.active]="activeTab === 'planned'"
+                                    (click)="setActiveTab('planned')">Planned</button>
+                            </div>
+
+                            <ng-container *ngIf="activeTab === 'countries'">
+                                <div class="items-grid">
+                                    <div *ngFor="let country of vm.visitedCountries"
+                                        class="item-card glass-panel country-card" (click)="focusOnMap(country)">
+                                        <span class="country-flag flag-emoji">{{ country.emoji }}</span>
+                                        <div class="item-info">
+                                            <span class="item-name row-link"
+                                                (click)="$event.stopPropagation(); navigateToCountry(country.id)"
+                                                title="Open country page">{{ country.name }}</span>
+                                            <span class="item-sub">{{ country.continent }}</span>
+                                        </div>
+                                        <span class="row-arrow">›</span>
+                                    </div>
+                                </div>
+                                <div *ngIf="vm.visitedCountries.length === 0" class="empty-state glass-panel">
+                                    <p>No countries visited yet.</p>
+                                </div>
+                            </ng-container>
+
+                            <ng-container *ngIf="activeTab === 'planned'">
+                                <div class="items-grid">
+                                    <div *ngFor="let country of vm.plannedCountries"
+                                        class="item-card glass-panel country-card" (click)="focusOnMap(country)">
+                                        <span class="country-flag flag-emoji">{{ country.emoji }}</span>
+                                        <div class="item-info">
+                                            <span class="item-name row-link"
+                                                (click)="$event.stopPropagation(); navigateToCountry(country.id)"
+                                                title="Open country page">{{ country.name }}</span>
+                                            <span class="item-sub">{{ country.continent }}</span>
+                                        </div>
+                                        <span class="row-arrow">›</span>
+                                    </div>
+                                </div>
+                                <div *ngIf="vm.plannedCountries.length === 0" class="empty-state glass-panel">
+                                    <p>No planned countries.</p>
+                                </div>
+                            </ng-container>
+                        </div>
+
+                        <!-- Heritage tab -->
+                        <div *ngIf="activeTab === 'heritage'" class="tab-panel fade-in">
+
+                            <!-- Inline site detail (view-only) -->
+                            <div *ngIf="selectedSite" class="inline-detail fade-in">
+                                <div class="inline-detail-header">
+                                    <div class="inline-detail-title-row">
+                                        <span class="heritage-badge"
+                                            [class.badge-cultural]="selectedSite.category_short === 'C'"
+                                            [class.badge-natural]="selectedSite.category_short === 'N'"
+                                            [class.badge-mixed]="selectedSite.category_short === 'C/N' || selectedSite.category_short === 'N/C'">
+                                            {{ selectedSite.category_short === 'C' ? 'Cultural' :
+                                            selectedSite.category_short === 'N' ? 'Natural' : 'Mixed' }}
+                                        </span>
+                                        <button class="detail-close-btn" (click)="closeSiteDetails()"
+                                            title="Back to list">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                                <line x1="18" y1="6" x2="6" y2="18" />
+                                                <line x1="6" y1="6" x2="18" y2="18" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <h2 class="inline-detail-name">{{ selectedSite.name_en }}</h2>
+                                </div>
+                                <div class="inline-detail-body">
+                                    <p class="detail-panel-desc">{{ selectedSite.short_description_en }}</p>
+                                </div>
+                                <div class="inline-detail-footer" (click)="$event.stopPropagation()">
+                                    <div class="panel-nav">
+                                        <button class="panel-nav-btn"
+                                            (click)="navigateSite(-1, vm.visitedHeritageSites); $event.stopPropagation()"
+                                            title="Previous">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                                <polyline points="15 18 9 12 15 6" />
+                                            </svg>
+                                        </button>
+                                        <span class="panel-nav-index">
+                                            {{ getSiteIndex(vm.visitedHeritageSites) + 1 }} / {{
+                                            vm.visitedHeritageSites.length }}
+                                        </span>
+                                        <button class="panel-nav-btn"
+                                            (click)="navigateSite(1, vm.visitedHeritageSites); $event.stopPropagation()"
+                                            title="Next">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                                <polyline points="9 18 15 12 9 6" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <!-- Read-only: visited badge instead of a toggle button -->
+                                    <span class="viewed-badge">Visited ✓</span>
+                                </div>
+                            </div>
+
+                            <!-- Heritage list -->
+                            <ng-container *ngIf="!selectedSite">
+                                <div *ngIf="vm.visitedHeritageSites.length > 0" class="items-grid">
+                                    <div *ngFor="let h of vm.visitedHeritageSites"
+                                        class="item-card glass-panel heritage-card"
+                                        [class.hovered]="hoveredSiteId === h.site.id_no"
+                                        (mouseenter)="setSiteHover(h.site.id_no)" (mouseleave)="setSiteHover(null)"
+                                        (click)="openSiteDetails(h.site)">
+                                        <div class="item-info">
+                                            <span class="item-name">{{ h.site.name_en }}</span>
+                                            <span class="item-sub">
+                                                <span class="flag-emoji">{{ h.countryEmoji }}</span> {{ h.countryName }}
+                                            </span>
+                                        </div>
+                                        <div class="heritage-card-right">
+                                            <span class="heritage-badge"
+                                                [class.badge-cultural]="h.site.category_short === 'C'"
+                                                [class.badge-natural]="h.site.category_short === 'N'"
+                                                [class.badge-mixed]="h.site.category_short === 'C/N' || h.site.category_short === 'N/C'">
+                                                {{ h.site.category_short === 'C' ? 'Cultural' : h.site.category_short
+                                                === 'N' ? 'Natural' : 'Mixed' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div *ngIf="vm.visitedHeritageSites.length === 0" class="empty-state glass-panel">
+                                    <p>No heritage sites visited yet.</p>
+                                </div>
+                            </ng-container>
+                        </div>
+
+                    </div>
+                </div>
+            </div><!-- /right-panel -->
+        </div><!-- /page-split -->
+
+        <!-- ── User stats section (scroll down) ── -->
+        <div class="stats-section fade-in">
+
+            <!-- Profile header -->
+            <div class="profile-header glass-panel">
+                <div class="profile-avatar-wrap">
+                    <img *ngIf="vm.targetProfile.photoURL" [src]="vm.targetProfile.photoURL" class="profile-avatar"
+                        alt="avatar" referrerpolicy="no-referrer" />
+                    <div *ngIf="!vm.targetProfile.photoURL" class="profile-avatar-fallback">
+                        {{ (vm.targetProfile.displayName || vm.targetProfile.email || '?').charAt(0).toUpperCase() }}
+                    </div>
+                </div>
+                <div class="profile-identity">
+                    <div class="profile-name-row">
+                        <h1 class="profile-name">{{ vm.targetProfile.displayName || 'Traveler' }}</h1>
+                        <span *ngIf="vm.isOwnProfile" class="own-profile-badge">You</span>
+                    </div>
+                    <span class="profile-email">{{ vm.targetProfile.email }}</span>
+                </div>
+            </div>
+
+            <!-- Stat cards -->
+            <div class="stat-cards">
+                <div class="stat-card glass-panel">
+                    <div class="stat-card-value">{{ vm.stats.countriesVisited }}</div>
+                    <div class="stat-card-bar">
+                        <div class="stat-card-bar-fill" [style.width.%]="(vm.stats.countriesVisited / 197) * 100"></div>
+                    </div>
+                    <div class="stat-card-label">Countries Visited</div>
+                    <div class="stat-card-sub">out of 197</div>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-card-value">{{ vm.stats.countriesPlanned }}</div>
+                    <div class="stat-card-label">Countries Planned</div>
+                    <div class="stat-card-sub">upcoming trips</div>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-card-value">{{ vm.stats.poisVisited }}</div>
+                    <div class="stat-card-label">Heritage Sites</div>
+                    <div class="stat-card-sub">visited</div>
+                </div>
+                <div class="stat-card glass-panel">
+                    <div class="stat-card-value">
+                        {{ vm.stats.countriesVisited > 0 ? ((vm.stats.countriesVisited / 197 * 100) | number:'1.1-1') +
+                        '%' : '0%' }}
+                    </div>
+                    <div class="stat-card-label">World Coverage</div>
+                    <div class="stat-card-sub">of all countries</div>
+                </div>
+            </div>
+
+        </div>
+
+    </ng-container>
+
+</div>

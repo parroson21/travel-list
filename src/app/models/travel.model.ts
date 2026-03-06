@@ -45,6 +45,9 @@ export interface Subdivision {
 
 export interface UserProfile {
     uid: string;
+    displayName?: string;
+    email?: string;
+    photoURL?: string;
     visitedCountries: string[]; // List of country IDs
     plannedCountries: string[]; // List of country IDs the user plans to visit
     visitedSubdivisions: string[]; // List of subdivision codes

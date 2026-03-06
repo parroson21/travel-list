@@ -168,7 +168,7 @@ h4,
   background: var(--text-muted);
 }
 
-/* Dashboard: make world-map fill its flex panel container */
+/* Profile: make world-map fill its flex panel container */
 .map-panel app-world-map,
 .map-panel app-world-map .map-wrapper {
   flex: 1;

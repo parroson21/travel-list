@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { POI, Country, UserProfile, Continent, Subdivision } from '../models/travel.model';
-import { Firestore, collection, doc, setDoc, getDocs, updateDoc, arrayUnion, arrayRemove, onSnapshot, query, where, collectionData, writeBatch, deleteDoc } from '@angular/fire/firestore';
+import { Firestore, collection, doc, setDoc, getDocs, getDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot, query, where, writeBatch, orderBy, limit, startAt, endAt } from '@angular/fire/firestore';
 import { Auth, user } from '@angular/fire/auth';
 import { switchMap } from 'rxjs/operators';
 import { of, Observable } from 'rxjs';
@@ -28,10 +28,26 @@ export class TravelService {
                     const unsubscribe = onSnapshot(userDoc, (snapshot) => {
                         this.zone.run(() => {
                             if (snapshot.exists()) {
-                                observer.next(snapshot.data() as UserProfile);
+                                // Keep identity fields up to date
+                                const data = snapshot.data() as UserProfile;
+                                const needsUpdate =
+                                    data.displayName !== (u.displayName || '') ||
+                                    data.email !== (u.email || '') ||
+                                    data.photoURL !== (u.photoURL || '');
+                                if (needsUpdate) {
+                                    updateDoc(userDoc, {
+                                        displayName: u.displayName || '',
+                                        email: u.email || '',
+                                        photoURL: u.photoURL || ''
+                                    });
+                                }
+                                observer.next(data);
                             } else {
                                 const newProfile: UserProfile = {
                                     uid: u.uid,
+                                    displayName: u.displayName || '',
+                                    email: u.email || '',
+                                    photoURL: u.photoURL || '',
                                     visitedCountries: [],
                                     plannedCountries: [],
                                     visitedSubdivisions: [],
@@ -45,6 +61,34 @@ export class TravelService {
                 });
             })
         );
+    }
+
+    /** Get any user's profile by UID (read-only) */
+    getUserProfileById(uid: string): Observable<UserProfile | null> {
+        const userDoc = doc(this.firestore, `users/${uid}`);
+        return new Observable(observer => {
+            const unsubscribe = onSnapshot(userDoc, snap => {
+                this.zone.run(() =>
+                    observer.next(snap.exists() ? snap.data() as UserProfile : null)
+                );
+            }, err => observer.error(err));
+            return () => unsubscribe();
+        });
+    }
+
+    /** Search users by display name or email (client-side filter) */
+    async searchUsers(query: string): Promise<UserProfile[]> {
+        if (!query.trim()) return [];
+        const q = query.toLowerCase();
+        const usersCol = collection(this.firestore, 'users');
+        const snap = await getDocs(usersCol);
+        return snap.docs
+            .map(d => d.data() as UserProfile)
+            .filter(p =>
+                (p.displayName || '').toLowerCase().includes(q) ||
+                (p.email || '').toLowerCase().includes(q)
+            )
+            .slice(0, 20);
     }
 
     async markCountryVisited(countryId: string, visited: boolean) {

@@ -22,11 +22,24 @@
                 (click)="openStatusMenu($event)"
                 [title]="getCountryStatus(vm.country?.id || '', vm.profile) === 'visited' ? 'Visited' : getCountryStatus(vm.country?.id || '', vm.profile) === 'planned' ? 'Planned' : 'Add'">
                 @if (getCountryStatus(vm.country?.id || '', vm.profile) === 'visited') {
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>
                 } @else if (getCountryStatus(vm.country?.id || '', vm.profile) === 'planned') {
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
                 } @else {
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
                 }
             </button>
             <div class="status-menu mobile-status-menu" [class.open]="statusMenuOpen">
@@ -37,9 +50,9 @@
                     [class.active]="getCountryStatus(vm.country?.id || '', vm.profile) === 'visited'"
                     (click)="setStatus('visited', vm.country?.id || '', vm.profile)">Visited</button>
                 @if (getCountryStatus(vm.country?.id || '', vm.profile) !== 'none') {
-                    <div class="status-divider"></div>
-                    <button class="status-remove status-option"
-                        (click)="setStatus('none', vm.country?.id || '', vm.profile)">Remove</button>
+                <div class="status-divider"></div>
+                <button class="status-remove status-option"
+                    (click)="setStatus('none', vm.country?.id || '', vm.profile)">Remove</button>
                 }
             </div>
         </div>
@@ -81,8 +94,9 @@
                             } @else {
                             Add
                             }
-                            <svg class="dropdown-caret" [class.open]="statusMenuOpen" width="11" height="11" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <svg class="dropdown-caret" [class.open]="statusMenuOpen" width="11" height="11"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                stroke-linecap="round">
                                 <polyline points="6 9 12 15 18 9" />
                             </svg>
                         </button>
@@ -103,16 +117,20 @@
                 </div>
                 <button class="info-toggle" (click)="infoExpanded = !infoExpanded">
                     <span>Details</span>
-                    <svg class="caret" [class.open]="infoExpanded" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <svg class="caret" [class.open]="infoExpanded" width="14" height="14" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                         <polyline points="6 9 12 15 18 9" />
                     </svg>
                 </button>
                 <div class="country-info-grid" [class.expanded]="infoExpanded">
-                    <div class="info-item"><span class="info-label">Continent</span><span class="info-value">{{ vm.country?.continent }}</span></div>
-                    <div class="info-item"><span class="info-label">Sub-region</span><span class="info-value">{{ vm.country?.region }}</span></div>
-                    <div class="info-item"><span class="info-label">Capital</span><span class="info-value">{{ vm.country?.capital }}</span></div>
-                    <div class="info-item"><span class="info-label">Native Name</span><span class="info-value">{{ vm.country?.native }}</span></div>
+                    <div class="info-item"><span class="info-label">Continent</span><span class="info-value">{{
+                            vm.country?.continent }}</span></div>
+                    <div class="info-item"><span class="info-label">Sub-region</span><span class="info-value">{{
+                            vm.country?.region }}</span></div>
+                    <div class="info-item"><span class="info-label">Capital</span><span class="info-value">{{
+                            vm.country?.capital }}</span></div>
+                    <div class="info-item"><span class="info-label">Native Name</span><span class="info-value">{{
+                            vm.country?.native }}</span></div>
                 </div>
             </div>
 
@@ -125,7 +143,8 @@
                         Subdivisions
                         <span class="tab-count">{{ vm.totalSubdivisions }}</span>
                     </button>
-                    <button class="tab-btn" [class.active]="activeTab === 'heritage'" (click)="setActiveTab('heritage')">
+                    <button class="tab-btn" [class.active]="activeTab === 'heritage'"
+                        (click)="setActiveTab('heritage')">
                         Heritage Sites
                         <span class="tab-count">{{ vm.heritageSites.length }}</span>
                     </button>
@@ -167,14 +186,18 @@
                         <div *ngIf="selectedSite" class="inline-detail fade-in">
                             <div class="inline-detail-header">
                                 <div class="inline-detail-title-row">
-                                    <span class="heritage-badge" [class.badge-cultural]="selectedSite.category_short === 'C'"
+                                    <span class="heritage-badge"
+                                        [class.badge-cultural]="selectedSite.category_short === 'C'"
                                         [class.badge-natural]="selectedSite.category_short === 'N'"
                                         [class.badge-mixed]="selectedSite.category_short === 'C/N' || selectedSite.category_short === 'N/C'">
-                                        {{ selectedSite.category_short === 'C' ? 'Cultural' : selectedSite.category_short === 'N' ? 'Natural' : 'Mixed' }}
+                                        {{ selectedSite.category_short === 'C' ? 'Cultural' :
+                                        selectedSite.category_short === 'N' ? 'Natural' : 'Mixed' }}
                                     </span>
                                     <button class="detail-close-btn" (click)="closeSiteDetails()" title="Back to list">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                            <line x1="18" y1="6" x2="6" y2="18" />
+                                            <line x1="6" y1="6" x2="18" y2="18" />
                                         </svg>
                                     </button>
                                 </div>
@@ -184,18 +207,30 @@
                                 <p class="detail-panel-desc">{{ selectedSite.short_description_en }}</p>
                             </div>
                             <div class="inline-detail-footer" (click)="$event.stopPropagation()">
-                                    <div class="panel-nav">
-                                        <button class="panel-nav-btn" (click)="navigateSite(-1, vm.heritageSites); $event.stopPropagation()" title="Previous">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-                                        </button>
-                                        <span class="panel-nav-index">{{ getSiteIndex(vm.heritageSites) + 1 }} / {{ vm.heritageSites.length }}</span>
-                                        <button class="panel-nav-btn" (click)="navigateSite(1, vm.heritageSites); $event.stopPropagation()" title="Next">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-                                        </button>
-                                    </div>
-                                <button class="btn-visited" [class.visited]="isPOIVisited(selectedSite.id_no, vm.profile)"
+                                <div class="panel-nav">
+                                    <button class="panel-nav-btn"
+                                        (click)="navigateSite(-1, vm.heritageSites); $event.stopPropagation()"
+                                        title="Previous">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                            <polyline points="15 18 9 12 15 6" />
+                                        </svg>
+                                    </button>
+                                    <span class="panel-nav-index">{{ getSiteIndex(vm.heritageSites) + 1 }} / {{
+                                        vm.heritageSites.length }}</span>
+                                    <button class="panel-nav-btn"
+                                        (click)="navigateSite(1, vm.heritageSites); $event.stopPropagation()"
+                                        title="Next">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                            <polyline points="9 18 15 12 9 6" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <button class="btn-visited"
+                                    [class.visited]="isPOIVisited(selectedSite.id_no, vm.profile)"
                                     (click)="togglePOIVisited(selectedSite.id_no, vm.profile, vm.country?.id)">
-                                    {{ isPOIVisited(selectedSite.id_no, vm.profile) ? 'Visited ✓' : 'Mark Visited' }}
+                                    {{ isPOIVisited(selectedSite.id_no, vm.profile) ? 'Visited' : 'Mark Visited' }}
                                 </button>
                             </div>
                         </div>
@@ -206,16 +241,20 @@
                                 <div *ngFor="let site of vm.heritageSites" class="item-card glass-panel heritage-card"
                                     [class.visited]="isPOIVisited(site.id_no, vm.profile)"
                                     [class.selected]="selectedSite?.id_no === site.id_no"
-                                    [class.hovered]="hoveredSiteId === site.id_no" (mouseenter)="setSiteHover(site.id_no)"
-                                    (mouseleave)="setSiteHover(null)" (click)="openSiteDetails(site)">
+                                    [class.hovered]="hoveredSiteId === site.id_no"
+                                    (mouseenter)="setSiteHover(site.id_no)" (mouseleave)="setSiteHover(null)"
+                                    (click)="openSiteDetails(site)">
                                     <div class="item-name">{{ site.name_en }}</div>
                                     <div class="heritage-card-right">
-                                        <span class="heritage-badge" [class.badge-cultural]="site.category_short === 'C'"
+                                        <span class="heritage-badge"
+                                            [class.badge-cultural]="site.category_short === 'C'"
                                             [class.badge-natural]="site.category_short === 'N'"
                                             [class.badge-mixed]="site.category_short === 'C/N' || site.category_short === 'N/C'">
-                                            {{ site.category_short === 'C' ? 'Cultural' : site.category_short === 'N' ? 'Natural' : 'Mixed' }}
+                                            {{ site.category_short === 'C' ? 'Cultural' : site.category_short === 'N' ?
+                                            'Natural' : 'Mixed' }}
                                         </span>
-                                        <button class="visit-indicator-btn" [class.visited]="isPOIVisited(site.id_no, vm.profile)"
+                                        <button class="visit-indicator-btn"
+                                            [class.visited]="isPOIVisited(site.id_no, vm.profile)"
                                             (click)="togglePOIVisited(site.id_no, vm.profile, vm.country?.id, $event)"
                                             [title]="isPOIVisited(site.id_no, vm.profile) ? 'Mark as unvisited' : 'Mark as visited'">
                                         </button>

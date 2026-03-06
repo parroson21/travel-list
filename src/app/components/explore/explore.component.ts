@@ -1,17 +1,24 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { TravelService } from '../../services/travel.service';
 import { AuthService } from '../../services/auth.service';
 import { Country, UserProfile, Continent } from '../../models/travel.model';
-import { Observable, combineLatest, BehaviorSubject, firstValueFrom, Subscription } from 'rxjs';
-import { map, startWith, take, distinctUntilChanged } from 'rxjs/operators';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Observable, combineLatest, BehaviorSubject, firstValueFrom } from 'rxjs';
+import { map, startWith, take } from 'rxjs/operators';
+import { ActivatedRoute } from '@angular/router';
 
 interface CountryGroup {
   continent: string;
   countries: Country[];
+}
+
+interface HeritageSiteResult {
+  site: any;
+  countryId: string;
+  countryName: string;
+  countryEmoji: string;
 }
 
 @Component({
@@ -23,11 +30,34 @@ interface CountryGroup {
   styleUrls: ['./explore.component.css']
 })
 export class ExploreComponent implements OnInit {
+
+  // ── Search mode ──────────────────────────────────────────
+  searchMode: 'countries' | 'heritage' | 'users' = 'countries';
+  dropdownOpen = false;
+
+  readonly modeLabels: Record<string, string> = {
+    countries: 'Country',
+    heritage: 'Heritage Site',
+    users: 'User'
+  };
+
+  // ── Country search ───────────────────────────────────────
   searchQuery = '';
   filtersOpen = false;
   private searchSubject = new BehaviorSubject<string>('');
   private selectedContinentsSubject = new BehaviorSubject<string[]>([]);
   private visitedFilterSubject = new BehaviorSubject<'all' | 'visited' | 'planned' | 'unvisited'>('all');
+
+  // ── Heritage search ──────────────────────────────────────
+  heritageQuery = '';
+  heritageResults: HeritageSiteResult[] = [];
+
+  // ── User search ──────────────────────────────────────────
+  userQuery = '';
+  userResults: UserProfile[] = [];
+  userSearching = false;
+  userSearchDone = false;
+  private userSearchTimeout: any;
 
   vm$: Observable<{
     countryGroups: CountryGroup[],
@@ -37,18 +67,34 @@ export class ExploreComponent implements OnInit {
     visitedFilter: 'all' | 'visited' | 'planned' | 'unvisited',
     totalCountries: number,
     profile: UserProfile | null,
-    recentCountries: Country[]
+    recentCountries: Country[],
+    allCountries: Country[]   // kept for heritage search
   }> | undefined;
 
   constructor(
     private travel: TravelService,
     private auth: AuthService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+    private elRef: ElementRef
   ) { }
 
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(e: MouseEvent) {
+    if (this.dropdownOpen && !this.elRef.nativeElement.querySelector('.search-type-btn')?.contains(e.target as Node)) {
+      this.dropdownOpen = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  selectMode(mode: 'countries' | 'heritage' | 'users') {
+    this.dropdownOpen = false;
+    this.onModeChange(mode);
+    this.cdr.markForCheck();
+  }
+
   ngOnInit() {
-    // 1. Initialize from query params (priority) or Service state
     const params = this.route.snapshot.queryParamMap;
     const hasParams = params.has('q') || params.has('c') || params.has('v');
 
@@ -65,12 +111,10 @@ export class ExploreComponent implements OnInit {
     this.selectedContinentsSubject.next(c);
     this.visitedFilterSubject.next(['all', 'visited', 'planned', 'unvisited'].includes(v) ? v as any : 'all');
 
-    // Sync subjects back to service state
     this.searchSubject.subscribe(val => this.travel.exploreState.searchQuery = val);
     this.selectedContinentsSubject.subscribe(val => this.travel.exploreState.selectedContinents = val);
     this.visitedFilterSubject.subscribe(val => this.travel.exploreState.visitedFilter = val);
 
-    // 2. Setup VM
     this.vm$ = combineLatest([
       this.travel.getCountries(),
       this.travel.getContinents(),
@@ -84,7 +128,6 @@ export class ExploreComponent implements OnInit {
         const visitedIds = new Set(profile?.visitedCountries || []);
         const plannedIds = new Set(profile?.plannedCountries || []);
 
-        // Apply search + status filter
         let filteredCountries = countries.filter(c => (c.name || '').toLowerCase().includes(q));
 
         if (visitedFilter === 'visited') {
@@ -95,14 +138,12 @@ export class ExploreComponent implements OnInit {
           filteredCountries = filteredCountries.filter(c => !visitedIds.has(c.id) && !plannedIds.has(c.id));
         }
 
-        // Continent counts (from filtered list, before continent filter)
         const continentCounts = new Map<string, number>();
         filteredCountries.forEach(country => {
           const continent = country.continent || 'Unknown';
           continentCounts.set(continent, (continentCounts.get(continent) || 0) + 1);
         });
 
-        // Group by continent
         const countryMap = new Map<string, Country[]>();
         const isAllContinents = selectedContinents.length === 0;
 
@@ -114,16 +155,12 @@ export class ExploreComponent implements OnInit {
             countryMap.get(continent)!.push(country);
           });
 
-        // Remove empty continents if they were explicitly selected but contain no matching countries
-        // Actually, the current logic only adds continents that HAVE countries to the countryGroups list based on countryMap keys.
-
         const countryGroups: CountryGroup[] = Array.from(countryMap.keys())
           .sort()
           .map(continent => ({
             continent,
             countries: countryMap.get(continent)!.sort((a, b) =>
-              (a.name || '').localeCompare(b.name || '')
-            )
+              (a.name || '').localeCompare(b.name || ''))
           }));
 
         const recentIds = JSON.parse(localStorage.getItem('recentlyViewed') || '[]') as string[];
@@ -133,33 +170,91 @@ export class ExploreComponent implements OnInit {
           .filter((c): c is Country => !!c);
 
         return {
-          countryGroups,
-          continents,
-          continentCounts,
-          selectedContinents,
-          visitedFilter,
-          totalCountries: filteredCountries.length,
-          profile,
-          recentCountries
+          countryGroups, continents, continentCounts, selectedContinents,
+          visitedFilter, totalCountries: filteredCountries.length,
+          profile, recentCountries,
+          allCountries: countries
         };
       })
     );
   }
 
+  // ── Mode switching ───────────────────────────────────────
+  onModeChange(mode: 'countries' | 'heritage' | 'users') {
+    this.searchMode = mode;
+    // Reset search fields for the other modes
+    this.heritageQuery = '';
+    this.heritageResults = [];
+    this.userQuery = '';
+    this.userResults = [];
+    this.userSearchDone = false;
+  }
+
+  // ── Heritage search (client-side, from loaded countries) ─
+  onHeritageQueryChange(val: string, allCountries: Country[]) {
+    this.heritageQuery = val;
+    const q = val.trim().toLowerCase();
+    if (!q) {
+      this.heritageResults = [];
+      return;
+    }
+    const results: HeritageSiteResult[] = [];
+    for (const country of allCountries) {
+      for (const site of (country.worldHeritageSites || [])) {
+        if ((site.name_en || '').toLowerCase().includes(q)) {
+          results.push({
+            site,
+            countryId: country.id,
+            countryName: country.name,
+            countryEmoji: country.emoji
+          });
+        }
+      }
+    }
+    this.heritageResults = results
+      .sort((a, b) => a.site.name_en.localeCompare(b.site.name_en))
+      .slice(0, 50);
+  }
+
+  navigateToCountry(countryId: string) {
+    this.router.navigate(['/explore', countryId]);
+  }
+
+  // ── User search ──────────────────────────────────────────
+  onUserQueryChange(val: string) {
+    this.userQuery = val;
+    this.userSearchDone = false;
+    clearTimeout(this.userSearchTimeout);
+    if (!val.trim()) {
+      this.userResults = [];
+      this.userSearching = false;
+      this.cdr.markForCheck();
+      return;
+    }
+    this.userSearching = true;
+    this.cdr.markForCheck();
+    this.userSearchTimeout = setTimeout(async () => {
+      this.userResults = await this.travel.searchUsers(val);
+      this.userSearching = false;
+      this.userSearchDone = true;
+      this.cdr.markForCheck();
+    }, 350);
+  }
+
+  navigateToUser(uid: string) {
+    this.router.navigate(['/user', uid]);
+  }
+
+  // ── Country search helpers ───────────────────────────────
   private updateUrl() {
     const q = this.searchQuery;
     const c = this.selectedContinentsSubject.getValue().join(',');
     const v = this.visitedFilterSubject.getValue();
-
     this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: {
-        q: q || null,
-        c: c || null,
-        v: v === 'all' ? null : v
-      },
+      queryParams: { q: q || null, c: c || null, v: v === 'all' ? null : v },
       queryParamsHandling: 'merge',
-      replaceUrl: true // Using replaceUrl to avoid cluttering history with every keystroke
+      replaceUrl: true
     });
   }
 
@@ -171,43 +266,27 @@ export class ExploreComponent implements OnInit {
 
   toggleContinent(continent: string) {
     const current = this.selectedContinentsSubject.getValue();
-
-    let updated: string[];
-    if (current.length === 0) {
-      updated = [continent];
-    } else {
-      updated = current.includes(continent)
+    const updated = current.length === 0
+      ? [continent]
+      : current.includes(continent)
         ? current.filter(c => c !== continent)
         : [...current, continent];
-    }
-
     this.selectedContinentsSubject.next(updated);
     this.updateUrl();
   }
 
-  selectAllContinents() {
-    this.selectedContinentsSubject.next([]);
-    this.updateUrl();
-  }
+  selectAllContinents() { this.selectedContinentsSubject.next([]); this.updateUrl(); }
 
   clearAllFilters() {
     this.selectedContinentsSubject.next([]);
     this.visitedFilterSubject.next('all');
     this.onSearchChange('');
-    // onSearchChange already calls updateUrl
   }
 
   toggleVisitedOnly() {
     const current = this.visitedFilterSubject.getValue();
-    if (current === 'all') {
-      this.visitedFilterSubject.next('visited');
-    } else if (current === 'visited') {
-      this.visitedFilterSubject.next('planned');
-    } else if (current === 'planned') {
-      this.visitedFilterSubject.next('unvisited');
-    } else {
-      this.visitedFilterSubject.next('all');
-    }
+    const next = current === 'all' ? 'visited' : current === 'visited' ? 'planned' : current === 'planned' ? 'unvisited' : 'all';
+    this.visitedFilterSubject.next(next);
     this.updateUrl();
   }
 
@@ -231,10 +310,7 @@ export class ExploreComponent implements OnInit {
 
   async cycleCountryStatus(countryId: string, profile: UserProfile | null) {
     const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
-    if (!user) {
-      this.auth.loginWithGoogle();
-      return;
-    }
+    if (!user) { this.auth.loginWithGoogle(); return; }
     const current = this.getCountryStatus(countryId, profile);
     const next = current === 'none' ? 'planned' : current === 'planned' ? 'visited' : 'none';
     this.travel.setCountryStatus(countryId, next);
@@ -242,10 +318,7 @@ export class ExploreComponent implements OnInit {
 
   async toggleCountryVisited(countryId: string, profile: UserProfile | null) {
     const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
-    if (!user) {
-      this.auth.loginWithGoogle();
-      return;
-    }
+    if (!user) { this.auth.loginWithGoogle(); return; }
     const visited = this.isCountryVisited(countryId, profile);
     this.travel.markCountryVisited(countryId, !visited);
   }
