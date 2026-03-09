@@ -19,8 +19,6 @@ export class AdminComponent {
 
   // ── Seeding tab ───────────────────────────────────────────
   loadingSeeding = false;
-  loadingWipe = false;
-  loadingReset = false;
   logs: string[] = [];
 
   // ── Countries tab ─────────────────────────────────────────
@@ -366,31 +364,6 @@ export class AdminComponent {
     });
   }
 
-  wipeCountryData() {
-    this.loadingWipe = true;
-    this.addLog('Starting country data wipe...');
-    this.zone.run(async () => {
-      try {
-        await this.travel.wipeAllCountryData((msg: string) => this.addLog(msg));
-      } catch (e: any) {
-        this.addLog('Error wiping data: ' + e.message);
-      }
-      this.loadingWipe = false;
-    });
-  }
-
-  resetUserData() {
-    this.loadingReset = true;
-    this.addLog('Starting user data reset...');
-    this.zone.run(async () => {
-      try {
-        await this.travel.resetAllUserData((msg: string) => this.addLog(msg));
-      } catch (e: any) {
-        this.addLog('Error resetting user data: ' + e.message);
-      }
-      this.loadingReset = false;
-    });
-  }
 
   addLog(msg: string) {
     this.zone.run(() => {

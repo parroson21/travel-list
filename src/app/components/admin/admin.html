@@ -34,21 +34,7 @@
             </button>
         </div>
 
-        <div class="section danger-section">
-            <h3>Destructive Actions</h3>
-            <div class="action-row">
-                <p class="section-desc">Delete all countries from the database.</p>
-                <button class="btn btn-danger" (click)="wipeCountryData()" [disabled]="loadingWipe">
-                    {{ loadingWipe ? 'Wiping...' : 'Wipe All Country Data' }}
-                </button>
-            </div>
-            <div class="action-row">
-                <p class="section-desc">Clear all users' visited countries and subdivisions.</p>
-                <button class="btn btn-danger" (click)="resetUserData()" [disabled]="loadingReset">
-                    {{ loadingReset ? 'Resetting...' : 'Reset All User Data' }}
-                </button>
-            </div>
-        </div>
+
 
         <div class="logs" *ngIf="logs.length > 0">
             <h3>Logs</h3>
