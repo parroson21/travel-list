@@ -1,6 +1,15 @@
-<div class="profile-container" *ngIf="vm$ | async as vm">
+<div class="not-found-page" *ngIf="notFound">
+    <div class="not-found-card">
+        <div class="not-found-icon">🌍</div>
+        <h1>Profile Not Found</h1>
+        <p>This username doesn't exist or may have changed.</p>
+        <button class="btn-home" (click)="goBack()">Go Back</button>
+    </div>
+</div>
 
-    <!-- Not found -->
+<div class="profile-container" *ngIf="!notFound && (vm$ | async) as vm">
+
+    <!-- Not found fallback (null profile before route resolves) -->
     <div *ngIf="!vm.targetProfile" class="not-found glass-panel">
         <p>User not found.</p>
         <button class="back-link" (click)="goBack()">← Go back</button>
@@ -206,7 +215,18 @@
                         <h1 class="profile-name">{{ vm.targetProfile.displayName || 'Traveler' }}</h1>
                         <span *ngIf="vm.isOwnProfile" class="own-profile-badge">You</span>
                     </div>
+                    <span *ngIf="vm.targetProfile.username" class="profile-username">@{{ vm.targetProfile.username }}</span>
                     <span class="profile-email">{{ vm.targetProfile.email }}</span>
+                    <div class="profile-dates">
+                        <span class="profile-date" *ngIf="vm.targetProfile.createdAt">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            Joined {{ vm.targetProfile.createdAt | date:'MMM d, y' }}
+                        </span>
+                        <span class="profile-date" *ngIf="vm.targetProfile.lastLoginAt">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            Last online {{ vm.targetProfile.lastLoginAt | date:'MMM d, y' }}
+                        </span>
+                    </div>
                 </div>
             </div>
 

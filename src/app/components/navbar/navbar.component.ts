@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -12,6 +12,8 @@ import { ThemeService } from '../../services/theme.service';
   styleUrls: ['./navbar.scss']
 })
 export class NavbarComponent {
+  @Output() changeUsername = new EventEmitter<void>();
+
   menuOpen = false;
   settingsOpen = false;
   showThemes = false;
@@ -60,5 +62,9 @@ export class NavbarComponent {
     if (this.fabOpen) {
       this.addCloseListener(() => this.fabOpen = false);
     }
+  }
+
+  onChangeUsername() {
+    this.changeUsername.emit();
   }
 }

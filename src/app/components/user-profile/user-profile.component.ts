@@ -1,9 +1,9 @@
-import { Component, OnInit, ChangeDetectionStrategy, ViewChild, HostListener } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ViewChild, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TravelService } from '../../services/travel.service';
 import { AuthService } from '../../services/auth.service';
-import { Observable, combineLatest } from 'rxjs';
+import { Observable, combineLatest, of } from 'rxjs';
 import { map, switchMap, startWith } from 'rxjs/operators';
 import { Country, UserProfile } from '../../models/travel.model';
 import { WorldMapComponent } from '../world-map/world-map.component';
@@ -22,6 +22,7 @@ export class UserProfileComponent implements OnInit {
     @ViewChild(WorldMapComponent) worldMap?: WorldMapComponent;
 
     activeTab: 'countries' | 'planned' | 'heritage' = 'countries';
+    notFound = false;
 
     vm$: Observable<{
         targetProfile: UserProfile | null,
@@ -45,13 +46,28 @@ export class UserProfileComponent implements OnInit {
         private router: Router,
         private travel: TravelService,
         public auth: AuthService,
-        private location: Location
+        private location: Location,
+        private cdr: ChangeDetectorRef
     ) { }
 
     ngOnInit() {
         this.vm$ = combineLatest([
             this.route.params.pipe(
-                switchMap(params => this.travel.getUserProfileById(params['uid']))
+                switchMap(async params => {
+                    const username = params['username'];
+                    const profile = await this.travel.getUserByUsername(username);
+                    if (!profile) {
+                        this.notFound = true;
+                        this.cdr.markForCheck();
+                        return null;
+                    }
+                    this.notFound = false;
+                    return profile;
+                }),
+                switchMap(profile => {
+                    if (!profile) return of(null);
+                    return this.travel.getUserProfileById(profile.uid);
+                })
             ),
             this.travel.getCountries(),
             this.auth.user$.pipe(startWith(null))

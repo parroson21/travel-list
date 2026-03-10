@@ -1,0 +1,172 @@
+/* Backdrop */
+.prompt-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.prompt-card {
+    position: relative;
+    background: var(--glass-bg, #1a1a2e);
+    border: 1px solid var(--glass-border, rgba(255,255,255,0.1));
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    max-width: 420px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+    box-shadow: 0 32px 64px rgba(0,0,0,0.4);
+    animation: slideUp .3s ease-out;
+}
+
+.prompt-close {
+    position: absolute;
+    top: .75rem;
+    right: .75rem;
+    background: none;
+    border: 1px solid var(--glass-border, rgba(255,255,255,0.12));
+    color: var(--text-muted, rgba(255,255,255,0.5));
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: .75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, color .15s;
+}
+
+.prompt-close:hover {
+    background: var(--glass-hover, rgba(255,255,255,0.08));
+    color: var(--text-main, #fff);
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.prompt-icon { font-size: 2.5rem; line-height: 1; }
+
+.prompt-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-main, #fff);
+}
+
+.prompt-desc {
+    font-size: .9rem;
+    color: var(--text-muted, rgba(255,255,255,0.6));
+    margin: 0;
+    line-height: 1.6;
+}
+
+.url-preview {
+    display: inline-block;
+    margin-top: .3rem;
+    font-family: monospace;
+    font-size: .82rem;
+    color: var(--primary, #6366f1);
+    background: rgba(99,102,241,.1);
+    border: 1px solid rgba(99,102,241,.25);
+    border-radius: 6px;
+    padding: .15rem .5rem;
+}
+
+/* Input row */
+.input-wrap {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background: var(--glass, rgba(255,255,255,0.05));
+    border: 1.5px solid var(--glass-border, rgba(255,255,255,0.12));
+    border-radius: 12px;
+    padding: 0 .75rem;
+    transition: border-color .2s;
+    gap: .25rem;
+}
+
+.input-wrap.valid   { border-color: #22c55e; }
+.input-wrap.taken   { border-color: #ff6b6b; }
+.input-wrap:focus-within { border-color: var(--primary, #6366f1); }
+
+.at-sign {
+    color: var(--text-muted, rgba(255,255,255,0.4));
+    font-size: 1.1rem;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.username-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-main, #fff);
+    padding: .75rem 0;
+}
+
+.username-input::placeholder { color: var(--text-muted, rgba(255,255,255,0.3)); font-weight: 400; }
+
+.input-status {
+    font-size: .9rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.input-status.available { color: #22c55e; font-weight: 700; }
+.input-status.taken     { color: #ff6b6b; font-weight: 700; }
+
+.spinner-sm {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.15);
+    border-top-color: var(--primary, #6366f1);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Hints */
+.hint {
+    font-size: .8rem;
+    color: var(--text-muted, rgba(255,255,255,0.5));
+    margin: -.25rem 0;
+}
+.taken-msg  { color: #ff6b6b; }
+.error-msg  { color: #ff6b6b; }
+
+/* Save button */
+.btn-save {
+    width: 100%;
+    padding: .8rem;
+    background: var(--primary, #6366f1);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity .2s;
+    margin-top: .25rem;
+}
+
+.btn-save:hover:not(:disabled) { opacity: .85; }
+.btn-save:disabled { opacity: .4; cursor: not-allowed; }

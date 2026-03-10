@@ -2,13 +2,6 @@
 
     <!-- Tab bar -->
     <nav class="admin-tabs glass-panel">
-        <button class="tab-btn" [class.active]="activeTab === 'seeding'" (click)="setTab('seeding')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-            </svg>
-            Seeding Utility
-        </button>
         <button class="tab-btn" [class.active]="activeTab === 'countries'" (click)="setTab('countries')">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round">
@@ -18,31 +11,17 @@
             </svg>
             Countries
         </button>
+        <button class="tab-btn" [class.active]="activeTab === 'users'" (click)="setTab('users')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            Users
+        </button>
     </nav>
-
-    <!-- ── Seeding Tab ────────────────────────────────── -->
-    <div class="tab-content glass-panel" *ngIf="activeTab === 'seeding'">
-        <h2>Seeding Utility</h2>
-        <p class="tab-desc">Use the buttons below to manage the database.</p>
-
-        <div class="section">
-            <h3>Seed Data</h3>
-            <p class="section-desc">Seed countries from the JSON file. Subdivisions and heritage sites are included
-                within each country.</p>
-            <button class="btn btn-primary" (click)="seedCountries()" [disabled]="loadingSeeding">
-                {{ loadingSeeding ? 'Seeding...' : 'Seed Countries' }}
-            </button>
-        </div>
-
-
-
-        <div class="logs" *ngIf="logs.length > 0">
-            <h3>Logs</h3>
-            <ul>
-                <li *ngFor="let log of logs">{{ log }}</li>
-            </ul>
-        </div>
-    </div>
 
     <!-- ── Countries Tab ─────────────────────────────── -->
     <div class="tab-content" *ngIf="activeTab === 'countries'">
@@ -83,7 +62,7 @@
                 </ul>
             </div>
 
-            <!-- MIDDLE: Subdivision list (visible when a country is selected and a subdivision panel is shown) -->
+            <!-- MIDDLE: Subdivision list -->
             <div class="sub-list-panel glass-panel" *ngIf="selectedCountry && editMode === 'subdivision'">
                 <div class="list-panel-header">
                     <button class="back-crumb" (click)="clearSubdivision()">
@@ -172,7 +151,6 @@
                         <div class="sub-group" *ngFor="let group of groupedSubdivisions">
                             <!-- Group header -->
                             <div class="sub-group-header">
-                                <!-- Inline rename input OR static label -->
                                 <ng-container *ngIf="renamingDivision === group.division; else staticLabel">
                                     <input class="field-input group-rename-input" [(ngModel)]="divisionRenameValue"
                                         [name]="'rename_' + group.division" (keydown.enter)="saveRenameGroup()"
@@ -316,6 +294,164 @@
                         d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
                 <p>Select a country from the list to edit its record</p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── Users Tab ──────────────────────────────────── -->
+    <div class="tab-content" *ngIf="activeTab === 'users'">
+        <div class="countries-layout">
+
+            <!-- LEFT: Search + user list -->
+            <div class="country-list-panel glass-panel">
+                <div class="list-panel-header">
+                    <h2>Users</h2>
+                    <span class="record-count" *ngIf="allUsers.length > 0">{{ allUsers.length }}</span>
+                </div>
+
+                <div class="search-wrap">
+                    <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input class="search-input" type="text" [(ngModel)]="userSearch"
+                        placeholder="Name or email…" />
+                    <button class="clear-btn" *ngIf="userSearch" (click)="userSearch = ''">✕</button>
+                </div>
+
+                <div class="loading-state" *ngIf="loadingUsers">
+                    <div class="spinner"></div>Loading users…
+                </div>
+
+                <ul class="country-list" *ngIf="!loadingUsers">
+                    <li *ngFor="let u of filteredUsers" class="country-item user-item"
+                        [class.selected]="selectedUser?.uid === u.uid"
+                        [class.no-username]="!u.username"
+                        (click)="selectUser(u)">
+                        <span class="user-avatar">{{ userInitial(u) }}</span>
+                        <span class="user-item-info">
+                            <span class="ci-name" *ngIf="u.username">@{{ u.username }}</span>
+                            <span class="ci-name no-username-label" *ngIf="!u.username">No username</span>
+                            <span class="ci-id">{{ u.displayName || u.email || u.uid }}</span>
+                        </span>
+                    </li>
+                    <li class="empty-hint" *ngIf="filteredUsers.length === 0 && !loadingUsers && usersLoaded">
+                        No users match "{{ userSearch }}"
+                    </li>
+                </ul>
+            </div>
+
+            <!-- RIGHT: User edit panel -->
+            <div class="edit-panel glass-panel" *ngIf="selectedUser">
+                <div class="edit-header">
+                    <div class="breadcrumb">
+                        <span class="user-avatar-lg">{{ userInitial(selectedUser) }}</span>
+                        <div style="display:flex;flex-direction:column;gap:.1rem">
+                            <span class="crumb-link active" *ngIf="selectedUser.username">@{{ selectedUser.username }}</span>
+                            <span class="crumb-link active no-username-label" *ngIf="!selectedUser.username">No username set</span>
+                            <span style="font-size:.8rem;color:var(--text-muted)">{{ selectedUser.displayName || selectedUser.email || selectedUser.uid }}</span>
+                        </div>
+                    </div>
+                    <button class="close-btn" (click)="clearUser()" title="Close">✕</button>
+                </div>
+
+                <form class="edit-form" (ngSubmit)="saveUser()">
+                    <div class="field-grid">
+                        <div class="field-group">
+                            <label class="field-label">Username</label>
+                            <div class="username-field-wrap">
+                                <span class="at-prefix">@</span>
+                                <input class="field-input username-field-input" type="text" [(ngModel)]="userForm.username"
+                                    name="user_username" placeholder="username" autocomplete="off" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Read-only stats -->
+                    <div class="user-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">{{ selectedUser.visitedCountries?.length ?? 0 }}</span>
+                            <span class="stat-label">Visited Countries</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ selectedUser.plannedCountries?.length ?? 0 }}</span>
+                            <span class="stat-label">Planned Countries</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ selectedUser.visitedSubdivisions?.length ?? 0 }}</span>
+                            <span class="stat-label">Visited Subdivisions</span>
+                        </div>
+                    </div>
+
+                    <!-- Google Info -->
+                    <div class="user-meta-section">
+                        <h4 class="meta-section-title">Google Info</h4>
+                        <div class="meta-grid">
+                            <div class="meta-item">
+                                <span class="meta-label">Name</span>
+                                <span class="meta-value">{{ selectedUser.displayName || '—' }}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Gmail</span>
+                                <span class="meta-value">{{ selectedUser.email || '—' }}</span>
+                            </div>
+                            <div class="meta-item full-width" *ngIf="selectedUser.photoURL">
+                                <span class="meta-label">Photo</span>
+                                <div class="meta-photo-wrap">
+                                    <img class="meta-photo" [src]="selectedUser.photoURL" alt="User photo" referrerpolicy="no-referrer" />
+                                    <span class="meta-value photo-url">{{ selectedUser.photoURL }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Info -->
+                    <div class="user-meta-section">
+                        <h4 class="meta-section-title">Account Info</h4>
+                        <div class="meta-grid">
+                            <div class="meta-item">
+                                <span class="meta-label">Created</span>
+                                <span class="meta-value">{{ selectedUser.createdAt ? (selectedUser.createdAt | date:'MMM d, y · h:mm a') : '—' }}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Last Login</span>
+                                <span class="meta-value">{{ selectedUser.lastLoginAt ? (selectedUser.lastLoginAt | date:'MMM d, y · h:mm a') : '—' }}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Auth Provider</span>
+                                <span class="meta-value provider-badge">{{ formatProvider(selectedUser.authProvider) }}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">UID</span>
+                                <span class="meta-value uid-value">{{ selectedUser.uid }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <div class="save-feedback">
+                            <span class="save-success" *ngIf="userSaveSuccess">Saved</span>
+                            <span class="save-error" *ngIf="userSaveError">⚠ {{ userSaveError }}</span>
+                        </div>
+                        <button class="btn btn-primary" type="submit" [disabled]="savingUser">
+                            {{ savingUser ? 'Saving…' : 'Save Changes' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Placeholder when no user selected -->
+            <div class="edit-placeholder glass-panel" *ngIf="!selectedUser && !loadingUsers">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                <p>Select a user from the list to view their profile</p>
             </div>
 
         </div>

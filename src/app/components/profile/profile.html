@@ -193,8 +193,17 @@
                 </div>
             </div>
             <div class="profile-identity">
-                <h1 class="profile-name">{{ user.displayName || 'Traveler' }}</h1>
-                <span class="profile-email">{{ user.email }}</span>
+                <h1 class="profile-name">{{ vm.profile?.username ? '@' + vm.profile?.username : (user.displayName || 'Traveler') }}</h1>
+                <div class="profile-dates">
+                    <span class="profile-date" *ngIf="vm.profile?.createdAt">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        Joined {{ vm.profile!.createdAt | date:'MMM d, y' }}
+                    </span>
+                    <span class="profile-date" *ngIf="vm.profile?.lastLoginAt">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Last online {{ vm.profile!.lastLoginAt | date:'MMM d, y' }}
+                    </span>
+                </div>
             </div>
         </div>
 

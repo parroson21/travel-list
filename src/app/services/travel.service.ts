@@ -30,16 +30,22 @@ export class TravelService {
                             if (snapshot.exists()) {
                                 // Keep identity fields up to date
                                 const data = snapshot.data() as UserProfile;
-                                const needsUpdate =
+                                const now = new Date().toISOString();
+                                const identityChanged =
                                     data.displayName !== (u.displayName || '') ||
                                     data.email !== (u.email || '') ||
                                     data.photoURL !== (u.photoURL || '');
-                                if (needsUpdate) {
-                                    updateDoc(userDoc, {
+                                const missingMeta = !data.createdAt || !data.lastLoginAt || !data.authProvider;
+                                if (identityChanged || missingMeta) {
+                                    const patch: Record<string, any> = {
                                         displayName: u.displayName || '',
                                         email: u.email || '',
-                                        photoURL: u.photoURL || ''
-                                    });
+                                        photoURL: u.photoURL || '',
+                                        lastLoginAt: now,
+                                        authProvider: u.providerData?.[0]?.providerId || data.authProvider || ''
+                                    };
+                                    if (!data.createdAt) patch['createdAt'] = now;
+                                    updateDoc(userDoc, patch);
                                 }
                                 observer.next(data);
                             } else {
@@ -48,6 +54,9 @@ export class TravelService {
                                     displayName: u.displayName || '',
                                     email: u.email || '',
                                     photoURL: u.photoURL || '',
+                                    createdAt: new Date().toISOString(),
+                                    lastLoginAt: new Date().toISOString(),
+                                    authProvider: u.providerData?.[0]?.providerId || '',
                                     visitedCountries: [],
                                     plannedCountries: [],
                                     visitedSubdivisions: [],
@@ -76,18 +85,18 @@ export class TravelService {
         });
     }
 
-    /** Search users by display name or email (client-side filter) */
-    async searchUsers(query: string): Promise<UserProfile[]> {
-        if (!query.trim()) return [];
-        const q = query.toLowerCase();
+    /** Search users by username or display name — only includes users who have set a username */
+    async searchUsers(q: string): Promise<UserProfile[]> {
+        const query = q.toLowerCase();
         const usersCol = collection(this.firestore, 'users');
         const snap = await getDocs(usersCol);
         return snap.docs
             .map(d => d.data() as UserProfile)
-            .filter(p =>
-                (p.displayName || '').toLowerCase().includes(q) ||
-                (p.email || '').toLowerCase().includes(q)
-            )
+            .filter(p => !!p.username && (
+                (p.username || '').toLowerCase().includes(query) ||
+                (p.displayName || '').toLowerCase().includes(query) ||
+                (p.email || '').toLowerCase().includes(query)
+            ))
             .slice(0, 20);
     }
 
@@ -357,4 +366,71 @@ export class TravelService {
         const snap = await getDoc(countryDocRef);
         return snap.exists() ? snap.data() : null;
     }
+
+    /** Admin: fetch all user profiles (all users, including those without usernames) */
+    async getAllUsers(): Promise<UserProfile[]> {
+        const usersCol = collection(this.firestore, 'users');
+        const snap = await getDocs(usersCol);
+        return snap.docs
+            .map(d => d.data() as UserProfile)
+            .sort((a, b) => (a.username || a.displayName || a.email || '').localeCompare(b.username || b.displayName || b.email || ''));
+    }
+
+    /** Admin: update editable profile fields for any user */
+    async updateUserProfile(uid: string, changes: Partial<Pick<UserProfile, 'displayName' | 'email'>>): Promise<void> {
+        const userDocRef = doc(this.firestore, `users/${uid}`);
+        await updateDoc(userDocRef, changes as Record<string, any>);
+    }
+
+    // ── Username methods ──────────────────────────────────────
+
+    /** Check whether a username is available (case-insensitive) */
+    async checkUsernameAvailable(username: string): Promise<boolean> {
+        const normalized = username.toLowerCase().trim();
+        if (!normalized) return false;
+        const usernameDoc = doc(this.firestore, `usernames/${normalized}`);
+        const snap = await getDoc(usernameDoc);
+        return !snap.exists();
+    }
+
+    /**
+     * Atomically claim a username for a user.
+     * - Writes usernames/{newUsername} → { uid }
+     * - Updates users/{uid} → { username: newUsername }
+     * - Deletes usernames/{oldUsername} if provided
+     */
+    async setUsername(uid: string, newUsername: string, oldUsername?: string): Promise<void> {
+        const normalized = newUsername.toLowerCase().trim();
+        const batch = writeBatch(this.firestore);
+
+        // Claim the new username
+        const newUsernameDoc = doc(this.firestore, `usernames/${normalized}`);
+        batch.set(newUsernameDoc, { uid });
+
+        // Update the user document
+        const userDocRef = doc(this.firestore, `users/${uid}`);
+        batch.update(userDocRef, { username: normalized });
+
+        // Release the old username
+        if (oldUsername) {
+            const oldUsernameDoc = doc(this.firestore, `usernames/${oldUsername.toLowerCase().trim()}`);
+            batch.delete(oldUsernameDoc);
+        }
+
+        await batch.commit();
+    }
+
+    /** Look up a user profile by username (via the usernames index collection) */
+    async getUserByUsername(username: string): Promise<UserProfile | null> {
+        const normalized = username.toLowerCase().trim();
+        const usernameDoc = doc(this.firestore, `usernames/${normalized}`);
+        const usernameSnap = await getDoc(usernameDoc);
+        if (!usernameSnap.exists()) return null;
+
+        const { uid } = usernameSnap.data() as { uid: string };
+        const userDocRef = doc(this.firestore, `users/${uid}`);
+        const userSnap = await getDoc(userDocRef);
+        return userSnap.exists() ? (userSnap.data() as UserProfile) : null;
+    }
 }
+

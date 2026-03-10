@@ -1,19 +1,30 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar.component';
+import { UsernamePromptComponent } from './components/username-prompt/username-prompt.component';
 import { TravelService } from './services/travel.service';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent, CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RouterOutlet, NavbarComponent, CommonModule, UsernamePromptComponent],
   template: `
-    <app-navbar></app-navbar>
+    <app-navbar (changeUsername)="openChangeUsername()"></app-navbar>
     <main>
       <router-outlet></router-outlet>
     </main>
+
+    <!-- Username Prompt — create mode (mandatory) or update mode (closeable) -->
+    <app-username-prompt
+      *ngIf="showUsernamePrompt"
+      [mode]="usernamePromptMode"
+      [currentUsername]="currentUsername"
+      (usernameSet)="onUsernameSet()"
+      (closed)="onPromptClosed()">
+    </app-username-prompt>
 
     <!-- Data Reset Toast -->
     <div class="toast-container" *ngIf="showResetToast" (click)="dismissToast()">
@@ -52,9 +63,7 @@ import { Subscription } from 'rxjs';
       flex-shrink: 0;
       margin-top: 0.1rem;
     }
-    .toast-content {
-      flex: 1;
-    }
+    .toast-content { flex: 1; }
     .toast-title {
       font-weight: 600;
       font-size: 0.95rem;
@@ -77,38 +86,57 @@ import { Subscription } from 'rxjs';
       opacity: 0.6;
       transition: opacity 0.2s ease;
     }
-    .toast-dismiss:hover {
-      opacity: 1;
-    }
+    .toast-dismiss:hover { opacity: 1; }
     @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(1rem);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(1rem); }
+      to   { opacity: 1; transform: translateY(0); }
     }
   `]
 })
 export class AppComponent implements OnInit, OnDestroy {
   title = 'travel-app';
   showResetToast = false;
+  showUsernamePrompt = false;
+  usernamePromptMode: 'create' | 'update' = 'create';
+  currentUsername = '';
   private profileSub: Subscription | null = null;
 
-  constructor(private travel: TravelService) {}
+  constructor(private travel: TravelService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.profileSub = this.travel.getUserProfile().subscribe(profile => {
       if (profile?.dataResetNotification) {
         this.showResetToast = true;
       }
+      // Track current username for change-username flow
+      this.currentUsername = profile?.username || '';
+      // Show mandatory prompt if user is logged in but hasn't set a username
+      if (!!profile && !profile.username) {
+        this.usernamePromptMode = 'create';
+        this.showUsernamePrompt = true;
+      }
+      this.cdr.markForCheck();
     });
   }
 
   ngOnDestroy() {
     this.profileSub?.unsubscribe();
+  }
+
+  openChangeUsername() {
+    this.usernamePromptMode = 'update';
+    this.showUsernamePrompt = true;
+    this.cdr.markForCheck();
+  }
+
+  onUsernameSet() {
+    this.showUsernamePrompt = false;
+    this.cdr.markForCheck();
+  }
+
+  onPromptClosed() {
+    this.showUsernamePrompt = false;
+    this.cdr.markForCheck();
   }
 
   dismissToast() {

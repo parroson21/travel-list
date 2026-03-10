@@ -1,0 +1,49 @@
+<div class="prompt-backdrop" (click)="mode === 'update' ? dismiss() : null">
+    <div class="prompt-card" (click)="$event.stopPropagation()">
+        <button class="prompt-close" *ngIf="mode === 'update'" (click)="dismiss()">✕</button>
+        <div class="prompt-icon">✈️</div>
+        <h1 class="prompt-title">{{ mode === 'update' ? 'Change your username' : 'Choose your username' }}</h1>
+        <p class="prompt-desc">
+            Your username is your unique public identity and becomes your profile URL:
+            <span class="url-preview">/user/{{ normalized || 'yourname' }}</span>
+        </p>
+
+        <div class="input-wrap" [class.valid]="isValid && available === true"
+            [class.taken]="available === false">
+            <span class="at-sign">@</span>
+            <input
+                class="username-input"
+                type="text"
+                [(ngModel)]="usernameInput"
+                (ngModelChange)="onInput()"
+                placeholder="username"
+                maxlength="30"
+                autocomplete="off"
+                autocorrect="off"
+                spellcheck="false"
+            />
+            <span class="input-status" *ngIf="checking">
+                <span class="spinner-sm"></span>
+            </span>
+            <span class="input-status available" *ngIf="!checking && available === true">✓</span>
+            <span class="input-status taken" *ngIf="!checking && available === false">✕</span>
+        </div>
+
+        <p class="hint" *ngIf="!isValid && usernameInput.length > 0">
+            3–30 characters, letters, numbers and underscores only.
+        </p>
+        <p class="hint taken-msg" *ngIf="available === false">
+            That username is already taken.
+        </p>
+        <p class="hint" *ngIf="isUnchanged && isValid">
+            That's already your current username.
+        </p>
+        <p class="hint error-msg" *ngIf="error">{{ error }}</p>
+
+        <button class="btn-save"
+            [disabled]="!isValid || available !== true || saving || isUnchanged"
+            (click)="save()">
+            {{ saving ? 'Saving…' : (mode === 'update' ? 'Update Username' : 'Claim Username') }}
+        </button>
+    </div>
+</div>

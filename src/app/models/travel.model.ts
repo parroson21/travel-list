@@ -48,6 +48,10 @@ export interface UserProfile {
     displayName?: string;
     email?: string;
     photoURL?: string;
+    username?: string; // Unique across the database; used for /user/:username URLs
+    createdAt?: string; // ISO timestamp of account creation
+    lastLoginAt?: string; // ISO timestamp of last login
+    authProvider?: string; // Sign-in provider (e.g. "google.com")
     visitedCountries: string[]; // List of country IDs
     plannedCountries: string[]; // List of country IDs the user plans to visit
     visitedSubdivisions: string[]; // List of subdivision codes

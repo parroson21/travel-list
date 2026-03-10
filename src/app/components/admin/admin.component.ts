@@ -1,9 +1,8 @@
-import { Component, NgZone, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, NgZone, ChangeDetectorRef, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TravelService } from '../../services/travel.service';
-import { HttpClient } from '@angular/common/http';
-import { Country } from '../../models/travel.model';
+import { Country, UserProfile } from '../../models/travel.model';
 
 @Component({
   selector: 'app-admin',
@@ -13,13 +12,9 @@ import { Country } from '../../models/travel.model';
   templateUrl: './admin.html',
   styleUrls: ['./admin.css']
 })
-export class AdminComponent {
+export class AdminComponent implements OnInit {
   // ── Tab state ─────────────────────────────────────────────
-  activeTab: 'seeding' | 'countries' = 'seeding';
-
-  // ── Seeding tab ───────────────────────────────────────────
-  loadingSeeding = false;
-  logs: string[] = [];
+  activeTab: 'countries' | 'users' = 'countries';
 
   // ── Countries tab ─────────────────────────────────────────
   allCountries: Country[] = [];
@@ -42,10 +37,10 @@ export class AdminComponent {
   subSaveError = '';
 
   // Group management
-  renamingDivision = '';      // division name currently being renamed
-  divisionRenameValue = '';   // input value while renaming
+  renamingDivision = '';
+  divisionRenameValue = '';
   savingGroupRename = false;
-  showAddFormForDivision = '';  // division name whose add-row is open
+  showAddFormForDivision = '';
   addForm = { code: '', name: '', division: '' };
   savingAdd = false;
   addError = '';
@@ -70,17 +65,31 @@ export class AdminComponent {
     { key: 'gdp', label: 'GDP', type: 'number' },
   ];
 
+  // ── Users tab ─────────────────────────────────────────────
+  allUsers: UserProfile[] = [];
+  loadingUsers = false;
+  usersLoaded = false;
+  userSearch = '';
+  selectedUser: UserProfile | null = null;
+  userForm: { username: string; displayName: string; email: string } = { username: '', displayName: '', email: '' };
+  savingUser = false;
+  userSaveSuccess = false;
+  userSaveError = '';
+
   constructor(
     private travel: TravelService,
-    private http: HttpClient,
     private zone: NgZone,
     private cdr: ChangeDetectorRef
   ) { }
 
-  setTab(tab: 'seeding' | 'countries') {
+  ngOnInit() {
+    this.loadAllCountries();
+  }
+
+  setTab(tab: 'countries' | 'users') {
     this.activeTab = tab;
-    if (tab === 'countries' && this.allCountries.length === 0) {
-      this.loadAllCountries();
+    if (tab === 'users' && !this.usersLoaded) {
+      this.loadAllUsers();
     }
   }
 
@@ -112,7 +121,6 @@ export class AdminComponent {
     this.selectedSubdivision = null;
     this.selectedSubdivisionIndex = -1;
     this.subdivisionSearch = '';
-    // Copy only editable scalar fields into form
     this.editForm = {};
     for (const field of this.editableFields) {
       this.editForm[field.key] = (country as any)[field.key] ?? '';
@@ -169,17 +177,14 @@ export class AdminComponent {
     this.subSaveError = '';
 
     try {
-      // Clone array and splice in the updated entry
       const subs = [...this.subdivisions];
       subs[this.selectedSubdivisionIndex] = {
         ...subs[this.selectedSubdivisionIndex],
         code: this.subForm['code'],
         name: this.subForm['name'],
         parent: this.subForm['parent'],
-        // division, lat, lng preserved from the spread above
       };
       await this.travel.updateCountry(this.selectedCountry.id, { subdivisions: subs });
-      // Patch local copy
       (this.selectedCountry as any).subdivisions = subs;
       this.selectedSubdivision = subs[this.selectedSubdivisionIndex];
       this.subSaveSuccess = true;
@@ -194,8 +199,6 @@ export class AdminComponent {
   }
 
   // ── Group management ────────────────────────────────────────
-
-  /** Subdivisions grouped by division type, sorted alphabetically. */
   get groupedSubdivisions(): { division: string; items: { sub: any; index: number }[] }[] {
     const groups: Record<string, { sub: any; index: number }[]> = {};
     this.subdivisions.forEach((sub, index) => {
@@ -209,7 +212,6 @@ export class AdminComponent {
     }));
   }
 
-  /** Push subdivisions array to Firestore and patch the local country copy. */
   private async persistSubdivisions(subs: any[]): Promise<void> {
     await this.travel.updateCountry(this.selectedCountry!.id, { subdivisions: subs });
     (this.selectedCountry as any).subdivisions = subs;
@@ -222,7 +224,6 @@ export class AdminComponent {
       const subs = [...this.subdivisions];
       subs.splice(index, 1);
       await this.persistSubdivisions(subs);
-      // If we were editing the deleted item, go back
       if (this.selectedSubdivisionIndex === index) this.clearSubdivision();
     } catch (e: any) {
       console.error('Delete failed', e);
@@ -233,11 +234,7 @@ export class AdminComponent {
 
   openAddForm(division: string) {
     this.showAddFormForDivision = division;
-    this.addForm = {
-      code: '',
-      name: '',
-      division,
-    };
+    this.addForm = { code: '', name: '', division };
     this.addError = '';
   }
 
@@ -291,7 +288,6 @@ export class AdminComponent {
         s.division === this.renamingDivision ? { ...s, division: newName } : s
       );
       await this.persistSubdivisions(subs);
-      // If add form was open for this group, update it too
       if (this.showAddFormForDivision === this.renamingDivision) {
         this.showAddFormForDivision = newName;
         this.addForm.division = newName;
@@ -305,13 +301,11 @@ export class AdminComponent {
   }
 
   async saveCountry() {
-
     if (!this.selectedCountry) return;
     this.saving = true;
     this.saveSuccess = false;
     this.saveError = '';
 
-    // Build the diff — only changed fields
     const changes: Record<string, any> = {};
     for (const field of this.editableFields) {
       const orig = (this.selectedCountry as any)[field.key] ?? '';
@@ -324,7 +318,6 @@ export class AdminComponent {
     try {
       if (Object.keys(changes).length > 0) {
         await this.travel.updateCountry(this.selectedCountry.id, changes);
-        // Patch local copy
         Object.assign(this.selectedCountry as any, changes);
       }
       this.saveSuccess = true;
@@ -338,37 +331,106 @@ export class AdminComponent {
     }
   }
 
-  // ── Seeding tab logic ─────────────────────────────────────
-  seedCountries() {
-    this.loadingSeeding = true;
-    this.addLog('Fetching countries.json...');
-    this.http.get('countries.json').subscribe({
-      next: (jsonContent: any) => {
-        this.zone.run(async () => {
-          this.addLog('Seeding countries, subdivisions, and heritage sites...');
-          try {
-            await this.travel.seedCountries(JSON.stringify(jsonContent), (msg: string) => this.addLog(msg));
-            this.addLog('Seeding complete!');
-          } catch (e: any) {
-            this.addLog('Error seeding: ' + e.message);
-          }
-          this.loadingSeeding = false;
-        });
-      },
-      error: (err) => {
-        this.zone.run(() => {
-          this.addLog('Error fetching countries.json: ' + err.message);
-          this.loadingSeeding = false;
-        });
-      }
-    });
+  // ── Users tab logic ───────────────────────────────────────
+  async loadAllUsers() {
+    this.loadingUsers = true;
+    try {
+      const users = await this.travel.getAllUsers();
+      this.zone.run(() => {
+        this.allUsers = users;
+        this.usersLoaded = true;
+        this.loadingUsers = false;
+        this.cdr.detectChanges();
+      });
+    } catch (e: any) {
+      this.zone.run(() => {
+        this.loadingUsers = false;
+        this.cdr.detectChanges();
+      });
+    }
   }
 
+  get filteredUsers(): UserProfile[] {
+    const q = this.userSearch.trim().toLowerCase();
+    if (!q) return this.allUsers;
+    return this.allUsers.filter(u =>
+      (u.displayName || '').toLowerCase().includes(q) ||
+      (u.email || '').toLowerCase().includes(q)
+    );
+  }
 
-  addLog(msg: string) {
-    this.zone.run(() => {
-      this.logs.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
-      this.cdr.detectChanges();
-    });
+  userInitial(user: UserProfile): string {
+    return (user.displayName || user.email || '?')[0].toUpperCase();
+  }
+
+  selectUser(user: UserProfile) {
+    this.selectedUser = user;
+    this.userForm = {
+      username: user.username || '',
+      displayName: user.displayName || '',
+      email: user.email || '',
+    };
+    this.userSaveSuccess = false;
+    this.userSaveError = '';
+  }
+
+  clearUser() {
+    this.selectedUser = null;
+    this.userForm = { username: '', displayName: '', email: '' };
+  }
+
+  formatProvider(provider?: string): string {
+    if (!provider) return '—';
+    const map: Record<string, string> = {
+      'google.com': 'Google',
+      'password': 'Email / Password',
+      'facebook.com': 'Facebook',
+      'twitter.com': 'Twitter',
+      'github.com': 'GitHub',
+      'apple.com': 'Apple',
+    };
+    return map[provider] || provider;
+  }
+
+  async saveUser() {
+    if (!this.selectedUser) return;
+    this.savingUser = true;
+    this.userSaveSuccess = false;
+    this.userSaveError = '';
+
+    try {
+      // Handle username change via atomic setUsername
+      const newUsername = this.userForm.username.toLowerCase().trim().replace(/[^a-z0-9_]/g, '');
+      const oldUsername = this.selectedUser.username || undefined;
+      if (newUsername && newUsername !== oldUsername) {
+        await this.travel.setUsername(this.selectedUser.uid, newUsername, oldUsername);
+        Object.assign(this.selectedUser, { username: newUsername });
+        // Patch list entry too
+        const idx = this.allUsers.findIndex(u => u.uid === this.selectedUser!.uid);
+        if (idx >= 0) this.allUsers[idx] = { ...this.allUsers[idx], username: newUsername };
+      }
+
+      // Handle displayName / email changes
+      const profileChanges: Partial<Pick<UserProfile, 'displayName' | 'email'>> = {};
+      if (this.userForm.displayName !== (this.selectedUser.displayName || '')) {
+        profileChanges.displayName = this.userForm.displayName;
+      }
+      if (this.userForm.email !== (this.selectedUser.email || '')) {
+        profileChanges.email = this.userForm.email;
+      }
+      if (Object.keys(profileChanges).length > 0) {
+        await this.travel.updateUserProfile(this.selectedUser.uid, profileChanges);
+        Object.assign(this.selectedUser, profileChanges);
+      }
+
+      this.userSaveSuccess = true;
+    } catch (e: any) {
+      this.userSaveError = e.message || 'Unknown error';
+    } finally {
+      this.zone.run(() => {
+        this.savingUser = false;
+        this.cdr.detectChanges();
+      });
+    }
   }
 }
