@@ -241,8 +241,8 @@ export class ExploreComponent implements OnInit {
     }, 350);
   }
 
-  navigateToUser(uid: string) {
-    this.router.navigate(['/user', uid]);
+  navigateToUser(username: string) {
+    this.router.navigate(['/user', username]);
   }
 
   // ── Country search helpers ───────────────────────────────

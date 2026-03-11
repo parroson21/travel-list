@@ -327,7 +327,7 @@
 
         <div *ngIf="!userSearching && userSearchDone" class="user-results-list">
             <div *ngFor="let user of userResults" class="user-result-card glass-panel"
-                (click)="navigateToUser(user.uid)">
+                (click)="navigateToUser(user.username!)">
                 <div class="user-result-avatar">
                     <img *ngIf="user.photoURL" [src]="user.photoURL" class="user-avatar-img" alt="avatar"
                         referrerpolicy="no-referrer" />
