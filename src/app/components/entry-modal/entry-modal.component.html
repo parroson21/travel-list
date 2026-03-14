@@ -1,0 +1,91 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+    <div class="modal-card">
+
+        <div class="modal-header">
+            <div class="modal-title-row">
+                <span class="modal-country-emoji flag-emoji">{{ countryEmoji }}</span>
+                <h2 class="modal-title">{{ countryName }}</h2>
+            </div>
+            <button class="modal-close-btn" (click)="close()" title="Close">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="modal-body">
+
+            <!-- Status selection -->
+            <div class="field-group">
+                <label class="field-label">Status</label>
+                <div class="status-options">
+                    <label class="status-option" [class.selected]="status === 'visited'">
+                        <input type="radio" name="status" value="visited" [(ngModel)]="status">
+                        <span class="status-icon visited-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </span>
+                        <span>I visited</span>
+                    </label>
+                    <label class="status-option" [class.selected]="status === 'planned'">
+                        <input type="radio" name="status" value="planned" [(ngModel)]="status">
+                        <span class="status-icon planned-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 8 12 12 14 14" />
+                            </svg>
+                        </span>
+                        <span>I'm planning to visit</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Date field -->
+            <div class="field-group">
+                <label class="field-label" for="entry-date">
+                    {{ status === 'visited' ? 'Date visited' : 'Planned date' }}
+                </label>
+                <input
+                    id="entry-date"
+                    type="date"
+                    class="date-input"
+                    [(ngModel)]="date"
+                    [max]="status === 'visited' ? todayIso : ''"
+                    required>
+            </div>
+
+            <!-- Error -->
+            <p class="modal-error" *ngIf="error">{{ error }}</p>
+
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-remove" *ngIf="allowRemove && existingEntry" (click)="remove()"
+                [disabled]="saving || removing">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                    <path d="M10 11v6" />
+                    <path d="M14 11v6" />
+                </svg>
+                <span *ngIf="!removing">Remove</span>
+                <span *ngIf="removing">Removing…</span>
+            </button>
+            <div class="footer-spacer"></div>
+            <button class="btn-cancel" (click)="close()" [disabled]="saving || removing">Cancel</button>
+            <button class="btn-submit" (click)="submit()" [disabled]="saving || removing || !date">
+                <span *ngIf="!saving">
+                    {{ existingEntry ? 'Save Changes' : (status === 'visited' ? 'Log Visit' : 'Add to Plans') }}
+                </span>
+                <span *ngIf="saving" class="saving-text">Saving…</span>
+            </button>
+        </div>
+
+    </div>
+</div>

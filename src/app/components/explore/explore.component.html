@@ -240,14 +240,25 @@
                                 <h3 class="country-name">{{ country.name }}</h3>
                             </a>
                         </div>
-                        <button class="btn-visit"
-                            [class.visited]="getCountryStatus(country.id, vm.profile) === 'visited'"
-                            [class.planned]="getCountryStatus(country.id, vm.profile) === 'planned'"
-                            (click)="cycleCountryStatus(country.id, vm.profile)">
-                            @if (getCountryStatus(country.id, vm.profile) === 'visited') { Visited
-                            } @else if (getCountryStatus(country.id, vm.profile) === 'planned') { Planned
-                            } @else { Add }
-                        </button>
+                        <div class="card-actions">
+                            @if (getCountryStatus(country.id, vm.profile) === 'visited') {
+                            <span class="status-chip chip-visited">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                Visited
+                            </span>
+                            } @else if (getCountryStatus(country.id, vm.profile) === 'planned') {
+                            <span class="status-chip chip-planned">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>
+                                Planning
+                            </span>
+                            }
+                            <button class="btn-add-entry" (click)="openEntryModal(country, $event)" title="Log a visit or plan">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                     <div class="country-body">
                         <p class="country-subinfo">{{ country.region }} · {{ country.native }}</p>
@@ -320,7 +331,7 @@
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
             </svg>
-            <p>Search for other travelers by name or email to view their profile and travel map.</p>
+            <p>Search for other travelers by username to view their profile and travel map.</p>
         </div>
 
         <div *ngIf="userQuery.trim() && userSearching" class="search-status">Searching…</div>
@@ -336,8 +347,13 @@
                     </div>
                 </div>
                 <div class="user-result-info">
-                    <span class="user-result-name">{{ user.displayName || 'Traveler' }}</span>
-                    <span class="user-result-email">{{ user.email }}</span>
+                    <span class="user-result-name">@{{ user.username || 'unknown' }}</span>
+                    <span class="user-result-sub online-badge" *ngIf="isOnline(user.lastLoginAt)">
+                        <span class="online-dot"></span>Online
+                    </span>
+                    <span class="user-result-sub" *ngIf="!isOnline(user.lastLoginAt) && user.lastLoginAt">
+                        Last online {{ user.lastLoginAt | date:'MMM d, y' }}
+                    </span>
                 </div>
                 <div class="user-result-stats">
                     <span class="user-stat-pill">🌍 {{ (user.visitedCountries || []).length }} countries</span>
@@ -356,3 +372,14 @@
     </main>
 
 </div>
+
+<!-- Entry Modal -->
+@if (modalCountry) {
+<app-entry-modal
+    [countryId]="modalCountry.id"
+    [countryName]="modalCountry.name"
+    [countryEmoji]="modalCountry.emoji"
+    (submitted)="closeModal()"
+    (closed)="closeModal()">
+</app-entry-modal>
+}

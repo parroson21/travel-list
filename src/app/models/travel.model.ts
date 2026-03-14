@@ -43,6 +43,16 @@ export interface Subdivision {
     lng?: number;
 }
 
+export interface TravelEntry {
+    id: string;           // auto-generated Firestore doc ID
+    countryId: string;    // ISO2 code (e.g., "FR")
+    countryName: string;
+    status: 'visited' | 'planned';
+    date: string;         // ISO date string YYYY-MM-DD (required)
+    note?: string;        // optional free-form note
+    createdAt: string;    // ISO timestamp when this entry was created
+}
+
 export interface UserProfile {
     uid: string;
     displayName?: string;
@@ -56,7 +66,9 @@ export interface UserProfile {
     plannedCountries: string[]; // List of country IDs the user plans to visit
     visitedSubdivisions: string[]; // List of subdivision codes
     visitedPOIs: string[]; // List of POI IDs
+    homeCountryId?: string; // ISO2 code of the user's home country
     dataResetNotification?: boolean; // Set to true when admin resets user data
+
 }
 
 export interface Continent {

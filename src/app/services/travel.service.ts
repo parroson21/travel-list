@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
-import { POI, Country, UserProfile, Continent, Subdivision } from '../models/travel.model';
-import { Firestore, collection, doc, setDoc, getDocs, getDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot, query, where, writeBatch, orderBy, limit, startAt, endAt } from '@angular/fire/firestore';
+import { POI, Country, UserProfile, Continent, Subdivision, TravelEntry } from '../models/travel.model';
+import { Firestore, collection, doc, setDoc, getDocs, getDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot, query, where, writeBatch, orderBy, limit, startAt, endAt, addDoc, deleteDoc, deleteField } from '@angular/fire/firestore';
 import { Auth, user } from '@angular/fire/auth';
 import { switchMap } from 'rxjs/operators';
 import { of, Observable } from 'rxjs';
@@ -16,7 +16,22 @@ export class TravelService {
         visitedFilter: 'all' as 'all' | 'visited' | 'planned' | 'unvisited'
     };
 
-    constructor(private firestore: Firestore, private auth: Auth, private zone: NgZone) { }
+    constructor(private firestore: Firestore, private auth: Auth, private zone: NgZone) {
+        // Heartbeat: update lastLoginAt on login and every 3 minutes while active.
+        // 2s initial delay ensures profile document exists before we updateDoc.
+        let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+        let initialTimer: ReturnType<typeof setTimeout> | null = null;
+        user(this.auth).subscribe(u => {
+            if (heartbeatInterval) { clearInterval(heartbeatInterval); heartbeatInterval = null; }
+            if (initialTimer) { clearTimeout(initialTimer); initialTimer = null; }
+            if (u) {
+                initialTimer = setTimeout(() => {
+                    this.updateLastSeen();
+                    heartbeatInterval = setInterval(() => this.updateLastSeen(), 3 * 60 * 1000);
+                }, 2000);
+            }
+        });
+    }
 
     // User Profile
     getUserProfile(): Observable<UserProfile | null> {
@@ -134,6 +149,110 @@ export class TravelService {
         }
     }
 
+    // ── Travel Entries ─────────────────────────────────────
+
+    /** Add a new travel entry, syncing visitedCountries / plannedCountries */
+    async addTravelEntry(entry: Omit<TravelEntry, 'id' | 'createdAt'>): Promise<void> {
+        const u = this.auth.currentUser;
+        if (!u) return;
+        const entriesCol = collection(this.firestore, `users/${u.uid}/travelEntries`);
+        const now = new Date().toISOString();
+        const docRef = await addDoc(entriesCol, { ...entry, createdAt: now });
+        // Write back the generated id
+        await updateDoc(docRef, { id: docRef.id });
+
+        // Sync the user profile arrays — visited and planned are independent flags.
+        // Adding a visited entry does NOT clear planned (user may plan to revisit).
+        // Adding a planned entry does NOT clear visited.
+        const userDoc = doc(this.firestore, `users/${u.uid}`);
+        if (entry.status === 'visited') {
+            await updateDoc(userDoc, { visitedCountries: arrayUnion(entry.countryId) });
+        } else {
+            await updateDoc(userDoc, { plannedCountries: arrayUnion(entry.countryId) });
+        }
+    }
+
+    /** Live stream of a user's travel entries, newest first */
+    getTravelEntries(uid: string): Observable<TravelEntry[]> {
+        const entriesCol = collection(this.firestore, `users/${uid}/travelEntries`);
+        return new Observable<TravelEntry[]>(observer => {
+            const unsubscribe = onSnapshot(entriesCol, snap => {
+                this.zone.run(() => {
+                    const entries = snap.docs
+                        .map(d => d.data() as TravelEntry)
+                        .sort((a, b) => b.date.localeCompare(a.date));
+                    observer.next(entries);
+                });
+            }, err => observer.error(err));
+            return () => unsubscribe();
+        });
+    }
+
+    /** Update an existing travel entry (e.g. planned → visited) and sync user arrays */
+    async updateTravelEntry(uid: string, entryId: string, changes: Partial<Pick<TravelEntry, 'status' | 'date' | 'note'>>): Promise<void> {
+        const entryDocRef = doc(this.firestore, `users/${uid}/travelEntries/${entryId}`);
+
+        // Read entry before updating to know old status
+        const snap = await getDoc(entryDocRef);
+        if (!snap.exists()) return;
+        const entry = snap.data() as TravelEntry;
+
+        await updateDoc(entryDocRef, changes as Record<string, any>);
+
+        const userDoc = doc(this.firestore, `users/${uid}`);
+        const newStatus = changes.status ?? entry.status;
+
+        if (newStatus === 'visited') {
+            // Ensure visited flag is set
+            await updateDoc(userDoc, { visitedCountries: arrayUnion(entry.countryId) });
+            // If no more planned entries for this country, remove planned flag
+            if (entry.status === 'planned') {
+                const entriesCol = collection(this.firestore, `users/${uid}/travelEntries`);
+                const allSnap = await getDocs(entriesCol);
+                const stillPlanned = allSnap.docs
+                    .map(d => d.data() as TravelEntry)
+                    .some(e => e.countryId === entry.countryId && e.status === 'planned' && e.id !== entryId);
+                if (!stillPlanned) {
+                    await updateDoc(userDoc, { plannedCountries: arrayRemove(entry.countryId) });
+                }
+            }
+        } else if (newStatus === 'planned') {
+            await updateDoc(userDoc, { plannedCountries: arrayUnion(entry.countryId) });
+            // If no more visited entries for this country, remove visited flag
+            if (entry.status === 'visited') {
+                const entriesCol = collection(this.firestore, `users/${uid}/travelEntries`);
+                const allSnap = await getDocs(entriesCol);
+                const stillVisited = allSnap.docs
+                    .map(d => d.data() as TravelEntry)
+                    .some(e => e.countryId === entry.countryId && e.status === 'visited' && e.id !== entryId);
+                if (!stillVisited) {
+                    await updateDoc(userDoc, { visitedCountries: arrayRemove(entry.countryId) });
+                }
+            }
+        }
+    }
+
+    /** Delete a travel entry and re-sync user profile arrays */
+    async deleteTravelEntry(uid: string, entryId: string): Promise<void> {
+        const entryDocRef = doc(this.firestore, `users/${uid}/travelEntries/${entryId}`);
+        const snap = await getDoc(entryDocRef);
+        if (!snap.exists()) return;
+        const entry = snap.data() as TravelEntry;
+        await deleteDoc(entryDocRef);
+
+        // Re-evaluate array membership
+        const entriesCol = collection(this.firestore, `users/${uid}/travelEntries`);
+        const allSnap = await getDocs(entriesCol);
+        const remaining = allSnap.docs.map(d => d.data() as TravelEntry).filter(e => e.countryId === entry.countryId);
+        const userDoc = doc(this.firestore, `users/${uid}`);
+        const hasVisited = remaining.some(e => e.status === 'visited');
+        const hasPlanned = remaining.some(e => e.status === 'planned');
+        const patch: Record<string, any> = {};
+        if (!hasVisited) patch['visitedCountries'] = arrayRemove(entry.countryId);
+        if (!hasPlanned) patch['plannedCountries'] = arrayRemove(entry.countryId);
+        if (Object.keys(patch).length > 0) await updateDoc(userDoc, patch);
+    }
+
     async markPOIVisited(poiId: string, visited: boolean, countryId?: string) {
         const u = this.auth.currentUser;
         if (!u) return;
@@ -146,6 +265,26 @@ export class TravelService {
             await updateDoc(userDoc, update);
         } else {
             await updateDoc(userDoc, { visitedPOIs: arrayRemove(poiId) });
+        }
+    }
+
+    /** Set (or clear) the user's home country */
+    async setHomeCountry(countryId: string | null): Promise<void> {
+        const u = this.auth.currentUser;
+        if (!u) return;
+        const userDoc = doc(this.firestore, `users/${u.uid}`);
+        await updateDoc(userDoc, { homeCountryId: countryId ?? deleteField() });
+    }
+
+    /** Heartbeat — write current timestamp to lastLoginAt so "last online" stays fresh */
+    async updateLastSeen(): Promise<void> {
+        try {
+            const u = this.auth.currentUser;
+            if (!u) return;
+            const userDoc = doc(this.firestore, `users/${u.uid}`);
+            await updateDoc(userDoc, { lastLoginAt: new Date().toISOString() });
+        } catch {
+            // Silently ignore — document may not exist yet on first load
         }
     }
 

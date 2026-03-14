@@ -1,18 +1,26 @@
 import { Component, OnInit, ChangeDetectionStrategy, ViewChild, HostListener } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TravelService } from '../../services/travel.service';
 import { AuthService } from '../../services/auth.service';
 import { Observable, combineLatest, firstValueFrom } from 'rxjs';
-import { map, startWith, take } from 'rxjs/operators';
-import { Country, UserProfile } from '../../models/travel.model';
+import { map, startWith, switchMap, take } from 'rxjs/operators';
+import { Country, UserProfile, TravelEntry } from '../../models/travel.model';
 import { WorldMapComponent } from '../world-map/world-map.component';
+import { EntryModalComponent } from '../entry-modal/entry-modal.component';
+
+export interface ProfileEntryRow {
+    entry: TravelEntry;
+    country: Country | undefined;
+    legacy: boolean; // true when the entry is missing a proper date
+}
 
 @Component({
     selector: 'app-profile',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, WorldMapComponent, DecimalPipe],
+    imports: [CommonModule, FormsModule, WorldMapComponent, DecimalPipe, EntryModalComponent],
     templateUrl: './profile.html',
     styleUrls: ['./profile.css']
 })
@@ -23,6 +31,7 @@ export class ProfileComponent implements OnInit {
     activeTab: 'countries' | 'planned' | 'heritage' = 'countries';
 
     vm$: Observable<{
+        countries: Country[],
         visitedCountries: Country[],
         visitedCountryNames: string[],
         plannedCountries: Country[],
@@ -31,7 +40,12 @@ export class ProfileComponent implements OnInit {
         visitedHeritageSites: { site: any; countryName: string; countryEmoji: string }[],
         visitedPOIIds: string[],
         stats: { countriesVisited: number, poisVisited: number, countriesPlanned: number },
-        profile: UserProfile | null
+        profile: UserProfile | null,
+        travelEntries: TravelEntry[],
+        entryByCountryId: Map<string, TravelEntry[]>,
+        visitedEntryRows: ProfileEntryRow[],
+        plannedEntryRows: ProfileEntryRow[],
+        homeCountry: Country | undefined
     }> | undefined;
 
     constructor(public travel: TravelService, public auth: AuthService, private router: Router) { }
@@ -41,50 +55,106 @@ export class ProfileComponent implements OnInit {
             this.travel.getCountries(),
             this.travel.getUserProfile().pipe(startWith(null)),
         ]).pipe(
-            map(([countries, profile]) => {
-                const visitedCountryIds = profile?.visitedCountries || [];
-                const plannedCountryIds = profile?.plannedCountries || [];
-                const visitedCountries = countries
-                    .filter(c => visitedCountryIds.includes(c.id))
-                    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-                const plannedCountries = countries
-                    .filter(c => plannedCountryIds.includes(c.id))
-                    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            switchMap(([countries, profile]) => {
+                const uid = profile?.uid;
+                const entries$ = uid
+                    ? this.travel.getTravelEntries(uid)
+                    : new Observable<TravelEntry[]>(o => o.next([]));
+                return combineLatest([entries$]).pipe(
+                    map(([travelEntries]) => {
+                        const visitedCountryIds = profile?.visitedCountries || [];
+                        const plannedCountryIds = profile?.plannedCountries || [];
+                        const visitedCountries = countries
+                            .filter(c => visitedCountryIds.includes(c.id))
+                            .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                        const plannedCountries = countries
+                            .filter(c => plannedCountryIds.includes(c.id))
+                            .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
-                const stats = {
-                    countriesVisited: visitedCountryIds.length,
-                    poisVisited: profile?.visitedPOIs?.length || 0,
-                    countriesPlanned: plannedCountryIds.length
-                };
+                        const stats = {
+                            countriesVisited: visitedCountryIds.length,
+                            poisVisited: profile?.visitedPOIs?.length || 0,
+                            countriesPlanned: plannedCountryIds.length
+                        };
 
-                const heritageSites = visitedCountries
-                    .flatMap(country => country.worldHeritageSites || []);
+                        const heritageSites = visitedCountries
+                            .flatMap(country => country.worldHeritageSites || []);
 
-                const visitedPOIIds = profile?.visitedPOIs || [];
+                        const visitedPOIIds = profile?.visitedPOIs || [];
 
-                const visitedHeritageSites = visitedCountries
-                    .flatMap(country =>
-                        (country.worldHeritageSites || [])
-                            .filter((site: any) => visitedPOIIds.includes(site.id_no))
-                            .map((site: any) => ({
-                                site,
-                                countryName: country.name,
-                                countryEmoji: country.emoji
-                            }))
-                    )
-                    .sort((a, b) => a.site.name_en.localeCompare(b.site.name_en));
+                        const visitedHeritageSites = visitedCountries
+                            .flatMap(country =>
+                                (country.worldHeritageSites || [])
+                                    .filter((site: any) => visitedPOIIds.includes(site.id_no))
+                                    .map((site: any) => ({
+                                        site,
+                                        countryName: country.name,
+                                        countryEmoji: country.emoji
+                                    }))
+                            )
+                            .sort((a, b) => a.site.name_en.localeCompare(b.site.name_en));
 
-                return {
-                    visitedCountries,
-                    visitedCountryNames: visitedCountries.map(c => c.name),
-                    plannedCountries,
-                    plannedCountryNames: plannedCountries.map(c => c.name),
-                    heritageSites,
-                    visitedHeritageSites,
-                    visitedPOIIds,
-                    stats,
-                    profile
-                };
+                        // Build entry map keyed by countryId, sorted newest first
+                        const entryByCountryId = new Map<string, TravelEntry[]>();
+                        for (const e of travelEntries) {
+                            if (!entryByCountryId.has(e.countryId)) entryByCountryId.set(e.countryId, []);
+                            entryByCountryId.get(e.countryId)!.push(e);
+                        }
+
+                        // Build flat sorted entry row lists
+                        const countryById = new Map(countries.map(c => [c.id, c]));
+
+                        const toRows = (entries: TravelEntry[]): ProfileEntryRow[] => {
+                            const dated = entries.filter(e => e.date);
+                            const legacy = entries.filter(e => !e.date);
+                            dated.sort((a, b) => b.date.localeCompare(a.date));
+                            return [
+                                ...dated.map(e => ({ entry: e, country: countryById.get(e.countryId), legacy: false })),
+                                ...legacy.map(e => ({ entry: e, country: countryById.get(e.countryId), legacy: true }))
+                            ];
+                        };
+
+                        const visitedEntries = travelEntries.filter(e => e.status === 'visited');
+                        const plannedEntries = travelEntries.filter(e => e.status === 'planned');
+
+                        // Phantom legacy rows: countries in the profile arrays but with no subcollection entry.
+                        // These are old data from before the entry system; display at bottom with legacy badge.
+                        const visitedWithEntries = new Set(visitedEntries.map(e => e.countryId));
+                        const plannedWithEntries = new Set(plannedEntries.map(e => e.countryId));
+
+
+                        const makePhantom = (id: string, status: 'visited' | 'planned'): TravelEntry => {
+                            const c = countryById.get(id);
+                            return { id: `legacy-${status}-${id}`, countryId: id, countryName: c?.name || id, status, date: '', createdAt: '' };
+                        };
+
+                        const phantomVisited = visitedCountryIds
+                            .filter(id => !visitedWithEntries.has(id))
+                            .map(id => makePhantom(id, 'visited'));
+
+                        const phantomPlanned = plannedCountryIds
+                            .filter(id => !plannedWithEntries.has(id))
+                            .map(id => makePhantom(id, 'planned'));
+
+                        return {
+                            countries,
+                            visitedCountries,
+                            visitedCountryNames: visitedCountries.map(c => c.name),
+                            plannedCountries,
+                            plannedCountryNames: plannedCountries.map(c => c.name),
+                            heritageSites,
+                            visitedHeritageSites,
+                            visitedPOIIds,
+                            stats,
+                            profile,
+                            travelEntries,
+                            entryByCountryId,
+                            visitedEntryRows: toRows([...visitedEntries, ...phantomVisited]),
+                            plannedEntryRows: toRows([...plannedEntries, ...phantomPlanned]),
+                            homeCountry: profile?.homeCountryId ? countryById.get(profile.homeCountryId) : undefined
+                        };
+                    })
+                );
             })
         );
     }
@@ -92,6 +162,55 @@ export class ProfileComponent implements OnInit {
     setActiveTab(tab: 'countries' | 'planned' | 'heritage') {
         this.activeTab = tab;
         this.selectedSite = null;
+    }
+
+    // ── Entry modal (edit / remove individual entries from profile) ─────────
+    editModalEntry: TravelEntry | null = null;
+    editModalCountry: { id: string; name: string; emoji: string } | null = null;
+
+    openEditModal(row: ProfileEntryRow, event: Event) {
+        event.stopPropagation();
+        this.editModalEntry = row.entry;
+        this.editModalCountry = row.country
+            ? { id: row.country.id, name: row.country.name, emoji: row.country.emoji }
+            : { id: row.entry.countryId, name: row.entry.countryName, emoji: '' };
+    }
+
+    closeEditModal() {
+        this.editModalEntry = null;
+        this.editModalCountry = null;
+    }
+
+    // ── Home country picker ──────────────────────────────────
+    homePickerOpen = false;
+    homeSearch = '';
+    pickerAnchorTop = 0;
+    pickerAnchorRight = 0;
+
+    openHomePicker(event: Event) {
+        const btn = event.currentTarget as HTMLElement;
+        const rect = btn.getBoundingClientRect();
+        this.pickerAnchorTop = rect.bottom + 8;
+        this.pickerAnchorRight = window.innerWidth - rect.right;
+        this.homePickerOpen = true;
+        this.homeSearch = '';
+    }
+    closeHomePicker() { this.homePickerOpen = false; this.homeSearch = ''; }
+
+    filteredHomeCountries(countries: Country[]): Country[] {
+        const q = this.homeSearch.toLowerCase();
+        return q ? countries.filter(c => c.name.toLowerCase().includes(q)) : countries;
+    }
+
+    async saveHomeCountry(countryId: string | null) {
+        await this.travel.setHomeCountry(countryId);
+        this.closeHomePicker();
+    }
+
+    /** Returns true if the ISO timestamp is within the last 5 minutes */
+    isOnline(isoTimestamp: string | undefined): boolean {
+        if (!isoTimestamp) return false;
+        return Date.now() - new Date(isoTimestamp).getTime() < 5 * 60 * 1000;
     }
 
     // ── Map interaction ─────────────────────────────────────

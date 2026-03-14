@@ -77,8 +77,19 @@
                                                 (click)="$event.stopPropagation(); navigateToCountry(country.id)"
                                                 title="Open country page">{{ country.name }}</span>
                                             <span class="item-sub">{{ country.continent }}</span>
+                                            <span class="item-date"
+                                                *ngIf="vm.entryByCountryId.get(country.id) as entries">
+                                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                                </svg>
+                                                {{ entries[0].date | date:'MMM d, y' }}
+                                            </span>
                                         </div>
-                                        <span class="row-arrow">›</span>
+                                        <span class="row-arrow">&rsaquo;</span>
                                     </div>
                                 </div>
                                 <div *ngIf="vm.visitedCountries.length === 0" class="empty-state glass-panel">
@@ -96,8 +107,18 @@
                                                 (click)="$event.stopPropagation(); navigateToCountry(country.id)"
                                                 title="Open country page">{{ country.name }}</span>
                                             <span class="item-sub">{{ country.continent }}</span>
+                                            <ng-container *ngIf="vm.entryByCountryId.get(country.id) as entries">
+                                                <span class="item-date" *ngIf="entries[entries.length - 1] as entry">
+                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                                        stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                                        <circle cx="12" cy="12" r="10" />
+                                                        <polyline points="12 8 12 12 14 14" />
+                                                    </svg>
+                                                    {{ entry.date | date:'MMM d, y' }}
+                                                </span>
+                                            </ng-container>
                                         </div>
-                                        <span class="row-arrow">›</span>
+                                        <span class="row-arrow">&rsaquo;</span>
                                     </div>
                                 </div>
                                 <div *ngIf="vm.plannedCountries.length === 0" class="empty-state glass-panel">
@@ -215,15 +236,32 @@
                         <h1 class="profile-name">{{ vm.targetProfile.displayName || 'Traveler' }}</h1>
                         <span *ngIf="vm.isOwnProfile" class="own-profile-badge">You</span>
                     </div>
-                    <span *ngIf="vm.targetProfile.username" class="profile-username">@{{ vm.targetProfile.username }}</span>
+                    <span *ngIf="vm.targetProfile.username" class="profile-username">@{{ vm.targetProfile.username
+                        }}</span>
                     <span class="profile-email">{{ vm.targetProfile.email }}</span>
                     <div class="profile-dates">
                         <span class="profile-date" *ngIf="vm.targetProfile.createdAt">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                <line x1="16" y1="2" x2="16" y2="6" />
+                                <line x1="8" y1="2" x2="8" y2="6" />
+                                <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
                             Joined {{ vm.targetProfile.createdAt | date:'MMM d, y' }}
                         </span>
-                        <span class="profile-date" *ngIf="vm.targetProfile.lastLoginAt">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span class="profile-date online-badge"
+                            *ngIf="vm.targetProfile.lastLoginAt && isOnline(vm.targetProfile.lastLoginAt)">
+                            <span class="online-dot"></span>
+                            Online
+                        </span>
+                        <span class="profile-date"
+                            *ngIf="vm.targetProfile.lastLoginAt && !isOnline(vm.targetProfile.lastLoginAt)">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
                             Last online {{ vm.targetProfile.lastLoginAt | date:'MMM d, y' }}
                         </span>
                     </div>

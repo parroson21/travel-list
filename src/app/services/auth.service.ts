@@ -35,10 +35,8 @@ export class AuthService {
         provider.setCustomParameters({ prompt: 'select_account' });
 
         try {
-            // Try popup first
             return await signInWithPopup(this.auth, provider);
         } catch (error: any) {
-            // Fallback to redirect if popup is blocked or fails
             if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-by-user') {
                 return await signInWithRedirect(this.auth, provider);
             }
@@ -48,5 +46,9 @@ export class AuthService {
 
     async logout() {
         return await signOut(this.auth);
+    }
+
+    get currentUser() {
+        return this.auth.currentUser;
     }
 }

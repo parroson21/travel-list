@@ -559,50 +559,62 @@
   font-size: 0.95rem;
 }
 
-.country-card-header .btn-visit {
-  width: auto;
-  min-width: 100px;
+/* Card actions: status chip + add button */
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
 }
 
-/* Buttons */
-.btn-visit {
-  padding: 0.6rem 1.5rem;
-  border-radius: 8px;
-  border: 1px solid var(--glass-border);
-  background: transparent;
-  color: var(--text-muted);
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.chip-visited {
+  background: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.3);
+}
+
+.chip-planned {
+  background: rgba(255, 159, 10, 0.15);
+  color: #ff9f0a;
+  border: 1px solid rgba(255, 159, 10, 0.3);
+}
+
+.btn-add-entry {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent-color, #4f8ef7);
+  background: rgba(79, 142, 247, 0.1);
+  color: var(--accent-color, #4f8ef7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
-  width: 100%;
-  font-weight: 500;
+  transition: background 0.15s, transform 0.12s;
+  flex-shrink: 0;
 }
 
-.btn-visit:hover {
-  background: var(--glass);
-  color: var(--text-main);
+.btn-add-entry:hover {
+  background: rgba(79, 142, 247, 0.22);
+  transform: scale(1.1);
 }
 
-.btn-visit.visited {
-  background: var(--success);
-  border-color: var(--success);
-  color: white;
+.btn-add-entry:active {
+  transform: scale(0.95);
 }
 
-.btn-visit.visited:hover {
-  background: var(--success-hover);
-}
-
-.btn-visit.planned {
-  background: rgba(128, 128, 128, 0.1);
-  border-color: var(--glass-border);
-  border-style: dashed;
-  color: var(--text-muted);
-}
-
-.btn-visit.planned:hover {
-  background: rgba(128, 128, 128, 0.18);
-  color: var(--text-main);
-}
 
 /* Responsive */
 @media (max-width: 968px) {
@@ -864,4 +876,12 @@
     font-size: .78rem;
     padding: 0.7rem 1.6rem 0.7rem 0.7rem;
   }
+}
+/* ── User result sub-label (last online / online badge) ── */
+.user-result-sub {
+    font-size: .75rem;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
 }

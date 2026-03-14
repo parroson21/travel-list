@@ -8,6 +8,7 @@ import { Country, UserProfile, Continent } from '../../models/travel.model';
 import { Observable, combineLatest, BehaviorSubject, firstValueFrom } from 'rxjs';
 import { map, startWith, take } from 'rxjs/operators';
 import { ActivatedRoute } from '@angular/router';
+import { EntryModalComponent } from '../entry-modal/entry-modal.component';
 
 interface CountryGroup {
   continent: string;
@@ -25,7 +26,7 @@ interface HeritageSiteResult {
   selector: 'app-explore',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, EntryModalComponent],
   templateUrl: './explore.component.html',
   styleUrls: ['./explore.component.css']
 })
@@ -58,6 +59,9 @@ export class ExploreComponent implements OnInit {
   userSearching = false;
   userSearchDone = false;
   private userSearchTimeout: any;
+
+  // ── Entry modal ──────────────────────────────────────────
+  modalCountry: { id: string; name: string; emoji: string } | null = null;
 
   vm$: Observable<{
     countryGroups: CountryGroup[],
@@ -308,18 +312,27 @@ export class ExploreComponent implements OnInit {
     return 'none';
   }
 
-  async cycleCountryStatus(countryId: string, profile: UserProfile | null) {
-    const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
-    if (!user) { this.auth.loginWithGoogle(); return; }
-    const current = this.getCountryStatus(countryId, profile);
-    const next = current === 'none' ? 'planned' : current === 'planned' ? 'visited' : 'none';
-    this.travel.setCountryStatus(countryId, next);
+  openEntryModal(country: Country, event: Event) {
+    event.stopPropagation();
+    this.modalCountry = { id: country.id, name: country.name, emoji: country.emoji };
+    this.cdr.markForCheck();
   }
 
-  async toggleCountryVisited(countryId: string, profile: UserProfile | null) {
-    const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
-    if (!user) { this.auth.loginWithGoogle(); return; }
-    const visited = this.isCountryVisited(countryId, profile);
-    this.travel.markCountryVisited(countryId, !visited);
+  closeModal() {
+    this.modalCountry = null;
+    this.cdr.markForCheck();
+  }
+
+  async ensureLoggedIn(): Promise<boolean> {
+    const u = await firstValueFrom(this.auth.user$.pipe(take(1)));
+    if (!u) { this.auth.loginWithGoogle(); return false; }
+    return true;
+  }
+
+  /** Returns true if the ISO timestamp is within the last 5 minutes */
+  isOnline(isoTimestamp: string | undefined): boolean {
+    if (!isoTimestamp) return false;
+    return Date.now() - new Date(isoTimestamp).getTime() < 5 * 60 * 1000;
   }
 }
+

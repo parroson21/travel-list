@@ -4,22 +4,23 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TravelService } from '../../services/travel.service';
 import { AuthService } from '../../services/auth.service';
 import { Country, UserProfile, Subdivision } from '../../models/travel.model';
+import { Observable, combineLatest, firstValueFrom } from 'rxjs';
+import { map, switchMap, startWith, take } from 'rxjs/operators';
+import { WorldMapComponent } from '../world-map/world-map.component';
+import { FormsModule } from '@angular/forms';
+import { Location } from '@angular/common';
+import { EntryModalComponent } from '../entry-modal/entry-modal.component';
 
 interface SubdivisionGroup {
     divisionType: string;
     label: string;
     subdivisions: Subdivision[];
 }
-import { Observable, combineLatest, firstValueFrom } from 'rxjs';
-import { map, switchMap, startWith, take } from 'rxjs/operators';
-import { WorldMapComponent } from '../world-map/world-map.component';
-import { FormsModule } from '@angular/forms';
-import { Location } from '@angular/common';
 
 @Component({
     selector: 'app-country-detail',
     standalone: true,
-    imports: [CommonModule, WorldMapComponent, FormsModule],
+    imports: [CommonModule, WorldMapComponent, FormsModule, EntryModalComponent],
     templateUrl: './country-detail.component.html',
     styleUrls: ['./country-detail.component.css']
 })
@@ -29,9 +30,21 @@ export class CountryDetailComponent implements OnInit {
     activeTab: 'subdivisions' | 'heritage' = 'subdivisions';
     infoExpanded = false;
     selectedSite: any = null;
-    statusMenuOpen = false;
     hoveredSiteId: string | null = null;
     hoveredSubdivisionCode: string | null = null;
+
+    // ── Entry modal ──────────────────────────────────────────
+    modalCountry: { id: string; name: string; emoji: string } | null = null;
+
+    openEntryModal(country: Country | null, event: Event) {
+        event.stopPropagation();
+        if (!country) return;
+        this.modalCountry = { id: country.id, name: country.name, emoji: country.emoji };
+    }
+
+    closeModal() {
+        this.modalCountry = null;
+    }
 
 
     vm$: Observable<{
@@ -111,50 +124,14 @@ export class CountryDetailComponent implements OnInit {
         this.activeTab = tab;
     }
 
-    async toggleCountryVisited(countryId: string, isVisited: boolean) {
-        const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
-        if (!user) {
-            this.auth.loginWithGoogle();
-            return;
-        }
-        this.travel.markCountryVisited(countryId, !isVisited);
-    }
-
     getCountryStatus(countryId: string, profile: UserProfile | null): 'visited' | 'planned' | 'none' {
         if (profile?.visitedCountries?.includes(countryId)) return 'visited';
         if (profile?.plannedCountries?.includes(countryId)) return 'planned';
         return 'none';
     }
 
-    async cycleCountryStatus(countryId: string, profile: UserProfile | null) {
-        const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
-        if (!user) {
-            this.auth.loginWithGoogle();
-            return;
-        }
-        const current = this.getCountryStatus(countryId, profile);
-        const next = current === 'none' ? 'planned' : current === 'planned' ? 'visited' : 'none';
-        this.travel.setCountryStatus(countryId, next);
-    }
-
-    openStatusMenu(event: Event) {
-        event.stopPropagation();
-        this.statusMenuOpen = !this.statusMenuOpen;
-    }
-
-    async setStatus(status: 'visited' | 'planned' | 'none', countryId: string, profile: UserProfile | null) {
-        this.statusMenuOpen = false;
-        const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
-        if (!user) {
-            this.auth.loginWithGoogle();
-            return;
-        }
-        this.travel.setCountryStatus(countryId, status);
-    }
-
     @HostListener('document:click', ['$event'])
     onDocumentClick(event: MouseEvent) {
-        this.statusMenuOpen = false;
         // Close the inline detail when clicking outside of it
         if (this.selectedSite) {
             const target = event.target as HTMLElement;

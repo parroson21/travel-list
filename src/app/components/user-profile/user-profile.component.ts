@@ -5,7 +5,7 @@ import { TravelService } from '../../services/travel.service';
 import { AuthService } from '../../services/auth.service';
 import { Observable, combineLatest, of } from 'rxjs';
 import { map, switchMap, startWith } from 'rxjs/operators';
-import { Country, UserProfile } from '../../models/travel.model';
+import { Country, UserProfile, TravelEntry } from '../../models/travel.model';
 import { WorldMapComponent } from '../world-map/world-map.component';
 import { Location } from '@angular/common';
 
@@ -34,7 +34,9 @@ export class UserProfileComponent implements OnInit {
         visitedHeritageSites: { site: any; countryName: string; countryEmoji: string }[],
         visitedPOIIds: string[],
         stats: { countriesVisited: number, poisVisited: number, countriesPlanned: number },
-        isOwnProfile: boolean
+        isOwnProfile: boolean,
+        travelEntries: TravelEntry[],
+        entryByCountryId: Map<string, TravelEntry[]>
     }> | undefined;
 
     highlightedCountry: Country | null = null;
@@ -72,9 +74,9 @@ export class UserProfileComponent implements OnInit {
             this.travel.getCountries(),
             this.auth.user$.pipe(startWith(null))
         ]).pipe(
-            map(([targetProfile, countries, currentUser]) => {
+            switchMap(([targetProfile, countries, currentUser]) => {
                 if (!targetProfile) {
-                    return {
+                    return of({
                         targetProfile: null,
                         visitedCountries: [],
                         visitedCountryNames: [],
@@ -84,8 +86,10 @@ export class UserProfileComponent implements OnInit {
                         visitedHeritageSites: [],
                         visitedPOIIds: [],
                         stats: { countriesVisited: 0, poisVisited: 0, countriesPlanned: 0 },
-                        isOwnProfile: false
-                    };
+                        isOwnProfile: false,
+                        travelEntries: [] as TravelEntry[],
+                        entryByCountryId: new Map<string, TravelEntry[]>()
+                    });
                 }
 
                 const visitedCountryIds = targetProfile.visitedCountries || [];
@@ -113,22 +117,33 @@ export class UserProfileComponent implements OnInit {
                     )
                     .sort((a, b) => a.site.name_en.localeCompare(b.site.name_en));
 
-                return {
-                    targetProfile,
-                    visitedCountries,
-                    visitedCountryNames: visitedCountries.map(c => c.name),
-                    plannedCountries,
-                    plannedCountryNames: plannedCountries.map(c => c.name),
-                    heritageSites,
-                    visitedHeritageSites,
-                    visitedPOIIds,
-                    stats: {
-                        countriesVisited: visitedCountryIds.length,
-                        poisVisited: visitedPOIIds.length,
-                        countriesPlanned: plannedCountryIds.length
-                    },
-                    isOwnProfile: !!currentUser && currentUser.uid === targetProfile.uid
-                };
+                return this.travel.getTravelEntries(targetProfile.uid).pipe(
+                    map(travelEntries => {
+                        const entryByCountryId = new Map<string, TravelEntry[]>();
+                        for (const e of travelEntries) {
+                            if (!entryByCountryId.has(e.countryId)) entryByCountryId.set(e.countryId, []);
+                            entryByCountryId.get(e.countryId)!.push(e);
+                        }
+                        return {
+                            targetProfile,
+                            visitedCountries,
+                            visitedCountryNames: visitedCountries.map(c => c.name),
+                            plannedCountries,
+                            plannedCountryNames: plannedCountries.map(c => c.name),
+                            heritageSites,
+                            visitedHeritageSites,
+                            visitedPOIIds,
+                            stats: {
+                                countriesVisited: visitedCountryIds.length,
+                                poisVisited: visitedPOIIds.length,
+                                countriesPlanned: plannedCountryIds.length
+                            },
+                            isOwnProfile: !!currentUser && currentUser.uid === targetProfile.uid,
+                            travelEntries,
+                            entryByCountryId
+                        };
+                    })
+                );
             })
         );
     }
@@ -166,6 +181,12 @@ export class UserProfileComponent implements OnInit {
     openSiteFromPin(poiId: string, heritageSites: any[]) {
         const site = heritageSites.find(s => s.id_no === poiId);
         if (site) this.openSiteDetails(site);
+    }
+
+    /** Returns true if the ISO timestamp is within the last 5 minutes */
+    isOnline(isoTimestamp: string | undefined): boolean {
+        if (!isoTimestamp) return false;
+        return Date.now() - new Date(isoTimestamp).getTime() < 5 * 60 * 1000;
     }
 
     navigateToCountry(countryId: string) {

@@ -718,3 +718,26 @@
         display: none;
     }
 }
+/* ── Online presence badge ── */
+.online-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    color: #22c55e !important;
+    font-weight: 600;
+}
+
+.online-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #22c55e;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 2px rgba(34,197,94,.25);
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { box-shadow: 0 0 0 2px rgba(34,197,94,.25); }
+    50%       { box-shadow: 0 0 0 5px rgba(34,197,94,.08); }
+}
