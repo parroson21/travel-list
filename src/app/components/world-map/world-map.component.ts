@@ -683,30 +683,31 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
     }
 
     /**
-     * Get the color expression for heritage site pins using theme primary colors.
-     * Cycles through the primary color array based on category.
+     * Get a single colour for a heritage site category (used in tooltips).
+     * Reads from --heritage-* CSS variables set by the theme service.
      */
-    private getHeritagePinColor(): string {
-        const colorsStr = this.getCssVar('--primary-colors');
-        if (!colorsStr) return this.getCssVar('--primary') || '#888888';
-        const colors = colorsStr.split(',').map(c => c.trim());
-        return colors[0] || '#888888';
+    private getHeritagePinColor(category?: string): string {
+        if (category === 'natural') return this.getCssVar('--heritage-natural') || '#27ae60';
+        if (category === 'mixed')   return this.getCssVar('--heritage-mixed')   || '#E67E22';
+        return this.getCssVar('--heritage-cultural') || '#4a90d9'; // cultural + default
     }
 
+    /**
+     * MapLibre paint expression using --heritage-* CSS variables.
+     * Fully independent of --primary / --secondary.
+     */
     private getHeritagePinColorExpression(): any {
-        const colorsStr = this.getCssVar('--primary-colors');
-        if (!colorsStr) return this.getCssVar('--primary') || '#888888';
-        const colors = colorsStr.split(',').map(c => c.trim());
-        if (colors.length <= 1) return colors[0] || '#888888';
+        const cultural = this.getCssVar('--heritage-cultural') || '#4a90d9';
+        const natural  = this.getCssVar('--heritage-natural')  || '#27ae60';
+        const mixed    = this.getCssVar('--heritage-mixed')    || '#E67E22';
 
-        // Cycle through primary colors by category
         return [
             'match',
             ['get', 'category'],
-            'cultural', colors[0],
-            'natural', colors[1 % colors.length],
-            'mixed', colors[2 % colors.length],
-            colors[0]
+            'cultural', cultural,
+            'natural',  natural,
+            'mixed',    mixed,
+            cultural  // default fallback
         ];
     }
 
@@ -795,7 +796,7 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
                     const name = props?.name;
                     const category = props?.category;
                     const visited = props?.visited;
-                    const color = this.getHeritagePinColor();
+                    const color = this.getHeritagePinColor(category);
                     const label = category === 'cultural' ? 'Cultural' : category === 'natural' ? 'Natural' : 'Mixed';
                     const visitedBadge = visited ? ' ✓' : '';
 

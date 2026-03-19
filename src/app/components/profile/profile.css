@@ -1,4 +1,4 @@
-﻿/* â”€â”€ Page shell: scrollable, no fixed height â”€â”€ */
+/* â”€â”€ Page shell: scrollable, no fixed height â”€â”€ */
 .profile-container {
     display: flex;
     flex-direction: column;
@@ -450,23 +450,7 @@
     flex-shrink: 0;
 }
 
-.badge-cultural {
-    background: rgba(74, 144, 217, .15);
-    color: #4A90D9;
-    border: 1px solid rgba(74, 144, 217, .3);
-}
 
-.badge-natural {
-    background: rgba(39, 174, 96, .15);
-    color: #27AE60;
-    border: 1px solid rgba(39, 174, 96, .3);
-}
-
-.badge-mixed {
-    background: rgba(230, 126, 34, .15);
-    color: #E67E22;
-    border: 1px solid rgba(230, 126, 34, .3);
-}
 
 /* â”€â”€ Inline site detail â”€â”€ */
 .inline-detail {

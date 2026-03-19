@@ -743,23 +743,7 @@
   white-space: nowrap;
 }
 
-.badge-cultural {
-  background: rgba(74, 144, 217, .15);
-  color: #4A90D9;
-  border: 1px solid rgba(74, 144, 217, .3);
-}
 
-.badge-natural {
-  background: rgba(39, 174, 96, .15);
-  color: #27AE60;
-  border: 1px solid rgba(39, 174, 96, .3);
-}
-
-.badge-mixed {
-  background: rgba(230, 126, 34, .15);
-  color: #E67E22;
-  border: 1px solid rgba(230, 126, 34, .3);
-}
 
 /* ── User results ── */
 .user-results-list {
