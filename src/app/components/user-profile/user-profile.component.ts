@@ -161,6 +161,23 @@ export class UserProfileComponent implements OnInit {
                             ];
                         };
 
+                        // Planned-specific sort: soonest upcoming first, past trips at the bottom, undated last
+                        const toPlannedRows = (entries: TravelEntry[]): ProfileEntryRow[] => {
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            const dated = entries.filter(e => e.date);
+                            const legacy = entries.filter(e => !e.date);
+                            const upcoming = dated.filter(e => new Date(e.date) >= today);
+                            const past = dated.filter(e => new Date(e.date) < today);
+                            upcoming.sort((a, b) => a.date.localeCompare(b.date)); // soonest first
+                            past.sort((a, b) => b.date.localeCompare(a.date));     // most recently passed first
+                            return [
+                                ...upcoming.map(e => ({ entry: e, country: countryById.get(e.countryId), legacy: false })),
+                                ...past.map(e => ({ entry: e, country: countryById.get(e.countryId), legacy: false })),
+                                ...legacy.map(e => ({ entry: e, country: countryById.get(e.countryId), legacy: true }))
+                            ];
+                        };
+
                         const visitedEntries = travelEntries.filter(e => e.status === 'visited');
                         const plannedEntries = travelEntries.filter(e => e.status === 'planned');
 
@@ -198,7 +215,7 @@ export class UserProfileComponent implements OnInit {
                             travelEntries,
                             entryByCountryId,
                             visitedEntryRows: toRows([...visitedEntries, ...phantomVisited]),
-                            plannedEntryRows: toRows([...plannedEntries, ...phantomPlanned]),
+                            plannedEntryRows: toPlannedRows([...plannedEntries, ...phantomPlanned]),
                             homeCountry,
                             countries
                         };
@@ -294,6 +311,16 @@ export class UserProfileComponent implements OnInit {
     openSiteFromPin(poiId: string, heritageSites: any[]) {
         const site = heritageSites.find(s => s.id_no === poiId);
         if (site) this.openSiteDetails(site);
+    }
+
+    /** Returns number of whole calendar days until the given date string (negative = past) */
+    daysUntil(dateStr: string | undefined): number | null {
+        if (!dateStr) return null;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const target = new Date(dateStr);
+        target.setHours(0, 0, 0, 0);
+        return Math.round((target.getTime() - today.getTime()) / 86400000);
     }
 
     /** Returns true if the ISO timestamp is within the last 5 minutes */

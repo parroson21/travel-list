@@ -76,9 +76,22 @@
                                     [class.entry-legacy]="row.legacy">
                                     <span class="entry-flag flag-emoji">{{ row.country?.emoji || '🌐' }}</span>
                                     <div class="entry-info">
-                                        <span class="entry-name row-link" (click)="navigateToCountry(row.entry.countryId)"
-                                            title="Open country page">{{ row.country?.name || row.entry.countryName
-                                            }}</span>
+                                        <div class="entry-name-row">
+                                            <span class="entry-name row-link" (click)="navigateToCountry(row.entry.countryId)"
+                                                title="Open country page">{{ row.country?.name || row.entry.countryName }}</span>
+                                            <ng-container *ngIf="!row.legacy && daysUntil(row.entry.date) !== null">
+                                                <span class="countdown-tag"
+                                                    [class.countdown-today]="daysUntil(row.entry.date) === 0"
+                                                    [class.countdown-soon]="daysUntil(row.entry.date)! > 0 && daysUntil(row.entry.date)! <= 7"
+                                                    [class.countdown-past]="daysUntil(row.entry.date)! < 0">
+                                                    {{ daysUntil(row.entry.date) === 0 ? 'Today' :
+                                                       daysUntil(row.entry.date) === 1 ? 'Tomorrow' :
+                                                       daysUntil(row.entry.date) === -1 ? 'Yesterday' :
+                                                       daysUntil(row.entry.date)! > 0 ? 'In ' + daysUntil(row.entry.date) + ' Days' :
+                                                       (-daysUntil(row.entry.date)!) + ' Days Ago' }}
+                                                </span>
+                                            </ng-container>
+                                        </div>
                                         <span class="entry-year planned-year" *ngIf="!row.legacy">{{ row.entry.date |
                                             date:'yyyy' }}</span>
                                         <span class="entry-legacy-badge" *ngIf="row.legacy">
