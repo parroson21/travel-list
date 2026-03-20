@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { ProfileComponent } from './components/profile/profile.component';
 import { ExploreComponent } from './components/explore/explore.component';
 import { AuthComponent } from './components/auth/auth.component';
 import { AdminComponent } from './components/admin/admin.component';
@@ -8,7 +7,7 @@ import { UserProfileComponent } from './components/user-profile/user-profile.com
 import { NotFoundComponent } from './components/not-found/not-found.component';
 
 export const routes: Routes = [
-    { path: '', component: ProfileComponent },
+    { path: '', component: UserProfileComponent },
     { path: 'explore', component: ExploreComponent },
     { path: 'explore/:countryId', component: CountryDetailComponent },
     { path: 'user/:username', component: UserProfileComponent },

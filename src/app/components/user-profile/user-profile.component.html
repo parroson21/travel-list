@@ -1,4 +1,4 @@
-<div class="not-found-page" *ngIf="notFound">
+<div class="not-found-page" *ngIf="isUsernameRoute && notFound">
     <div class="not-found-card">
         <div class="not-found-icon">🌍</div>
         <h1>Profile Not Found</h1>
@@ -7,18 +7,18 @@
     </div>
 </div>
 
-<div class="profile-container" *ngIf="!notFound && (vm$ | async) as vm">
+<div class="profile-container" *ngIf="!(isUsernameRoute && notFound) && (vm$ | async) as vm">
 
-    <!-- Not found fallback (null profile before route resolves) -->
-    <div *ngIf="!vm.targetProfile" class="not-found glass-panel">
+    <!-- Not found fallback (null profile before route resolves — only relevant on /user/:username) -->
+    <div *ngIf="isUsernameRoute && !vm.targetProfile" class="not-found glass-panel">
         <p>User not found.</p>
         <button class="back-link" (click)="goBack()">← Go back</button>
     </div>
 
     <ng-container *ngIf="vm.targetProfile">
 
-        <!-- Back button -->
-        <button class="back-btn" (click)="goBack()" title="Back">
+        <!-- Back button (only on /user/:username, not on '/') -->
+        <button *ngIf="isUsernameRoute" class="back-btn" (click)="goBack()" title="Back">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                 stroke-linecap="round">
                 <polyline points="15 18 9 12 15 6" />

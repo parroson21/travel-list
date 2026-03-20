@@ -26,6 +26,8 @@ export class UserProfileComponent implements OnInit {
 
     activeTab: 'countries' | 'planned' | 'heritage' = 'countries';
     notFound = false;
+    /** True only when rendered at /user/:username, false at '/' */
+    isUsernameRoute = false;
 
     vm$: Observable<{
         targetProfile: UserProfile | null,
@@ -74,6 +76,11 @@ export class UserProfileComponent implements OnInit {
             this.route.params.pipe(
                 switchMap(async params => {
                     const username = params['username'];
+                    this.isUsernameRoute = !!username;
+                    if (!username) {
+                        // '/' route — sentinel value; next pipe will stream own profile
+                        return '__self__' as const;
+                    }
                     const profile = await this.travel.getUserByUsername(username);
                     if (!profile) {
                         this.notFound = true;
@@ -83,9 +90,13 @@ export class UserProfileComponent implements OnInit {
                     this.notFound = false;
                     return profile;
                 }),
-                switchMap(profile => {
-                    if (!profile) return of(null);
-                    return this.travel.getUserProfileById(profile.uid);
+                switchMap(profileOrSelf => {
+                    if (profileOrSelf === '__self__') {
+                        // Stream the logged-in user's own profile (may be null if not logged in)
+                        return this.travel.getUserProfile().pipe(startWith(null));
+                    }
+                    if (!profileOrSelf) return of(null);
+                    return this.travel.getUserProfileById(profileOrSelf.uid);
                 })
             ),
             this.travel.getCountries(),
