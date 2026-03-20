@@ -373,7 +373,7 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
 
         const style = isDark
             ? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
-            : 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+            : 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
 
         const center = this.map.getCenter();
         const zoom = this.map.getZoom();
@@ -688,7 +688,7 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
      */
     private getHeritagePinColor(category?: string): string {
         if (category === 'natural') return this.getCssVar('--heritage-natural') || '#27ae60';
-        if (category === 'mixed')   return this.getCssVar('--heritage-mixed')   || '#E67E22';
+        if (category === 'mixed') return this.getCssVar('--heritage-mixed') || '#E67E22';
         return this.getCssVar('--heritage-cultural') || '#4a90d9'; // cultural + default
     }
 
@@ -698,15 +698,15 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
      */
     private getHeritagePinColorExpression(): any {
         const cultural = this.getCssVar('--heritage-cultural') || '#4a90d9';
-        const natural  = this.getCssVar('--heritage-natural')  || '#27ae60';
-        const mixed    = this.getCssVar('--heritage-mixed')    || '#E67E22';
+        const natural = this.getCssVar('--heritage-natural') || '#27ae60';
+        const mixed = this.getCssVar('--heritage-mixed') || '#E67E22';
 
         return [
             'match',
             ['get', 'category'],
             'cultural', cultural,
-            'natural',  natural,
-            'mixed',    mixed,
+            'natural', natural,
+            'mixed', mixed,
             cultural  // default fallback
         ];
     }
