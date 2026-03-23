@@ -1,5 +1,5 @@
 import { Component, NgZone, ChangeDetectorRef, ChangeDetectionStrategy, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TravelService } from '../../services/travel.service';
 import { Country, UserProfile } from '../../models/travel.model';
@@ -8,13 +8,13 @@ import { Country, UserProfile } from '../../models/travel.model';
   selector: 'app-admin',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.Default,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DecimalPipe],
   templateUrl: './admin.html',
   styleUrls: ['./admin.css']
 })
 export class AdminComponent implements OnInit {
   // ── Tab state ─────────────────────────────────────────────
-  activeTab: 'countries' | 'users' = 'countries';
+  activeTab: 'countries' | 'users' | 'stats' = 'countries';
 
   // ── Countries tab ─────────────────────────────────────────
   allCountries: Country[] = [];
@@ -76,6 +76,25 @@ export class AdminComponent implements OnInit {
   userSaveSuccess = false;
   userSaveError = '';
 
+  // ── Stats tab ───────────────────────────────────────────
+  statsComputed = false;
+  loadingStats = false;
+  stats: {
+    totalUsers: number;
+    usersWithUsername: number;
+    usersOnlineNow: number;
+    usersActiveToday: number;
+    avgCountriesVisited: number;
+    avgCountriesPlanned: number;
+    avgHeritageSitesVisited: number;
+    avgSubdivisionsVisited: number;
+    totalUniqueCountriesVisited: number;
+    mostVisited: { id: string; name: string; emoji: string; count: number }[];
+    mostPlanned: { id: string; name: string; emoji: string; count: number }[];
+    mostHomeCountry: { id: string; name: string; emoji: string; count: number }[];
+    countryReachPct: number; // % of all countries visited by at least one user
+  } | null = null;
+
   constructor(
     private travel: TravelService,
     private zone: NgZone,
@@ -86,10 +105,13 @@ export class AdminComponent implements OnInit {
     this.loadAllCountries();
   }
 
-  setTab(tab: 'countries' | 'users') {
+  setTab(tab: 'countries' | 'users' | 'stats') {
     this.activeTab = tab;
     if (tab === 'users' && !this.usersLoaded) {
       this.loadAllUsers();
+    }
+    if (tab === 'stats') {
+      this.loadAndComputeStats();
     }
   }
 
@@ -353,6 +375,88 @@ export class AdminComponent implements OnInit {
         this.cdr.detectChanges();
       });
     }
+  }
+
+  async loadAndComputeStats() {
+    if (this.loadingStats) return;
+    this.loadingStats = true;
+    this.cdr.detectChanges();
+
+    // Ensure users are loaded
+    if (!this.usersLoaded) {
+      await this.loadAllUsers();
+    }
+
+    const users = this.allUsers;
+    const countryMap = new Map(this.allCountries.map(c => [c.id, c]));
+    const now = Date.now();
+
+    const visitCounts = new Map<string, number>();
+    const planCounts = new Map<string, number>();
+    const homeCounts = new Map<string, number>();
+    const visitedOnce = new Set<string>();
+
+    let totalVisited = 0, totalPlanned = 0, totalPOIs = 0, totalSubs = 0;
+    let onlineNow = 0, activeToday = 0;
+
+    for (const u of users) {
+      const visited = u.visitedCountries || [];
+      const planned = u.plannedCountries || [];
+      const pois    = u.visitedPOIs || [];
+      const subs    = u.visitedSubdivisions || [];
+
+      totalVisited += visited.length;
+      totalPlanned += planned.length;
+      totalPOIs    += pois.length;
+      totalSubs    += subs.length;
+
+      for (const id of visited) {
+        visitCounts.set(id, (visitCounts.get(id) || 0) + 1);
+        visitedOnce.add(id);
+      }
+      for (const id of planned) {
+        planCounts.set(id, (planCounts.get(id) || 0) + 1);
+      }
+      if (u.homeCountryId) {
+        homeCounts.set(u.homeCountryId, (homeCounts.get(u.homeCountryId) || 0) + 1);
+      }
+      if (u.lastLoginAt) {
+        const ms = now - new Date(u.lastLoginAt).getTime();
+        if (ms < 5 * 60 * 1000) onlineNow++;
+        if (ms < 24 * 60 * 60 * 1000) activeToday++;
+      }
+    }
+
+    const n = Math.max(users.length, 1);
+    const topN = (map: Map<string, number>, limit = 8) =>
+      [...map.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(([id, count]) => {
+          const c = countryMap.get(id);
+          return { id, count, name: c?.name || id, emoji: c?.emoji || '🌍' };
+        });
+
+    this.zone.run(() => {
+      this.stats = {
+        totalUsers: users.length,
+        usersWithUsername: users.filter(u => !!u.username).length,
+        usersOnlineNow: onlineNow,
+        usersActiveToday: activeToday,
+        avgCountriesVisited: totalVisited / n,
+        avgCountriesPlanned: totalPlanned / n,
+        avgHeritageSitesVisited: totalPOIs / n,
+        avgSubdivisionsVisited: totalSubs / n,
+        totalUniqueCountriesVisited: visitedOnce.size,
+        countryReachPct: Math.round(visitedOnce.size / Math.max(this.allCountries.length, 1) * 100),
+        mostVisited:     topN(visitCounts),
+        mostPlanned:     topN(planCounts),
+        mostHomeCountry: topN(homeCounts),
+      };
+      this.statsComputed = true;
+      this.loadingStats = false;
+      this.cdr.detectChanges();
+    });
   }
 
   get filteredUsers(): UserProfile[] {
