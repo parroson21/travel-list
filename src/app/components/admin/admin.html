@@ -50,7 +50,7 @@
                 </div>
 
                 <ul class="country-list" *ngIf="!loadingCountries">
-                    <li *ngFor="let c of filteredCountries" class="country-item"
+                    <li *ngFor="let c of filteredCountries; trackBy: trackByCountryId" class="country-item"
                         [class.selected]="selectedCountry?.id === c.id" (click)="selectCountry(c)">
                         <span class="ci-flag flag-emoji">{{ c.emoji }}</span>
                         <span class="ci-name">{{ c.name }}</span>
@@ -87,7 +87,7 @@
                 </div>
 
                 <ul class="country-list">
-                    <li *ngFor="let s of filteredSubdivisions; let i = index" class="country-item sub-item"
+                    <li *ngFor="let s of filteredSubdivisions; let i = index; trackBy: trackBySubCode" class="country-item sub-item"
                         [class.selected]="selectedSubdivision?.code === s.code"
                         (click)="selectSubdivision(s, subdivisions.indexOf(s))">
                         <div class="sub-item-info">
@@ -122,7 +122,7 @@
                 <ng-container *ngIf="editMode === 'country'">
                     <form class="edit-form" (ngSubmit)="saveCountry()">
                         <div class="field-grid">
-                            <div class="field-group" *ngFor="let f of editableFields">
+                            <div class="field-group" *ngFor="let f of editableFields; trackBy: trackByFieldKey">
                                 <label class="field-label">{{ f.label }}</label>
                                 <input class="field-input" [type]="f.type === 'number' ? 'number' : 'text'"
                                     [(ngModel)]="editForm[f.key]" [name]="f.key"
@@ -148,7 +148,7 @@
                         </div>
 
                         <!-- One card per division group -->
-                        <div class="sub-group" *ngFor="let group of groupedSubdivisions">
+                        <div class="sub-group" *ngFor="let group of groupedSubdivisions; trackBy: trackByDivision">
                             <!-- Group header -->
                             <div class="sub-group-header">
                                 <ng-container *ngIf="renamingDivision === group.division; else staticLabel">
@@ -175,7 +175,7 @@
 
                             <!-- Group members -->
                             <ul class="sub-group-list">
-                                <li *ngFor="let item of group.items" class="sub-group-item"
+                                <li *ngFor="let item of group.items; trackBy: trackBySubCode" class="sub-group-item"
                                     [class.editing]="selectedSubdivisionIndex === item.index">
                                     <div class="sub-item-info">
                                         <span class="si-name">{{ item.sub.name }}</span>
@@ -326,7 +326,7 @@
                 </div>
 
                 <ul class="country-list" *ngIf="!loadingUsers">
-                    <li *ngFor="let u of filteredUsers" class="country-item user-item"
+                    <li *ngFor="let u of filteredUsers; trackBy: trackByUserId" class="country-item user-item"
                         [class.selected]="selectedUser?.uid === u.uid"
                         [class.no-username]="!u.username"
                         (click)="selectUser(u)">

@@ -127,6 +127,7 @@ export class AdminComponent implements OnInit {
     }
     this.saveSuccess = false;
     this.saveError = '';
+    this.rebuildGrouped();
   }
 
   clearSelection() {
@@ -199,14 +200,17 @@ export class AdminComponent implements OnInit {
   }
 
   // ── Group management ────────────────────────────────────────
-  get groupedSubdivisions(): { division: string; items: { sub: any; index: number }[] }[] {
+  /** Cached — rebuilt only when subdivisions actually change (not on every CD cycle) */
+  groupedSubdivisions: { division: string; items: { sub: any; index: number }[] }[] = [];
+
+  private rebuildGrouped() {
     const groups: Record<string, { sub: any; index: number }[]> = {};
     this.subdivisions.forEach((sub, index) => {
       const div = sub.division || 'Other';
       if (!groups[div]) groups[div] = [];
       groups[div].push({ sub, index });
     });
-    return Object.keys(groups).sort().map(division => ({
+    this.groupedSubdivisions = Object.keys(groups).sort().map(division => ({
       division,
       items: groups[division].sort((a, b) => (a.sub.name || '').localeCompare(b.sub.name || ''))
     }));
@@ -215,6 +219,7 @@ export class AdminComponent implements OnInit {
   private async persistSubdivisions(subs: any[]): Promise<void> {
     await this.travel.updateCountry(this.selectedCountry!.id, { subdivisions: subs });
     (this.selectedCountry as any).subdivisions = subs;
+    this.rebuildGrouped();
   }
 
   async deleteSubdivision(index: number) {
@@ -373,6 +378,13 @@ export class AdminComponent implements OnInit {
     this.userSaveSuccess = false;
     this.userSaveError = '';
   }
+
+  // ── trackBy helpers (prevent full DOM rebuild on every CD cycle) ──────
+  trackByCountryId(_: number, c: Country) { return c.id; }
+  trackByUserId(_: number, u: UserProfile) { return u.uid; }
+  trackByDivision(_: number, g: { division: string }) { return g.division; }
+  trackBySubCode(i: number, item: { sub: any }) { return item.sub.code ?? i; }
+  trackByFieldKey(_: number, f: { key: string }) { return f.key; }
 
   clearUser() {
     this.selectedUser = null;
