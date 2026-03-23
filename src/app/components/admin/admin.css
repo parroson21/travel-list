@@ -1156,7 +1156,7 @@
 
 .stat-reach-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--primary), #7c3aed);
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
     border-radius: 99px;
     transition: width .6s ease;
 }
@@ -1265,4 +1265,4 @@
     .stats-summary-grid { grid-template-columns: 1fr 1fr; }
     .stat-card.span-2   { grid-column: span 2; }
     .stats-lists-grid   { grid-template-columns: 1fr; }
-}
+}
