@@ -68,10 +68,11 @@ export class AddEntryComponent implements OnInit, OnChanges {
         'July', 'August', 'September', 'October', 'November', 'December'
     ];
 
+    readonly currentYear = new Date().getFullYear();
+
     get availableYears(): number[] {
-        const currentYear = new Date().getFullYear();
         const years: number[] = [];
-        for (let y = currentYear + 5; y >= 1900; y--) years.push(y);
+        for (let y = this.currentYear + 5; y >= 1900; y--) years.push(y);
         return years;
     }
 
@@ -182,9 +183,11 @@ export class AddEntryComponent implements OnInit, OnChanges {
     }
 
     isMonthDisabled(m: number): boolean {
-        return this.status === 'visited'
-            && this.selectedYear === new Date().getFullYear()
-            && m > new Date().getMonth() + 1;
+        if (this.status !== 'visited') return false;
+        const now = new Date();
+        if (this.selectedYear > now.getFullYear()) return true;
+        if (this.selectedYear === now.getFullYear()) return m > now.getMonth() + 1;
+        return false;
     }
 
     doSkipDate() {
