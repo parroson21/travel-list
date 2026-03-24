@@ -158,6 +158,7 @@ export class CountryOverlayComponent implements OnInit, OnDestroy {
 
     openSiteDetails(site: any) {
         this.selectedSite = site;
+        this.hoveredSiteId = site.id_no;
         this.activeTab = 'heritage';
         if (this.worldMap) this.worldMap.flyToSite(site.id_no);
     }
@@ -179,7 +180,7 @@ export class CountryOverlayComponent implements OnInit, OnDestroy {
         if (site) this.openSiteDetails(site);
     }
 
-    closeSiteDetails() { this.selectedSite = null; }
+    closeSiteDetails() { this.selectedSite = null; this.hoveredSiteId = null; }
     setSiteHover(siteId: string | null) { this.hoveredSiteId = siteId; }
     setSubdivisionHover(code: string | null) { this.hoveredSubdivisionCode = code; }
 

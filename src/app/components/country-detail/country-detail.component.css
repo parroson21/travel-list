@@ -102,16 +102,14 @@
 
 .header-main {
     display: flex;
-    align-items: center;
-    gap: .75rem;
-    justify-content: space-between
+    flex-direction: column;
+    gap: .5rem;
 }
 
 .country-title-section {
     display: flex;
     align-items: center;
     gap: .6rem;
-    flex: 1;
     min-width: 0
 }
 
@@ -125,9 +123,8 @@
     font-size: 1.35rem;
     margin: 0;
     color: var(--text-main);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    word-break: break-word;
     min-width: 0
 }
 
