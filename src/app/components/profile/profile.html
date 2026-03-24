@@ -1,6 +1,6 @@
-<div class="profile-container" *ngIf="vm$ | async as vm">
+﻿<div class="profile-container" *ngIf="vm$ | async as vm">
 
-    <!-- ── Hero: map + list side by side (viewport height) ── -->
+    <!-- â”€â”€ Hero: map + list side by side (viewport height) â”€â”€ -->
     <div class="page-split">
 
         <!-- Left: World Map -->
@@ -33,7 +33,7 @@
                 <!-- Scrollable tab content -->
                 <div class="tab-scroll">
 
-                    <!-- Combined countries panel: Planned → Visited -->
+                    <!-- Combined countries panel: Planned â†’ Visited -->
                     <div class="entries-section" *ngIf="activeTab === 'countries'">
 
                         <!-- Planned -->
@@ -49,7 +49,7 @@
                         <div class="entry-list" *ngIf="vm.plannedEntryRows.length > 0">
                             <div *ngFor="let row of vm.plannedEntryRows" class="entry-row glass-panel"
                                 [class.entry-legacy]="row.legacy">
-                                <span class="entry-flag flag-emoji">{{ row.country?.emoji || '🌐' }}</span>
+                                <span class="entry-flag flag-emoji">{{ row.country?.emoji || 'ðŸŒ' }}</span>
                                 <div class="entry-info">
                                     <span class="entry-name row-link" (click)="navigateToCountry(row.entry.countryId)"
                                         title="Open country page">{{ row.country?.name || row.entry.countryName
@@ -95,7 +95,7 @@
                         <div class="entry-list" *ngIf="vm.visitedEntryRows.length > 0">
                             <div *ngFor="let row of vm.visitedEntryRows" class="entry-row glass-panel"
                                 [class.entry-legacy]="row.legacy">
-                                <span class="entry-flag flag-emoji">{{ row.country?.emoji || '🌐' }}</span>
+                                <span class="entry-flag flag-emoji">{{ row.country?.emoji || 'ðŸŒ' }}</span>
                                 <div class="entry-info">
                                     <span class="entry-name row-link" (click)="navigateToCountry(row.entry.countryId)"
                                         title="Open country page">{{ row.country?.name || row.entry.countryName
@@ -226,7 +226,7 @@
         </div><!-- /right-panel -->
     </div><!-- /page-split -->
 
-    <!-- ── Stats section (scroll down to see) ── -->
+    <!-- â”€â”€ Stats section (scroll down to see) â”€â”€ -->
     <div class="stats-section fade-in" *ngIf="auth.user$ | async as user">
 
         <!-- User identity -->
@@ -268,7 +268,7 @@
                 </div>
             </div>
 
-            <!-- Home country — right-aligned column -->
+            <!-- Home country â€” right-aligned column -->
             <div class="home-col">
                 <button class="home-btn" (click)="openHomePicker($event)"
                     [title]="vm.homeCountry ? 'Change: ' + vm.homeCountry.name : 'Set home country'">
@@ -325,7 +325,7 @@
 
 </div>
 
-<!-- Home country picker — modal-style, fixed to escape stacking contexts -->
+<!-- Home country picker â€” modal-style, fixed to escape stacking contexts -->
 @if (homePickerOpen) {
 <div class="home-picker-overlay" (click)="closeHomePicker()"></div>
 <div class="home-picker home-picker-fixed" [style.top.px]="pickerAnchorTop" [style.right.px]="pickerAnchorRight"
@@ -372,7 +372,7 @@
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
-        <input class="hpick-search" [(ngModel)]="homeSearch" placeholder="Search countries…" autofocus>
+        <input class="hpick-search" [(ngModel)]="homeSearch" placeholder="Search countriesâ€¦" autofocus>
     </div>
 
     <!-- Country list -->
@@ -397,9 +397,10 @@
 
 <!-- Edit entry modal (from profile) -->
 @if (editModalCountry && editModalEntry) {
-<app-entry-modal [countryId]="editModalCountry.id" [countryName]="editModalCountry.name"
-    [countryEmoji]="editModalCountry.emoji" [existingEntry]="editModalEntry"
-    [allowRemove]="!editModalEntry.id.startsWith('legacy-')" (submitted)="closeEditModal()" (removed)="closeEditModal()"
+<app-add-entry
+    [preselectedCountry]="{ id: editModalCountry.id, name: editModalCountry.name, emoji: editModalCountry.emoji }"
+    [existingEntry]="editModalEntry"
+    (saved)="closeEditModal()"
     (closed)="closeEditModal()">
-</app-entry-modal>
+</app-add-entry>
 }

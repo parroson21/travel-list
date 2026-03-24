@@ -1,4 +1,22 @@
-/* ── Page shell: full viewport height, no scroll ── */
+/* â”€â”€ Page shell: full viewport height, no scroll â”€â”€ */
+/* â”€â”€ Overlay backdrop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.overlay-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    overflow-y: auto;
+    animation: backdropFadeIn 0.2s ease;
+}
+
+@keyframes backdropFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+
 .country-detail-container {
     display: flex;
     flex-direction: column;
@@ -9,7 +27,7 @@
     box-sizing: border-box;
 }
 
-/* ── Back button (floating) ── */
+/* â”€â”€ Back button (floating) â”€â”€ */
 .back-btn {
     position: fixed;
     top: 5.5rem;
@@ -34,7 +52,7 @@
     transform: translateX(-2px)
 }
 
-/* ── Mobile top-right group: chip + status FAB (hidden on desktop) ── */
+/* â”€â”€ Mobile top-right group: chip + status FAB (hidden on desktop) â”€â”€ */
 .mobile-top-right {
     display: none;
     position: fixed;
@@ -45,7 +63,7 @@
     gap: .5rem;
 }
 
-/* ── Mobile status FAB ── */
+/* â”€â”€ Mobile status FAB â”€â”€ */
 .mobile-status-fab {
     display: flex;
     align-items: center;
@@ -54,7 +72,7 @@
 }
 
 
-/* ── Country Header ── */
+/* â”€â”€ Country Header â”€â”€ */
 .country-header {
     padding: 1.25rem 1.5rem;
     flex-shrink: 0;
@@ -99,7 +117,7 @@
     flex-shrink: 0
 }
 
-/* ── Header actions: status chip + add button ── */
+/* â”€â”€ Header actions: status chip + add button â”€â”€ */
 .header-actions {
     display: flex;
     align-items: center;
@@ -132,31 +150,33 @@
 }
 
 .btn-add-entry {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px 6px 10px;
+    border-radius: 999px;
     border: 1.5px solid var(--accent-color);
     background: rgba(var(--primary-rgb), 0.1);
     color: var(--accent-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: inherit;
     cursor: pointer;
     transition: background .15s, transform .12s;
     flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .btn-add-entry:hover {
     background: rgba(var(--primary-rgb), 0.22);
-    transform: scale(1.1);
 }
 
 .btn-add-entry:active {
-    transform: scale(0.95);
+    transform: scale(0.96);
 }
 
 
-/* ── Info toggle / grid ── */
+/* â”€â”€ Info toggle / grid â”€â”€ */
 .caret {
     transition: transform .2s ease;
 }
@@ -220,7 +240,7 @@
     font-weight: 500
 }
 
-/* ── Main split: map | right panel ── */
+/* â”€â”€ Main split: map | right panel â”€â”€ */
 .page-split {
     display: grid;
     grid-template-columns: 1fr 340px;
@@ -230,13 +250,13 @@
     overflow: hidden;
 }
 
-/* ── Map section ── */
+/* â”€â”€ Map section â”€â”€ */
 .country-map-section {
     overflow: hidden;
     height: 100%
 }
 
-/* ── Right panel: tabs only ── */
+/* â”€â”€ Right panel: tabs only â”€â”€ */
 .right-panel {
     display: flex;
     flex-direction: column;
@@ -244,7 +264,7 @@
     overflow: hidden;
 }
 
-/* ── Tabs panel ── */
+/* â”€â”€ Tabs panel â”€â”€ */
 .tabs-panel {
     display: flex;
     flex-direction: column;
@@ -302,7 +322,7 @@
     background: rgba(255,255,255,.3)
 }
 
-/* ── Scrollable tab content ── */
+/* â”€â”€ Scrollable tab content â”€â”€ */
 .tab-scroll {
     flex: 1;
     min-height: 0;
@@ -317,7 +337,7 @@
     animation: fadeIn .3s ease-in;
 }
 
-/* ── Inline site detail (replaces list when a site is open) ── */
+/* â”€â”€ Inline site detail (replaces list when a site is open) â”€â”€ */
 .inline-detail {
     display: flex;
     flex-direction: column;
@@ -368,7 +388,7 @@
     color: var(--text-main)
 }
 
-/* ── Prev / Next nav ── */
+/* â”€â”€ Prev / Next nav â”€â”€ */
 .panel-nav {
     display: flex;
     align-items: center;
@@ -416,7 +436,7 @@
     gap: .75rem;
 }
 
-/* ── Subdivision groups ── */
+/* â”€â”€ Subdivision groups â”€â”€ */
 .subdivision-group {
     margin-bottom: 1.25rem
 }
@@ -432,7 +452,7 @@
     border-bottom: 1px solid var(--glass-border)
 }
 
-/* ── Item grid ── */
+/* â”€â”€ Item grid â”€â”€ */
 .items-grid {
     display: grid;
     grid-template-columns: 100%;
@@ -476,57 +496,39 @@
     min-width: 0
 }
 
-/* ── Visited checkbox button ── */
-.visit-indicator-btn {
-    width: 22px;
-    height: 22px;
+/* â”€â”€ Read-only visited indicator dot (replaces old toggle button) â”€â”€ */
+.visit-indicator-dot {
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: var(--glass-border);
     border: 1px solid var(--glass-border);
-    transition: all .2s ease;
     flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
+    transition: background .2s, border-color .2s;
 }
 
-.visit-indicator-btn::after {
-    content: '✓';
-    color: #fff;
-    font-size: 12px;
-    font-weight: 700;
-    opacity: 0;
-    transition: opacity .2s ease
-}
-
-.visit-indicator-btn.visited {
+.visit-indicator-dot.visited {
     background: var(--primary);
     border-color: var(--primary);
-    box-shadow: 0 0 8px rgba(var(--primary-rgb),.5)
+    box-shadow: 0 0 6px rgba(var(--primary-rgb), .45);
 }
 
-.visit-indicator-btn.visited::after {
-    opacity: 1
+/* â”€â”€ Inline detail visited indicator â”€â”€ */
+.visited-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--success, #10b981);
+    padding: .3rem .7rem;
+    border: 1px solid rgba(16,185,129,.3);
+    border-radius: 999px;
+    background: rgba(16,185,129,.1);
+    flex-shrink: 0;
 }
 
-.visit-indicator-btn:hover {
-    background: var(--glass-hover);
-    border-color: var(--text-muted);
-    transform: scale(1.1)
-}
-
-.item-card:hover .visit-indicator-btn:not(.visited),
-.item-card.hovered .visit-indicator-btn:not(.visited) {
-    border-color: var(--text-muted);
-    background: var(--glass-hover)
-}
-
-.visit-indicator-btn.visited:hover {
-    background: var(--primary-hover)
-}
-
-/* ── Heritage cards ── */
+/* â”€â”€ Heritage cards â”€â”€ */
 .heritage-card-right {
     display: flex;
     align-items: center;
@@ -545,7 +547,7 @@
 
 
 
-/* ── Detail description (inside inline-detail-body) ── */
+/* â”€â”€ Detail description (inside inline-detail-body) â”€â”€ */
 .detail-panel-desc {
     font-size: .875rem;
     color: var(--text-muted);
@@ -553,7 +555,7 @@
     margin: 0
 }
 
-/* ── Empty state ── */
+/* â”€â”€ Empty state â”€â”€ */
 .empty-state {
     padding: 2rem;
     text-align: center
@@ -565,13 +567,13 @@
     margin: 0
 }
 
-/* ── Fade animation ── */
+/* â”€â”€ Fade animation â”€â”€ */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(8px) }
     to { opacity: 1; transform: translateY(0) }
 }
 
-/* ── Tablet ── */
+/* â”€â”€ Tablet â”€â”€ */
 @media(max-width:900px) {
     .country-detail-container {
         height: calc(100dvh - 120px);
@@ -582,7 +584,7 @@
     }
 }
 
-/* ── Mobile ── */
+/* â”€â”€ Mobile â”€â”€ */
 @media(max-width:600px) {
     .country-detail-container {
         height: calc(100dvh - 80px);
@@ -645,7 +647,7 @@
         overflow: hidden;
     }
 
-    /* ── Bigger tab buttons ── */
+    /* â”€â”€ Bigger tab buttons â”€â”€ */
     .tab-btn {
         padding: .75rem .6rem;
         font-size: .95rem;
@@ -660,7 +662,7 @@
         padding: .4rem .35rem;
     }
 
-    /* ── Cards: more room to tap ── */
+    /* â”€â”€ Cards: more room to tap â”€â”€ */
     .items-grid {
         grid-template-columns: 100%;
         gap: .5rem;
@@ -675,7 +677,7 @@
         font-size: 1rem;
     }
 
-    /* ── Bigger visited checkbox ── */
+    /* â”€â”€ Bigger visited checkbox â”€â”€ */
     .visit-indicator-btn {
         width: 36px;
         height: 36px;
@@ -686,7 +688,7 @@
         font-size: 15px;
     }
 
-    /* ── Inline detail header ── */
+    /* â”€â”€ Inline detail header â”€â”€ */
     .inline-detail-header {
         padding: .9rem .9rem .6rem;
     }
@@ -700,7 +702,7 @@
         height: 36px;
     }
 
-    /* ── Footer: compact single row ── */
+    /* â”€â”€ Footer: compact single row â”€â”€ */
     .inline-detail-footer {
         flex-direction: row;
         gap: .5rem;
@@ -724,36 +726,10 @@
     }
 
     /* Visited button fills remaining space in the row */
-    .inline-detail-footer .btn-visited {
+    .inline-detail-footer .btn-add-entry {
         flex: 1;
         justify-content: center;
         padding: .7rem .5rem;
         font-size: .95rem;
     }
-}
-/* ── Mark Visited / Visited button ── */
-.btn-visited {
-    padding: .55rem 1.1rem;
-    border-radius: 10px;
-    border: 2px solid var(--glass-border);
-    background: transparent;
-    color: var(--text-main);
-    cursor: pointer;
-    font-size: .9rem;
-    font-weight: 600;
-    font-family: inherit;
-    transition: all .2s ease;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.btn-visited.visited {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #fff;
-}
-
-.btn-visited:not(.visited):hover {
-    border-color: var(--primary);
-    color: var(--primary);
 }

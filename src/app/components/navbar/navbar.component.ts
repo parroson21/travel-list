@@ -3,26 +3,29 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
+import { SearchOverlayService } from '../../services/search-overlay.service';
+import { SearchOverlayComponent } from '../search-overlay/search-overlay.component';
 
 @Component({
-  selector: 'app-navbar',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  templateUrl: './navbar.html',
-  styleUrls: ['./navbar.scss']
+    selector: 'app-navbar',
+    standalone: true,
+    imports: [CommonModule, RouterModule, SearchOverlayComponent],
+    templateUrl: './navbar.html',
+    styleUrls: ['./navbar.scss']
 })
 export class NavbarComponent {
-  @Output() changeUsername = new EventEmitter<void>();
+    @Output() changeUsername = new EventEmitter<void>();
 
-  menuOpen = false;
-  settingsOpen = false;
-  showThemes = false;
-  fabOpen = false;
+    menuOpen = false;
+    settingsOpen = false;
+    showThemes = false;
+    fabOpen = false;
 
-  constructor(
-    public auth: AuthService,
-    public theme: ThemeService
-  ) { }
+    constructor(
+        public auth: AuthService,
+        public theme: ThemeService,
+        public searchOverlay: SearchOverlayService
+    ) { }
 
   toggleMenu(event: Event) {
     event.stopPropagation();

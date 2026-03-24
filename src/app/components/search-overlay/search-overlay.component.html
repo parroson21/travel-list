@@ -1,0 +1,82 @@
+<div class="search-backdrop" (click)="onBackdropClick($event)" *ngIf="searchOverlay.isOpen$ | async">
+    <div class="search-panel" (click)="$event.stopPropagation()">
+        <div class="search-input-row">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+                #searchInput
+                class="search-input"
+                type="text"
+                placeholder="Search countries, heritage sites, users..."
+                [value]="query"
+                (input)="onQueryChange($any($event.target).value)"
+                autocomplete="off"
+                autocorrect="off"
+                spellcheck="false">
+            <button class="search-close-btn" (click)="close()" title="Close">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5" stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="search-results" *ngIf="query.trim()">
+            <!-- No results -->
+            <div class="no-results" *ngIf="!hasResults && !searching">
+                No results for <strong>"{{ query }}"</strong>
+            </div>
+
+            <!-- Countries -->
+            <ng-container *ngIf="countryResults.length > 0">
+                <div class="results-section-header">Countries</div>
+                <button class="result-row result-country" *ngFor="let r of countryResults"
+                    (click)="selectCountry(r.country)">
+                    <span class="result-flag flag-emoji">{{ r.country.emoji }}</span>
+                    <span class="result-name">{{ r.country.name }}</span>
+                    <span class="result-meta">{{ r.country.continent }}</span>
+                </button>
+            </ng-container>
+
+            <!-- Heritage Sites -->
+            <ng-container *ngIf="heritageResults.length > 0">
+                <div class="results-section-header">Heritage Sites</div>
+                <button class="result-row result-heritage" *ngFor="let r of heritageResults"
+                    (click)="selectHeritageSite(r)">
+                    <span class="result-heritage-type" [class]="'heritage-' + (r.site.category || 'cultural').toLowerCase()">
+                        {{ r.site.category || 'Cultural' }}
+                    </span>
+                    <span class="result-name">{{ r.site.name_en }}</span>
+                    <span class="result-meta">
+                        <span class="flag-emoji">{{ r.country.emoji }}</span> {{ r.country.name }}
+                    </span>
+                </button>
+            </ng-container>
+
+            <!-- Users -->
+            <ng-container *ngIf="userResults.length > 0">
+                <div class="results-section-header">Users</div>
+                <button class="result-row result-user" *ngFor="let r of userResults"
+                    (click)="selectUser(r.user)">
+                    <div class="result-user-avatar">
+                        <img *ngIf="r.user.photoURL" [src]="r.user.photoURL" alt="avatar" referrerpolicy="no-referrer">
+                        <span *ngIf="!r.user.photoURL" class="avatar-fallback">
+                            {{ (r.user.displayName || r.user.username || '?').charAt(0).toUpperCase() }}
+                        </span>
+                        <span class="online-dot" *ngIf="isOnline(r.user.lastLoginAt)"></span>
+                    </div>
+                    <div class="result-user-info">
+                        <span class="result-user-name">{{ r.user.displayName || r.user.username }}</span>
+                        <span class="result-user-sub">
+                            <span *ngIf="r.user.username">@{{ r.user.username }}</span>
+                        </span>
+                    </div>
+                </button>
+            </ng-container>
+        </div>
+    </div>
+</div>

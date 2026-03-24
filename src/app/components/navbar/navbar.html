@@ -3,7 +3,13 @@
         <div class="brand" routerLink="/">TRAVEL<span>LIST</span></div>
         <div class="nav-links">
             <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Profile</a>
-            <a routerLink="/explore" routerLinkActive="active">Explore</a>
+            <button class="nav-search-btn" (click)="searchOverlay.toggle()" title="Search">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+            </button>
             <a *ngIf="auth.isAdmin$ | async" routerLink="/admin" routerLinkActive="active">Admin</a>
         </div>
         <div class="auth-section">
@@ -111,7 +117,6 @@
 
 <!-- Mobile FAB navigation -->
 <div class="mobile-fab-container">
-    <!-- Popup links -->
     <div class="fab-menu" [class.open]="fabOpen">
         <a routerLink="/" class="fab-item" (click)="fabOpen = false" title="Profile">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -121,16 +126,15 @@
             </svg>
             <span>Profile</span>
         </a>
-        <a routerLink="/explore" class="fab-item" (click)="fabOpen = false" title="Explore">
+        <button class="fab-item" (click)="searchOverlay.open(); fabOpen = false" title="Search">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <span>Explore</span>
-        </a>
+            <span>Search</span>
+        </button>
     </div>
-    <!-- FAB button -->
     <button class="fab-btn" (click)="toggleFab($event)" [class.open]="fabOpen">
         <svg *ngIf="!fabOpen" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -145,3 +149,6 @@
         </svg>
     </button>
 </div>
+
+<!-- Global search overlay -->
+<app-search-overlay></app-search-overlay>

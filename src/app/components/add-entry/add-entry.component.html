@@ -1,0 +1,220 @@
+<div class="entry-backdrop" (click)="onBackdropClick($event)">
+    <div class="entry-panel">
+
+        <!-- Header -->
+        <div class="entry-header">
+            <div class="entry-header-left">
+                <span class="flag-emoji" *ngIf="selectedCountry">{{ selectedCountry.emoji }}</span>
+                <span class="entry-title">
+                    {{ existingEntry ? 'Edit Entry' : 'Log a Trip' }}
+                    <span *ngIf="selectedCountry && stage > 1"> — {{ selectedCountry.name }}</span>
+                </span>
+            </div>
+            <button class="close-btn" (click)="close()" title="Close">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5" stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Step indicator -->
+        <div class="step-indicator">
+            <span class="step-label">{{ stage }} / {{ TOTAL_STAGES }}</span>
+            <div class="step-dots">
+                <div class="step-dot" *ngFor="let s of [1,2,3,4]" [class.active]="stage === s" [class.done]="stage > s"></div>
+            </div>
+        </div>
+
+        <!-- ── Stage 1: Country ── -->
+        <div class="entry-body" *ngIf="stage === 1">
+            <div class="stage-label">Select a country</div>
+            <div class="search-row">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" class="search-icon-sm">
+                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                    class="country-search-input"
+                    type="text"
+                    placeholder="Search countries..."
+                    [value]="countrySearch"
+                    (input)="onCountrySearch($any($event.target).value)"
+                    autocomplete="off">
+            </div>
+            <div class="country-list">
+                <button class="country-row" *ngFor="let c of filteredCountries" (click)="selectCountry(c)">
+                    <span class="flag-emoji">{{ c.emoji }}</span>
+                    <span class="country-name">{{ c.name }}</span>
+                    <span class="country-region">{{ c.continent }}</span>
+                </button>
+                <p class="country-list-hint" *ngIf="filteredCountries.length === 0">No countries found.</p>
+            </div>
+        </div>
+
+        <!-- ── Stage 2: Status & Date ── -->
+        <div class="entry-body" *ngIf="stage === 2">
+            <div class="stage-label">When did you go?</div>
+
+            <div class="status-cards">
+                <button class="status-card" [class.selected]="status === 'visited'" (click)="setStatus('visited')">
+                    <span class="status-card-title">Visited</span>
+                    <span class="status-card-sub">I've been there</span>
+                </button>
+                <button class="status-card" [class.selected]="status === 'planned'" (click)="setStatus('planned')">
+                    <span class="status-card-title">Planning</span>
+                    <span class="status-card-sub">Going in the future</span>
+                </button>
+            </div>
+
+            <div class="date-section" *ngIf="!skipDate">
+                <div class="date-label">{{ status === 'visited' ? 'Month visited' : 'Planned month' }}</div>
+
+                <!-- Month grid -->
+                <div class="month-grid">
+                    <button
+                        *ngFor="let m of months; let i = index"
+                        class="month-btn"
+                        [class.selected]="selectedMonth === i + 1"
+                        [class.disabled]="isMonthDisabled(i + 1)"
+                        [disabled]="isMonthDisabled(i + 1)"
+                        (click)="selectedMonth = i + 1">
+                        {{ m.substring(0, 3) }}
+                    </button>
+                </div>
+
+                <!-- Year selector -->
+                <div class="year-row">
+                    <button class="year-arrow"
+                        [disabled]="status === 'visited' && selectedYear <= 1900"
+                        (click)="selectedYear = selectedYear - 1">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                    </button>
+                    <span class="year-display">{{ selectedYear }}</span>
+                    <button class="year-arrow"
+                        [disabled]="status === 'visited' && selectedYear >= (availableYears[0])"
+                        (click)="selectedYear = selectedYear + 1">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="skip-date-row">
+                <button class="skip-date-btn" *ngIf="!skipDate" (click)="doSkipDate()">
+                    Skip date for now
+                </button>
+                <button class="skip-date-btn undo-skip" *ngIf="skipDate" (click)="skipDate = false">
+                    Add a date
+                </button>
+            </div>
+        </div>
+
+        <!-- ── Stage 3: Subdivisions & Heritage ── -->
+        <div class="entry-body" *ngIf="stage === 3">
+            <div class="stage-label">What did you see?</div>
+
+            <div class="sections-row">
+                <!-- Subdivisions -->
+                <div class="section-col" *ngIf="subdivisionGroups.length > 0">
+                    <div class="col-title">Regions visited</div>
+                    <div class="group-list">
+                        <div class="group-item" *ngFor="let group of subdivisionGroups">
+                            <button class="group-header" (click)="toggleGroup(group)">
+                                <span>{{ group.label }}</span>
+                                <span class="group-count" *ngIf="countSelectedInGroup(group) > 0">
+                                    {{ countSelectedInGroup(group) }} selected
+                                </span>
+                                <svg class="chevron" [class.open]="group.expanded" width="12" height="12" viewBox="0 0 12 12">
+                                    <path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" />
+                                </svg>
+                            </button>
+                            <div class="group-subs" *ngIf="group.expanded">
+                                <label class="sub-row" *ngFor="let sub of group.subdivisions">
+                                    <input type="checkbox"
+                                        [checked]="selectedSubdivisions.has(sub.code)"
+                                        (change)="toggleSubdivision(sub.code)">
+                                    <span>{{ sub.name }}</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Heritage sites -->
+                <div class="section-col" *ngIf="heritageSites.length > 0">
+                    <div class="col-title">Heritage sites</div>
+                    <div class="heritage-list">
+                        <label class="sub-row heritage-row" *ngFor="let site of heritageSites">
+                            <input type="checkbox"
+                                [checked]="selectedHeritage.has(site.id_no)"
+                                (change)="toggleHeritage(site.id_no)">
+                            <span class="heritage-pill" [class]="'heritage-' + (site.category || 'Cultural').toLowerCase()">
+                                {{ (site.category || 'C')[0] }}
+                            </span>
+                            <span>{{ site.name_en }}</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="nothing-to-select" *ngIf="subdivisionGroups.length === 0 && heritageSites.length === 0">
+                    No regions or heritage sites available for this country.
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Stage 4: Note & Rating ── -->
+        <div class="entry-body" *ngIf="stage === 4">
+            <div class="stage-label">Any thoughts?</div>
+
+            <!-- Star rating -->
+            <div class="rating-section">
+                <div class="rating-label">Rating (optional)</div>
+                <div class="stars" (mouseleave)="clearHoverRating()">
+                    <button
+                        *ngFor="let i of [1,2,3,4,5]"
+                        class="star-btn"
+                        [class.filled]="getStarState(i) === 'filled'"
+                        (mouseenter)="setHoverRating(i)"
+                        (click)="setRating(rating === i ? 0 : i)">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Note -->
+            <div class="note-section">
+                <label class="note-label" for="trip-note">Note (optional)</label>
+                <textarea
+                    id="trip-note"
+                    class="note-textarea"
+                    placeholder="Anything memorable about the trip..."
+                    [(ngModel)]="note"
+                    rows="4">
+                </textarea>
+            </div>
+
+            <p class="modal-error" *ngIf="error">{{ error }}</p>
+        </div>
+
+        <!-- Footer nav -->
+        <div class="entry-footer">
+            <button class="btn-back" (click)="goBack()" *ngIf="stage > 1 && !existingEntry && !preselectedCountry || (existingEntry && stage > 2)">
+                Back
+            </button>
+            <div class="footer-spacer"></div>
+            <button class="btn-next" (click)="goNext()" [disabled]="!canGoNext() || saving">
+                <span *ngIf="stage < TOTAL_STAGES">Next</span>
+                <span *ngIf="stage === TOTAL_STAGES && !saving">{{ existingEntry ? 'Save Changes' : 'Log Trip' }}</span>
+                <span *ngIf="saving">Saving…</span>
+            </button>
+        </div>
+
+    </div>
+</div>

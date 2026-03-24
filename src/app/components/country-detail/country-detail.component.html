@@ -1,251 +1,225 @@
-<div class="country-detail-container" [class.sheet-open]="selectedSite" *ngIf="vm$ | async as vm">
+<ng-container *ngIf="hashRouter.activeCountryId$ | async as countryId">
+<div class="overlay-backdrop" (click)="close()" *ngIf="vm$ | async as vm">
 
-    <!-- Floating back button -->
-    <button class="back-btn" (click)="goBack()" title="Back to Explore">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6" />
-        </svg>
-    </button>
+    <div class="country-detail-container" [class.sheet-open]="selectedSite" (click)="$event.stopPropagation()">
 
-    <!-- Mobile-only: country chip + status button grouped top-right -->
-    <div class="mobile-top-right">
-        <div class="country-title-section">
-            <span class="country-emoji flag-emoji">{{ vm.country?.emoji }}</span>
-            <h1 class="country-title">{{ vm.country?.name }}</h1>
-        </div>
+        <!-- Close button -->
+        <button class="back-btn" (click)="close()" title="Close">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+        </button>
 
-        <div class="mobile-status-fab">
-            @if (getCountryStatus(vm.country?.id || '', vm.profile) === 'visited') {
-            <span class="status-chip chip-visited">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                Visited
-            </span>
-            } @else if (getCountryStatus(vm.country?.id || '', vm.profile) === 'planned') {
-            <span class="status-chip chip-planned">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>
-                Planning
-            </span>
-            }
-            <button class="btn-add-entry" (click)="openEntryModal(vm.country, $event)" title="Log a visit or plan">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/>
-                    <line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-            </button>
-        </div>
-    </div>
-
-    <!-- Main split: large map | right panel -->
-    <div class="page-split">
-
-        <!-- ── Left: Country Map ── -->
-        <div class="country-map-section glass-panel fade-in">
-            <app-world-map [focusedCountry]="vm.country || null"
-                [visitedCountryNames]="vm.isVisited ? [vm.country?.name || ''] : []" [heritageSites]="vm.heritageSites"
-                [visitedPOIIds]="vm.profile?.visitedPOIs || []" [countryId]="vm.country?.id || ''" [height]="'100%'"
-                [visitedSubdivisionCodes]="vm.profile?.visitedSubdivisions || []" [highlightedSiteId]="hoveredSiteId"
-                [highlightedSubdivisionCode]="hoveredSubdivisionCode"
-                (poiToggled)="openSiteFromPin($event, vm.heritageSites)">
-            </app-world-map>
-        </div>
-
-        <!-- ── Right panel ── -->
-        <div class="right-panel">
-
-            <!-- Country Header -->
-            <div class="country-header glass-panel fade-in">
-                <div class="header-main">
-                    <div class="country-title-section">
-                        <span class="country-emoji flag-emoji">{{ vm.country?.emoji }}</span>
-                        <h1 class="country-title">{{ vm.country?.name }}</h1>
-                    </div>
-                    <div class="header-actions">
-                        @if (getCountryStatus(vm.country?.id || '', vm.profile) === 'visited') {
-                        <span class="status-chip chip-visited">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            Visited
-                        </span>
-                        } @else if (getCountryStatus(vm.country?.id || '', vm.profile) === 'planned') {
-                        <span class="status-chip chip-planned">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>
-                            Planning
-                        </span>
-                        }
-                        <button class="btn-add-entry" (click)="openEntryModal(vm.country, $event)" title="Log a visit or plan">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                                <line x1="12" y1="5" x2="12" y2="19"/>
-                                <line x1="5" y1="12" x2="19" y2="12"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <button class="info-toggle" (click)="infoExpanded = !infoExpanded">
-                    <span>Details</span>
-                    <svg class="caret" [class.open]="infoExpanded" width="14" height="14" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                        <polyline points="6 9 12 15 18 9" />
+        <!-- Mobile-only: country chip + Log Trip button top-right -->
+        <div class="mobile-top-right">
+            <div class="country-title-section">
+                <span class="country-emoji flag-emoji">{{ vm.country?.emoji }}</span>
+                <h1 class="country-title">{{ vm.country?.name }}</h1>
+            </div>
+            <div class="mobile-status-fab">
+                @if (getCountryStatus(vm.country?.id || '', vm.profile) === 'visited') {
+                <span class="status-chip chip-visited">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Visited
+                </span>
+                } @else if (getCountryStatus(vm.country?.id || '', vm.profile) === 'planned') {
+                <span class="status-chip chip-planned">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>
+                    Planning
+                </span>
+                }
+                <button class="btn-add-entry" (click)="openAddEntry(vm.country)" title="Log a visit or plan" *ngIf="vm.isLoggedIn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                     </svg>
                 </button>
-                <div class="country-info-grid" [class.expanded]="infoExpanded">
-                    <div class="info-item"><span class="info-label">Continent</span><span class="info-value">{{
-                            vm.country?.continent }}</span></div>
-                    <div class="info-item"><span class="info-label">Sub-region</span><span class="info-value">{{
-                            vm.country?.region }}</span></div>
-                    <div class="info-item"><span class="info-label">Capital</span><span class="info-value">{{
-                            vm.country?.capital }}</span></div>
-                    <div class="info-item"><span class="info-label">Native Name</span><span class="info-value">{{
-                            vm.country?.native }}</span></div>
-                </div>
+            </div>
+        </div>
+
+        <!-- Main split: large map | right panel -->
+        <div class="page-split">
+
+            <!-- Left: Country Map -->
+            <div class="country-map-section glass-panel fade-in">
+                <app-world-map
+                    [focusedCountry]="vm.country || null"
+                    [visitedCountryNames]="vm.visitedSubdivisions.length > 0 || vm.visitedHeritageSiteIds.length > 0 ? [vm.country?.name || ''] : []"
+                    [heritageSites]="vm.heritageSites"
+                    [visitedPOIIds]="vm.visitedHeritageSiteIds"
+                    [countryId]="vm.country?.id || ''"
+                    [height]="'100%'"
+                    [visitedSubdivisionCodes]="vm.visitedSubdivisions"
+                    [highlightedSiteId]="hoveredSiteId"
+                    [highlightedSubdivisionCode]="hoveredSubdivisionCode"
+                    (poiToggled)="openSiteFromPin($event, vm.heritageSites)">
+                </app-world-map>
             </div>
 
-            <!-- Tabs + scrollable list -->
-            <div class="tabs-panel glass-panel fade-in">
-                <!-- Tab bar -->
-                <div class="tabs">
-                    <button class="tab-btn" [class.active]="activeTab === 'subdivisions'"
-                        (click)="setActiveTab('subdivisions')">
-                        Subdivisions
-                        <span class="tab-count">{{ vm.totalSubdivisions }}</span>
+            <!-- Right panel -->
+            <div class="right-panel">
+
+                <!-- Country Header -->
+                <div class="country-header glass-panel fade-in">
+                    <div class="header-main">
+                        <div class="country-title-section">
+                            <span class="country-emoji flag-emoji">{{ vm.country?.emoji }}</span>
+                            <h1 class="country-title">{{ vm.country?.name }}</h1>
+                        </div>
+                        <div class="header-actions">
+                            @if (getCountryStatus(vm.country?.id || '', vm.profile) === 'visited') {
+                            <span class="status-chip chip-visited">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                Visited
+                            </span>
+                            } @else if (getCountryStatus(vm.country?.id || '', vm.profile) === 'planned') {
+                            <span class="status-chip chip-planned">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>
+                                Planning
+                            </span>
+                            }
+                            <button class="btn-add-entry" (click)="openAddEntry(vm.country)" title="Log a visit" *ngIf="vm.isLoggedIn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                Log a visit
+                            </button>
+                        </div>
+                    </div>
+                    <button class="info-toggle" (click)="infoExpanded = !infoExpanded">
+                        <span>Details</span>
+                        <svg class="caret" [class.open]="infoExpanded" width="14" height="14" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <polyline points="6 9 12 15 18 9" />
+                        </svg>
                     </button>
-                    <button class="tab-btn" [class.active]="activeTab === 'heritage'"
-                        (click)="setActiveTab('heritage')">
-                        Heritage Sites
-                        <span class="tab-count">{{ vm.heritageSites.length }}</span>
-                    </button>
+                    <div class="country-info-grid" [class.expanded]="infoExpanded">
+                        <div class="info-item"><span class="info-label">Continent</span><span class="info-value">{{ vm.country?.continent }}</span></div>
+                        <div class="info-item"><span class="info-label">Sub-region</span><span class="info-value">{{ vm.country?.region }}</span></div>
+                        <div class="info-item"><span class="info-label">Capital</span><span class="info-value">{{ vm.country?.capital }}</span></div>
+                        <div class="info-item"><span class="info-label">Native Name</span><span class="info-value">{{ vm.country?.native }}</span></div>
+                    </div>
                 </div>
 
-                <!-- Scrollable content -->
-                <div class="tab-scroll">
-                    <!-- Subdivisions Tab -->
-                    <div *ngIf="activeTab === 'subdivisions'" class="tab-panel fade-in">
-                        <div *ngIf="vm.totalSubdivisions > 0">
-                            <div *ngFor="let group of vm.subdivisionGroups" class="subdivision-group">
-                                <h3 class="division-type-header">{{ group.label }}</h3>
-                                <div class="items-grid">
-                                    <div *ngFor="let subdivision of group.subdivisions" class="item-card glass-panel"
-                                        [class.visited]="isSubdivisionVisited(subdivision.code, vm.profile)"
-                                        [class.hovered]="hoveredSubdivisionCode === subdivision.code"
-                                        (mouseenter)="setSubdivisionHover(subdivision.code)"
-                                        (mouseleave)="setSubdivisionHover(null)"
-                                        (click)="focusSubdivision(subdivision)">
-                                        <div class="item-name">{{ subdivision.name }}</div>
-                                        <button class="visit-indicator-btn"
-                                            [class.visited]="isSubdivisionVisited(subdivision.code, vm.profile)"
-                                            (click)="toggleSubdivisionVisited(subdivision.code, vm.profile, vm.country?.id); $event.stopPropagation()"
-                                            [title]="isSubdivisionVisited(subdivision.code, vm.profile) ? 'Mark as unvisited' : 'Mark as visited'">
-                                        </button>
+                <!-- Tabs + scrollable list -->
+                <div class="tabs-panel glass-panel fade-in">
+                    <div class="tabs">
+                        <button class="tab-btn" [class.active]="activeTab === 'subdivisions'" (click)="setActiveTab('subdivisions')">
+                            Subdivisions
+                            <span class="tab-count">{{ vm.totalSubdivisions }}</span>
+                        </button>
+                        <button class="tab-btn" [class.active]="activeTab === 'heritage'" (click)="setActiveTab('heritage')">
+                            Heritage Sites
+                            <span class="tab-count">{{ vm.heritageSites.length }}</span>
+                        </button>
+                    </div>
+
+                    <div class="tab-scroll">
+                        <!-- Subdivisions Tab (read-only — visited state from entries) -->
+                        <div *ngIf="activeTab === 'subdivisions'" class="tab-panel fade-in">
+                            <div *ngIf="vm.totalSubdivisions > 0">
+                                <div *ngFor="let group of vm.subdivisionGroups" class="subdivision-group">
+                                    <h3 class="division-type-header">{{ group.label }}</h3>
+                                    <div class="items-grid">
+                                        <div *ngFor="let subdivision of group.subdivisions" class="item-card glass-panel"
+                                            [class.visited]="vm.visitedSubdivisions.includes(subdivision.code)"
+                                            [class.hovered]="hoveredSubdivisionCode === subdivision.code"
+                                            (mouseenter)="setSubdivisionHover(subdivision.code)"
+                                            (mouseleave)="setSubdivisionHover(null)"
+                                            (click)="focusSubdivision(subdivision)">
+                                            <div class="item-name">{{ subdivision.name }}</div>
+                                            <div class="visit-indicator-dot"
+                                                [class.visited]="vm.visitedSubdivisions.includes(subdivision.code)">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div *ngIf="vm.totalSubdivisions === 0" class="empty-state glass-panel">
-                            <p>No subdivisions found for this country.</p>
-                        </div>
-                    </div>
-
-                    <!-- Heritage Sites Tab -->
-                    <div *ngIf="activeTab === 'heritage'" class="tab-panel fade-in">
-
-                        <!-- Inline detail view — shown when a site is selected -->
-                        <div *ngIf="selectedSite" class="inline-detail fade-in">
-                            <div class="inline-detail-header">
-                                <div class="inline-detail-title-row">
-                                    <span class="heritage-badge"
-                                        [class.badge-cultural]="selectedSite.category_short === 'C'"
-                                        [class.badge-natural]="selectedSite.category_short === 'N'"
-                                        [class.badge-mixed]="selectedSite.category_short === 'C/N' || selectedSite.category_short === 'N/C'">
-                                        {{ selectedSite.category_short === 'C' ? 'Cultural' :
-                                        selectedSite.category_short === 'N' ? 'Natural' : 'Mixed' }}
-                                    </span>
-                                    <button class="detail-close-btn" (click)="closeSiteDetails()" title="Back to list">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                                            <line x1="18" y1="6" x2="6" y2="18" />
-                                            <line x1="6" y1="6" x2="18" y2="18" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                <h2 class="inline-detail-name">{{ selectedSite.name_en }}</h2>
-                            </div>
-                            <div class="inline-detail-body">
-                                <p class="detail-panel-desc">{{ selectedSite.short_description_en }}</p>
-                            </div>
-                            <div class="inline-detail-footer" (click)="$event.stopPropagation()">
-                                <div class="panel-nav">
-                                    <button class="panel-nav-btn"
-                                        (click)="navigateSite(-1, vm.heritageSites); $event.stopPropagation()"
-                                        title="Previous">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                                            <polyline points="15 18 9 12 15 6" />
-                                        </svg>
-                                    </button>
-                                    <span class="panel-nav-index">{{ getSiteIndex(vm.heritageSites) + 1 }} / {{
-                                        vm.heritageSites.length }}</span>
-                                    <button class="panel-nav-btn"
-                                        (click)="navigateSite(1, vm.heritageSites); $event.stopPropagation()"
-                                        title="Next">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                                            <polyline points="9 18 15 12 9 6" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                <button class="btn-visited"
-                                    [class.visited]="isPOIVisited(selectedSite.id_no, vm.profile)"
-                                    (click)="togglePOIVisited(selectedSite.id_no, vm.profile, vm.country?.id)">
-                                    {{ isPOIVisited(selectedSite.id_no, vm.profile) ? 'Visited' : 'Mark Visited' }}
-                                </button>
+                            <div *ngIf="vm.totalSubdivisions === 0" class="empty-state glass-panel">
+                                <p>No subdivisions found for this country.</p>
                             </div>
                         </div>
 
-                        <!-- Site list — shown when no site is selected -->
-                        <ng-container *ngIf="!selectedSite">
-                            <div *ngIf="vm.heritageSites.length > 0" class="items-grid">
-                                <div *ngFor="let site of vm.heritageSites" class="item-card glass-panel heritage-card"
-                                    [class.visited]="isPOIVisited(site.id_no, vm.profile)"
-                                    [class.selected]="selectedSite?.id_no === site.id_no"
-                                    [class.hovered]="hoveredSiteId === site.id_no"
-                                    (mouseenter)="setSiteHover(site.id_no)" (mouseleave)="setSiteHover(null)"
-                                    (click)="openSiteDetails(site)">
-                                    <div class="item-name">{{ site.name_en }}</div>
-                                    <div class="heritage-card-right">
+                        <!-- Heritage Sites Tab (read-only) -->
+                        <div *ngIf="activeTab === 'heritage'" class="tab-panel fade-in">
+                            <div *ngIf="selectedSite" class="inline-detail fade-in">
+                                <div class="inline-detail-header">
+                                    <div class="inline-detail-title-row">
                                         <span class="heritage-badge"
-                                            [class.badge-cultural]="site.category_short === 'C'"
-                                            [class.badge-natural]="site.category_short === 'N'"
-                                            [class.badge-mixed]="site.category_short === 'C/N' || site.category_short === 'N/C'">
-                                            {{ site.category_short === 'C' ? 'Cultural' : site.category_short === 'N' ?
-                                            'Natural' : 'Mixed' }}
+                                            [class.badge-cultural]="selectedSite.category_short === 'C'"
+                                            [class.badge-natural]="selectedSite.category_short === 'N'"
+                                            [class.badge-mixed]="selectedSite.category_short === 'C/N' || selectedSite.category_short === 'N/C'">
+                                            {{ selectedSite.category_short === 'C' ? 'Cultural' : selectedSite.category_short === 'N' ? 'Natural' : 'Mixed' }}
                                         </span>
-                                        <button class="visit-indicator-btn"
-                                            [class.visited]="isPOIVisited(site.id_no, vm.profile)"
-                                            (click)="togglePOIVisited(site.id_no, vm.profile, vm.country?.id, $event)"
-                                            [title]="isPOIVisited(site.id_no, vm.profile) ? 'Mark as unvisited' : 'Mark as visited'">
+                                        <button class="detail-close-btn" (click)="closeSiteDetails()" title="Back to list">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                                            </svg>
                                         </button>
                                     </div>
+                                    <h2 class="inline-detail-name">{{ selectedSite.name_en }}</h2>
+                                </div>
+                                <div class="inline-detail-body">
+                                    <p class="detail-panel-desc">{{ selectedSite.short_description_en }}</p>
+                                </div>
+                                <div class="inline-detail-footer" (click)="$event.stopPropagation()">
+                                    <div class="panel-nav">
+                                        <button class="panel-nav-btn" (click)="navigateSite(-1, vm.heritageSites); $event.stopPropagation()" title="Previous">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+                                        </button>
+                                        <span class="panel-nav-index">{{ getSiteIndex(vm.heritageSites) + 1 }} / {{ vm.heritageSites.length }}</span>
+                                        <button class="panel-nav-btn" (click)="navigateSite(1, vm.heritageSites); $event.stopPropagation()" title="Next">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                                        </button>
+                                    </div>
+                                    <!-- Read-only: visited state shown only -->
+                                    <span class="visited-indicator" *ngIf="vm.visitedHeritageSiteIds.includes(selectedSite.id_no)">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Visited
+                                    </span>
                                 </div>
                             </div>
-                            <div *ngIf="vm.heritageSites.length === 0" class="empty-state glass-panel">
-                                <p>No World Heritage Sites found for this country.</p>
-                            </div>
-                        </ng-container>
+
+                            <ng-container *ngIf="!selectedSite">
+                                <div *ngIf="vm.heritageSites.length > 0" class="items-grid">
+                                    <div *ngFor="let site of vm.heritageSites" class="item-card glass-panel heritage-card"
+                                        [class.visited]="vm.visitedHeritageSiteIds.includes(site.id_no)"
+                                        [class.hovered]="hoveredSiteId === site.id_no"
+                                        (mouseenter)="setSiteHover(site.id_no)" (mouseleave)="setSiteHover(null)"
+                                        (click)="openSiteDetails(site)">
+                                        <div class="item-name">{{ site.name_en }}</div>
+                                        <div class="heritage-card-right">
+                                            <span class="heritage-badge"
+                                                [class.badge-cultural]="site.category_short === 'C'"
+                                                [class.badge-natural]="site.category_short === 'N'"
+                                                [class.badge-mixed]="site.category_short === 'C/N' || site.category_short === 'N/C'">
+                                                {{ site.category_short === 'C' ? 'Cultural' : site.category_short === 'N' ? 'Natural' : 'Mixed' }}
+                                            </span>
+                                            <div class="visit-indicator-dot" [class.visited]="vm.visitedHeritageSiteIds.includes(site.id_no)"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div *ngIf="vm.heritageSites.length === 0" class="empty-state glass-panel">
+                                    <p>No World Heritage Sites found for this country.</p>
+                                </div>
+                            </ng-container>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-        </div><!-- /right-panel -->
-    </div><!-- /page-split -->
+            </div><!-- /right-panel -->
+        </div><!-- /page-split -->
 
+    </div>
 </div>
+</ng-container>
 
-<!-- Entry Modal -->
-@if (modalCountry) {
-<app-entry-modal
-    [countryId]="modalCountry.id"
-    [countryName]="modalCountry.name"
-    [countryEmoji]="modalCountry.emoji"
-    (submitted)="closeModal()"
-    (closed)="closeModal()">
-</app-entry-modal>
+<!-- AddEntry wizard (mounted outside overlay to avoid z-index issues) -->
+@if (addEntryOpen && addEntryCountry) {
+<app-add-entry
+    [preselectedCountry]="addEntryCountry"
+    (saved)="closeAddEntry()"
+    (closed)="closeAddEntry()">
+</app-add-entry>
 }

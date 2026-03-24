@@ -9,12 +9,6 @@ import { of, Observable } from 'rxjs';
     providedIn: 'root'
 })
 export class TravelService {
-    // Persistent state for Explore page
-    exploreState = {
-        searchQuery: '',
-        selectedContinents: [] as string[],
-        visitedFilter: 'all' as 'all' | 'visited' | 'planned' | 'unvisited'
-    };
 
     constructor(private firestore: Firestore, private auth: Auth, private zone: NgZone) {
         // Heartbeat: update lastLoginAt on login and every 3 minutes while active.
@@ -151,25 +145,34 @@ export class TravelService {
 
     // ── Travel Entries ─────────────────────────────────────
 
-    /** Add a new travel entry, syncing visitedCountries / plannedCountries */
+    /** Add a new travel entry, syncing visitedCountries/plannedCountries and
+     *  the flat visitedSubdivisions/visitedPOIs caches. */
     async addTravelEntry(entry: Omit<TravelEntry, 'id' | 'createdAt'>): Promise<void> {
         const u = this.auth.currentUser;
         if (!u) return;
         const entriesCol = collection(this.firestore, `users/${u.uid}/travelEntries`);
         const now = new Date().toISOString();
         const docRef = await addDoc(entriesCol, { ...entry, createdAt: now });
-        // Write back the generated id
         await updateDoc(docRef, { id: docRef.id });
 
-        // Sync the user profile arrays — visited and planned are independent flags.
-        // Adding a visited entry does NOT clear planned (user may plan to revisit).
-        // Adding a planned entry does NOT clear visited.
         const userDoc = doc(this.firestore, `users/${u.uid}`);
+        const patch: Record<string, any> = {};
+
         if (entry.status === 'visited') {
-            await updateDoc(userDoc, { visitedCountries: arrayUnion(entry.countryId) });
+            patch['visitedCountries'] = arrayUnion(entry.countryId);
         } else {
-            await updateDoc(userDoc, { plannedCountries: arrayUnion(entry.countryId) });
+            patch['plannedCountries'] = arrayUnion(entry.countryId);
         }
+
+        // Dual-write subdivision / heritage caches
+        if (entry.subdivisions?.length) {
+            patch['visitedSubdivisions'] = arrayUnion(...entry.subdivisions);
+        }
+        if (entry.heritageSites?.length) {
+            patch['visitedPOIs'] = arrayUnion(...entry.heritageSites);
+        }
+
+        await updateDoc(userDoc, patch);
     }
 
     /** Live stream of a user's travel entries, newest first */
@@ -180,7 +183,7 @@ export class TravelService {
                 this.zone.run(() => {
                     const entries = snap.docs
                         .map(d => d.data() as TravelEntry)
-                        .sort((a, b) => b.date.localeCompare(a.date));
+                        .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
                     observer.next(entries);
                 });
             }, err => observer.error(err));
@@ -188,11 +191,13 @@ export class TravelService {
         });
     }
 
-    /** Update an existing travel entry (e.g. planned → visited) and sync user arrays */
-    async updateTravelEntry(uid: string, entryId: string, changes: Partial<Pick<TravelEntry, 'status' | 'date' | 'note'>>): Promise<void> {
+    /** Update an existing travel entry and sync user profile arrays + caches */
+    async updateTravelEntry(
+        uid: string,
+        entryId: string,
+        changes: Partial<Pick<TravelEntry, 'status' | 'date' | 'note' | 'rating' | 'subdivisions' | 'heritageSites' | 'needsDate'>>
+    ): Promise<void> {
         const entryDocRef = doc(this.firestore, `users/${uid}/travelEntries/${entryId}`);
-
-        // Read entry before updating to know old status
         const snap = await getDoc(entryDocRef);
         if (!snap.exists()) return;
         const entry = snap.data() as TravelEntry;
@@ -201,38 +206,40 @@ export class TravelService {
 
         const userDoc = doc(this.firestore, `users/${uid}`);
         const newStatus = changes.status ?? entry.status;
+        const patch: Record<string, any> = {};
 
         if (newStatus === 'visited') {
-            // Ensure visited flag is set
-            await updateDoc(userDoc, { visitedCountries: arrayUnion(entry.countryId) });
-            // If no more planned entries for this country, remove planned flag
+            patch['visitedCountries'] = arrayUnion(entry.countryId);
             if (entry.status === 'planned') {
-                const entriesCol = collection(this.firestore, `users/${uid}/travelEntries`);
-                const allSnap = await getDocs(entriesCol);
+                const allSnap = await getDocs(collection(this.firestore, `users/${uid}/travelEntries`));
                 const stillPlanned = allSnap.docs
                     .map(d => d.data() as TravelEntry)
                     .some(e => e.countryId === entry.countryId && e.status === 'planned' && e.id !== entryId);
-                if (!stillPlanned) {
-                    await updateDoc(userDoc, { plannedCountries: arrayRemove(entry.countryId) });
-                }
+                if (!stillPlanned) patch['plannedCountries'] = arrayRemove(entry.countryId);
             }
         } else if (newStatus === 'planned') {
-            await updateDoc(userDoc, { plannedCountries: arrayUnion(entry.countryId) });
-            // If no more visited entries for this country, remove visited flag
+            patch['plannedCountries'] = arrayUnion(entry.countryId);
             if (entry.status === 'visited') {
-                const entriesCol = collection(this.firestore, `users/${uid}/travelEntries`);
-                const allSnap = await getDocs(entriesCol);
+                const allSnap = await getDocs(collection(this.firestore, `users/${uid}/travelEntries`));
                 const stillVisited = allSnap.docs
                     .map(d => d.data() as TravelEntry)
                     .some(e => e.countryId === entry.countryId && e.status === 'visited' && e.id !== entryId);
-                if (!stillVisited) {
-                    await updateDoc(userDoc, { visitedCountries: arrayRemove(entry.countryId) });
-                }
+                if (!stillVisited) patch['visitedCountries'] = arrayRemove(entry.countryId);
             }
         }
+
+        // Dual-write new subdivisions/heritage into caches
+        if (changes.subdivisions?.length) {
+            patch['visitedSubdivisions'] = arrayUnion(...changes.subdivisions);
+        }
+        if (changes.heritageSites?.length) {
+            patch['visitedPOIs'] = arrayUnion(...changes.heritageSites);
+        }
+
+        if (Object.keys(patch).length) await updateDoc(userDoc, patch);
     }
 
-    /** Delete a travel entry and re-sync user profile arrays */
+    /** Delete a travel entry. Re-syncs country flags and recomputes subdivision/heritage caches. */
     async deleteTravelEntry(uid: string, entryId: string): Promise<void> {
         const entryDocRef = doc(this.firestore, `users/${uid}/travelEntries/${entryId}`);
         const snap = await getDoc(entryDocRef);
@@ -240,28 +247,34 @@ export class TravelService {
         const entry = snap.data() as TravelEntry;
         await deleteDoc(entryDocRef);
 
-        // Re-evaluate array membership
         const entriesCol = collection(this.firestore, `users/${uid}/travelEntries`);
         const allSnap = await getDocs(entriesCol);
-        const remaining = allSnap.docs.map(d => d.data() as TravelEntry).filter(e => e.countryId === entry.countryId);
+        const allEntries = allSnap.docs.map(d => d.data() as TravelEntry);
+        const remaining = allEntries.filter(e => e.countryId === entry.countryId);
+
         const userDoc = doc(this.firestore, `users/${uid}`);
-        const hasVisited = remaining.some(e => e.status === 'visited');
-        const hasPlanned = remaining.some(e => e.status === 'planned');
         const patch: Record<string, any> = {};
-        if (!hasVisited) patch['visitedCountries'] = arrayRemove(entry.countryId);
-        if (!hasPlanned) patch['plannedCountries'] = arrayRemove(entry.countryId);
-        if (Object.keys(patch).length > 0) await updateDoc(userDoc, patch);
+
+        if (!remaining.some(e => e.status === 'visited')) patch['visitedCountries'] = arrayRemove(entry.countryId);
+        if (!remaining.some(e => e.status === 'planned')) patch['plannedCountries'] = arrayRemove(entry.countryId);
+
+        // Recompute visited subdivisions and heritage from all remaining entries
+        const allSubdivisions = allEntries.flatMap(e => e.subdivisions || []);
+        const allHeritage = allEntries.flatMap(e => e.heritageSites || []);
+        patch['visitedSubdivisions'] = allSubdivisions;
+        patch['visitedPOIs'] = allHeritage;
+
+        await updateDoc(userDoc, patch);
     }
 
+    /** @deprecated Use addTravelEntry with heritageSites[] instead. Kept temporarily for compatibility. */
     async markPOIVisited(poiId: string, visited: boolean, countryId?: string) {
         const u = this.auth.currentUser;
         if (!u) return;
         const userDoc = doc(this.firestore, `users/${u.uid}`);
         if (visited) {
             const update: any = { visitedPOIs: arrayUnion(poiId) };
-            if (countryId) {
-                update.visitedCountries = arrayUnion(countryId);
-            }
+            if (countryId) update.visitedCountries = arrayUnion(countryId);
             await updateDoc(userDoc, update);
         } else {
             await updateDoc(userDoc, { visitedPOIs: arrayRemove(poiId) });
@@ -471,25 +484,85 @@ export class TravelService {
         });
     }
 
+    /** @deprecated Subdivisions are now managed through TravelEntry.subdivisions[]. */
     async toggleSubdivisionVisited(subdivisionId: string, profile: UserProfile | null, countryId?: string) {
         if (!profile) return;
-
         const userDocRef = doc(this.firestore, `users/${profile.uid}`);
         const isVisited = profile.visitedSubdivisions?.includes(subdivisionId);
-
         if (isVisited) {
-            await updateDoc(userDocRef, {
-                visitedSubdivisions: arrayRemove(subdivisionId)
-            });
+            await updateDoc(userDocRef, { visitedSubdivisions: arrayRemove(subdivisionId) });
         } else {
-            const update: any = {
-                visitedSubdivisions: arrayUnion(subdivisionId)
-            };
-            if (countryId) {
-                update.visitedCountries = arrayUnion(countryId);
-            }
+            const update: any = { visitedSubdivisions: arrayUnion(subdivisionId) };
+            if (countryId) update.visitedCountries = arrayUnion(countryId);
             await updateDoc(userDocRef, update);
         }
+    }
+
+    // ── Migration ────────────────────────────────────────────────────────────
+
+    /**
+     * Migrates legacy data for a single user:
+     * 1. Truncates full YYYY-MM-DD dates to YYYY-MM.
+     * 2. Creates real TravelEntry documents for countries in visitedCountries/plannedCountries
+     *    that have no corresponding subcollection entry (sets needsDate: true, date: '').
+     * 3. Rebuilds visitedSubdivisions and visitedPOIs caches from entry data.
+     */
+    async migrateLegacyEntries(uid: string, onLog?: (msg: string) => void): Promise<void> {
+        const log = onLog || (() => {});
+        const entriesCol = collection(this.firestore, `users/${uid}/travelEntries`);
+        const userDocRef = doc(this.firestore, `users/${uid}`);
+
+        // 1. Fetch current entries
+        const entriesSnap = await getDocs(entriesCol);
+        const existingEntries = entriesSnap.docs.map(d => ({ ref: d.ref, data: d.data() as TravelEntry }));
+
+        // 2. Truncate YYYY-MM-DD → YYYY-MM
+        let migrated = 0;
+        for (const { ref, data } of existingEntries) {
+            if (data.date && data.date.length === 10) {
+                const newDate = data.date.substring(0, 7);
+                await updateDoc(ref, { date: newDate });
+                migrated++;
+            }
+        }
+        log(`Date truncation: ${migrated} entries updated.`);
+
+        // 3. Create phantom entries for legacy country IDs with no entry
+        const userSnap = await getDoc(userDocRef);
+        if (!userSnap.exists()) { log('User doc not found, skipping.'); return; }
+        const profile = userSnap.data() as UserProfile;
+
+        const coveredIds = new Set(existingEntries.map(e => e.data.countryId));
+        const now = new Date().toISOString();
+        let phantoms = 0;
+
+        for (const countryId of (profile.visitedCountries || [])) {
+            if (!coveredIds.has(countryId)) {
+                await addDoc(entriesCol, {
+                    countryId, countryName: countryId, status: 'visited',
+                    date: '', needsDate: true, createdAt: now, subdivisions: [], heritageSites: []
+                } as Omit<TravelEntry, 'id'>);
+                phantoms++;
+            }
+        }
+        for (const countryId of (profile.plannedCountries || [])) {
+            if (!coveredIds.has(countryId)) {
+                await addDoc(entriesCol, {
+                    countryId, countryName: countryId, status: 'planned',
+                    date: '', needsDate: true, createdAt: now, subdivisions: [], heritageSites: []
+                } as Omit<TravelEntry, 'id'>);
+                phantoms++;
+            }
+        }
+        log(`Phantom entries created: ${phantoms}.`);
+
+        // 4. Rebuild flat subdivision/heritage caches from entries
+        const refreshed = await getDocs(entriesCol);
+        const allEntries = refreshed.docs.map(d => d.data() as TravelEntry);
+        const allSubs = [...new Set(allEntries.flatMap(e => e.subdivisions || []))];
+        const allPOIs = [...new Set(allEntries.flatMap(e => e.heritageSites || []))];
+        await updateDoc(userDocRef, { visitedSubdivisions: allSubs, visitedPOIs: allPOIs });
+        log(`Caches rebuilt: ${allSubs.length} subdivisions, ${allPOIs.length} heritage sites.`);
     }
 
     /** Update scalar fields on a country document (does not touch subdivisions / worldHeritageSites arrays) */
