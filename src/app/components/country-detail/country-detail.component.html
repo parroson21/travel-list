@@ -1,7 +1,7 @@
 <ng-container *ngIf="hashRouter.activeCountryId$ | async as countryId">
-<div class="overlay-backdrop" (click)="close()" *ngIf="vm$ | async as vm">
+<div class="overlay-backdrop" (mousedown)="close()" *ngIf="vm$ | async as vm">
 
-    <div class="country-detail-container" [class.sheet-open]="selectedSite" (click)="$event.stopPropagation()">
+    <div class="country-detail-container" [class.sheet-open]="selectedSite" (mousedown)="$event.stopPropagation()">
 
         <!-- Close button -->
         <button class="back-btn" (click)="close()" title="Close">
