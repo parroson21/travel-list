@@ -278,6 +278,12 @@ export class ProfileComponent implements OnInit {
         this.hashRouter.openCountry(countryId);
     }
 
+    /** Called when a filled country polygon is clicked on the map. `name` is the GeoJSON feature name. */
+    onMapCountryClicked(name: string, countries: Country[]) {
+        const country = countries.find(c => c.name === name);
+        if (country) this.hashRouter.openCountry(country.id);
+    }
+
     @HostListener('document:click', ['$event'])
     onDocumentClick(event: MouseEvent) {
         if (this.selectedSite) {

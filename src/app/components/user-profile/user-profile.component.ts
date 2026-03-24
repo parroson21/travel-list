@@ -11,6 +11,7 @@ import { WorldMapComponent } from '../world-map/world-map.component';
 import { EntryModalComponent } from '../entry-modal/entry-modal.component';
 import { Location } from '@angular/common';
 import { ProfileEntryRow } from '../profile/profile.component';
+import { HashRouterService } from '../../services/hash-router.service';
 
 @Component({
     selector: 'app-user-profile',
@@ -68,7 +69,8 @@ export class UserProfileComponent implements OnInit {
         private travel: TravelService,
         public auth: AuthService,
         private location: Location,
-        private cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef,
+        public hashRouter: HashRouterService
     ) { }
 
     ngOnInit() {
@@ -341,7 +343,12 @@ export class UserProfileComponent implements OnInit {
     }
 
     navigateToCountry(countryId: string) {
-        this.router.navigate(['/explore', countryId]);
+        this.hashRouter.openCountry(countryId);
+    }
+
+    onMapCountryClicked(name: string, countries: Country[]) {
+        const country = countries.find(c => c.name === name);
+        if (country) this.hashRouter.openCountry(country.id);
     }
 
     goBack() { this.location.back(); }

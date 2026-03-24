@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -36,7 +36,8 @@ export class SearchOverlayComponent implements OnInit, OnDestroy {
         private travel: TravelService,
         private hashRouter: HashRouterService,
         private router: Router,
-        private elRef: ElementRef
+        private elRef: ElementRef,
+        private cdr: ChangeDetectorRef
     ) {}
 
     ngOnInit() {
@@ -66,20 +67,20 @@ export class SearchOverlayComponent implements OnInit, OnDestroy {
     onQueryChange(val: string) {
         this.query = val;
         clearTimeout(this.searchTimeout);
-        if (!val.trim()) { this.clearResults(); return; }
+        if (!val.trim()) { this.clearResults(); this.cdr.markForCheck(); return; }
         this.searchTimeout = setTimeout(() => this.runSearch(val.trim()), 200);
     }
 
     private async runSearch(q: string) {
         const lower = q.toLowerCase();
 
-        // Countries
+        // Countries — synchronous, fast
         this.countryResults = this.allCountries
             .filter(c => c.name.toLowerCase().includes(lower))
             .slice(0, 8)
             .map(country => ({ country }));
 
-        // Heritage sites — search across all loaded countries
+        // Heritage sites
         const heritageMatches: HeritageResult[] = [];
         for (const country of this.allCountries) {
             for (const site of (country.worldHeritageSites || [])) {
@@ -89,14 +90,18 @@ export class SearchOverlayComponent implements OnInit, OnDestroy {
             }
         }
         this.heritageResults = heritageMatches.slice(0, 6);
+        // Trigger CD synchronously so country + heritage results show immediately
+        this.cdr.markForCheck();
 
-        // Users — debounced Firestore search
+        // Users — async Firestore query
         this.searching = true;
         try {
             const users = await this.travel.searchUsers(q);
             this.userResults = users.slice(0, 5).map(user => ({ user }));
         } finally {
             this.searching = false;
+            // Trigger CD again after async completes (may be outside zone)
+            this.cdr.markForCheck();
         }
     }
 

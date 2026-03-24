@@ -7,6 +7,7 @@ import { TravelService } from '../../services/travel.service';
 import { AuthService } from '../../services/auth.service';
 import { Country, TravelEntry, Subdivision } from '../../models/travel.model';
 import { firstValueFrom, take } from 'rxjs';
+import { HashRouterService } from '../../services/hash-router.service';
 
 interface SubdivisionGroup {
     divisionType: string;
@@ -59,6 +60,7 @@ export class AddEntryComponent implements OnInit, OnChanges {
     note = '';
 
     saving = false;
+    deleting = false;
     error: string | null = null;
 
     readonly months = [
@@ -80,7 +82,11 @@ export class AddEntryComponent implements OnInit, OnChanges {
         return 12;
     }
 
-    constructor(private travel: TravelService, private auth: AuthService) {}
+    constructor(
+        private travel: TravelService,
+        private auth: AuthService,
+        private hashRouter: HashRouterService
+    ) {}
 
     ngOnInit() {
         this.travel.getCountries().pipe(take(1)).subscribe(countries => {
@@ -277,6 +283,24 @@ export class AddEntryComponent implements OnInit, OnChanges {
             this.error = 'Failed to save. Please try again.';
         } finally {
             this.saving = false;
+        }
+    }
+
+    // ── Delete ───────────────────────────────────────────────
+    async deleteEntry() {
+        if (!this.existingEntry || this.existingEntry.id.startsWith('legacy-')) return;
+        this.deleting = true;
+        this.error = null;
+        try {
+            const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
+            if (!user) return;
+            await this.travel.deleteTravelEntry(user.uid, this.existingEntry.id);
+            this.saved.emit();
+            this.closed.emit();
+        } catch (e) {
+            this.error = 'Failed to remove entry. Please try again.';
+        } finally {
+            this.deleting = false;
         }
     }
 

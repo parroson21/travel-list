@@ -27,6 +27,11 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
     @Input() highlightedSubdivisionCode: string | null = null;
 
     @Output() poiToggled = new EventEmitter<string>();
+    /** Emits the GeoJSON country **name** (not id) when a filled country polygon is clicked */
+    @Output() countryClicked = new EventEmitter<string>();
+
+    /** Unique DOM id so multiple map instances on the same page don't conflict */
+    readonly mapContainerId = `map-container-${Math.random().toString(36).slice(2)}`;
 
     private map: any | null = null;
     private popup: any | null = null;
@@ -848,7 +853,8 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
     }
 
     /**
-     * Click handler — clicking a heritage site pin emits poiToggled
+     * Click handler — clicking a heritage site pin emits poiToggled;
+     * clicking a visited/planned country fill emits countryClicked.
      */
     private setupClickHandler() {
         if (!this.map) return;
@@ -860,12 +866,29 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
             if (this.map.getLayer('heritage-sites-visited')) heritageLayers.push('heritage-sites-visited');
             if (this.map.getLayer('heritage-sites-unvisited')) heritageLayers.push('heritage-sites-unvisited');
 
+            // Heritage pin click takes priority
             if (heritageLayers.length > 0) {
                 const features = this.map.queryRenderedFeatures(e.point, { layers: heritageLayers });
                 if (features.length > 0) {
                     const poiId = features[0].properties?.id;
                     if (poiId) {
                         this.poiToggled.emit(poiId);
+                        return;
+                    }
+                }
+            }
+
+            // Country polygon click — emit name of clicked visited/planned country
+            const countryFillLayers: string[] = [];
+            if (this.map.getLayer('countries-visited-fill')) countryFillLayers.push('countries-visited-fill');
+            if (this.map.getLayer('countries-planned-fill')) countryFillLayers.push('countries-planned-fill');
+
+            if (countryFillLayers.length > 0) {
+                const countryFeatures = this.map.queryRenderedFeatures(e.point, { layers: countryFillLayers });
+                if (countryFeatures.length > 0) {
+                    const name = countryFeatures[0].properties?.name;
+                    if (name) {
+                        this.countryClicked.emit(name);
                     }
                 }
             }
@@ -888,7 +911,7 @@ export class WorldMapComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
                 : 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
 
             this.map = new this.maplibregl.Map({
-                container: 'map-container',
+                container: this.mapContainerId,
                 style: mapStyle,
                 center: center,
                 zoom: zoom,

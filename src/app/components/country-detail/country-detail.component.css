@@ -7,8 +7,13 @@
     background: rgba(0, 0, 0, 0.55);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    overflow-y: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    box-sizing: border-box;
     animation: backdropFadeIn 0.2s ease;
+    overflow-y: auto;
 }
 
 @keyframes backdropFadeIn {
@@ -18,21 +23,36 @@
 
 
 .country-detail-container {
+    position: relative;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 160px);
+    width: 100%;
+    max-width: 1100px;
+    height: calc(100vh - 5rem);
+    max-height: 860px;
     overflow: hidden;
+    border-radius: 16px;
+    background: var(--bg-dark);
+    border: 1px solid var(--glass-border, rgba(255,255,255,0.1));
+    box-shadow: 0 24px 64px rgba(0,0,0,0.6);
     padding: 1rem;
     gap: .75rem;
     box-sizing: border-box;
+    animation: modalSlideIn 0.25s ease;
+    flex-shrink: 0;
+}
+
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(16px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* â”€â”€ Back button (floating) â”€â”€ */
 .back-btn {
-    position: fixed;
-    top: 5.5rem;
+    position: absolute;
+    top: 1rem;
     left: 1.25rem;
-    z-index: 100;
+    z-index: 10;
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -573,10 +593,11 @@
     to { opacity: 1; transform: translateY(0) }
 }
 
-/* â”€â”€ Tablet â”€â”€ */
+/* â”€â”€/* ── Tablet ── */
 @media(max-width:900px) {
     .country-detail-container {
-        height: calc(100dvh - 120px);
+        max-height: calc(100dvh - 3rem);
+        height: calc(100dvh - 3rem);
     }
 
     .page-split {

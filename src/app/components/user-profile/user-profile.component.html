@@ -33,7 +33,8 @@
                 <app-world-map [visitedCountryNames]="vm.visitedCountryNames" [plannedCountryNames]="vm.plannedCountryNames"
                     [focusedCountry]="highlightedCountry" [heritageSites]="vm.heritageSites"
                     [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true" [height]="'100%'"
-                    [highlightedSiteId]="hoveredSiteId" (poiToggled)="openSiteFromPin($event, vm.heritageSites)">
+                    [highlightedSiteId]="hoveredSiteId" (poiToggled)="openSiteFromPin($event, vm.heritageSites)"
+                    (countryClicked)="onMapCountryClicked($event, vm.countries)">
                 </app-world-map>
             </div>
 

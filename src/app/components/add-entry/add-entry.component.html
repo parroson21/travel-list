@@ -208,6 +208,20 @@
             <button class="btn-back" (click)="goBack()" *ngIf="stage > 1 && !existingEntry && !preselectedCountry || (existingEntry && stage > 2)">
                 Back
             </button>
+            <!-- Delete button (edit mode, real entry only) -->
+            <button class="btn-delete"
+                *ngIf="existingEntry && !existingEntry.id.startsWith('legacy-') && stage === 4"
+                (click)="deleteEntry()"
+                [disabled]="deleting || saving"
+                title="Remove this entry">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5" stroke-linecap="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                    <path d="M10 11v6M14 11v6" />
+                </svg>
+                {{ deleting ? 'Removing…' : 'Remove entry' }}
+            </button>
             <div class="footer-spacer"></div>
             <button class="btn-next" (click)="goNext()" [disabled]="!canGoNext() || saving">
                 <span *ngIf="stage < TOTAL_STAGES">Next</span>

@@ -1,4 +1,4 @@
-﻿<div class="profile-container" *ngIf="vm$ | async as vm">
+<div class="profile-container" *ngIf="vm$ | async as vm">
 
     <!-- â”€â”€ Hero: map + list side by side (viewport height) â”€â”€ -->
     <div class="page-split">
@@ -8,7 +8,9 @@
             <app-world-map [visitedCountryNames]="vm.visitedCountryNames" [plannedCountryNames]="vm.plannedCountryNames"
                 [focusedCountry]="highlightedCountry" [heritageSites]="vm.heritageSites"
                 [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true" [height]="'100%'"
-                [highlightedSiteId]="hoveredSiteId" (poiToggled)="openSiteFromPin($event, vm.heritageSites)">
+                [highlightedSiteId]="hoveredSiteId"
+                (poiToggled)="openSiteFromPin($event, vm.heritageSites)"
+                (countryClicked)="onMapCountryClicked($event, vm.countries)">
             </app-world-map>
         </div>
 
@@ -48,10 +50,12 @@
                         </div>
                         <div class="entry-list" *ngIf="vm.plannedEntryRows.length > 0">
                             <div *ngFor="let row of vm.plannedEntryRows" class="entry-row glass-panel"
-                                [class.entry-legacy]="row.legacy">
-                                <span class="entry-flag flag-emoji">{{ row.country?.emoji || 'ðŸŒ' }}</span>
+                                [class.entry-legacy]="row.legacy"
+                                (click)="navigateToCountry(row.entry.countryId)"
+                                style="cursor:pointer">
+                                <span class="entry-flag flag-emoji">{{ row.country?.emoji || '🌍' }}</span>
                                 <div class="entry-info">
-                                    <span class="entry-name row-link" (click)="navigateToCountry(row.entry.countryId)"
+                                    <span class="entry-name row-link"
                                         title="Open country page">{{ row.country?.name || row.entry.countryName
                                         }}</span>
                                     <span class="entry-year planned-year" *ngIf="!row.legacy">{{ row.entry.date |
@@ -94,10 +98,12 @@
                         <!-- Visited -->
                         <div class="entry-list" *ngIf="vm.visitedEntryRows.length > 0">
                             <div *ngFor="let row of vm.visitedEntryRows" class="entry-row glass-panel"
-                                [class.entry-legacy]="row.legacy">
-                                <span class="entry-flag flag-emoji">{{ row.country?.emoji || 'ðŸŒ' }}</span>
+                                [class.entry-legacy]="row.legacy"
+                                (click)="navigateToCountry(row.entry.countryId)"
+                                style="cursor:pointer">
+                                <span class="entry-flag flag-emoji">{{ row.country?.emoji || '🌍' }}</span>
                                 <div class="entry-info">
-                                    <span class="entry-name row-link" (click)="navigateToCountry(row.entry.countryId)"
+                                    <span class="entry-name row-link"
                                         title="Open country page">{{ row.country?.name || row.entry.countryName
                                         }}</span>
                                     <span class="entry-year" *ngIf="!row.legacy">{{ row.entry.date | date:'yyyy'

@@ -21,12 +21,17 @@ export class HashRouterService implements OnDestroy {
 
     openCountry(countryId: string): void {
         window.location.hash = `country/${countryId}`;
+        // Emit directly so the overlay opens synchronously — don't wait for
+        // the async hashchange event which can lag behind Angular's zone.
+        this.zone.run(() => this.activeCountryIdSubject.next(countryId));
+        document.body.style.overflow = 'hidden';
     }
 
     closeCountry(): void {
         // Remove hash without adding a history entry
         history.pushState(null, '', window.location.pathname + window.location.search);
         this.zone.run(() => this.activeCountryIdSubject.next(null));
+        document.body.style.overflow = '';
     }
 
     private onHashChange(): void {
@@ -38,5 +43,7 @@ export class HashRouterService implements OnDestroy {
         const match = hash.match(/^#country\/([A-Z]{2})$/i);
         const id = match ? match[1].toUpperCase() : null;
         this.activeCountryIdSubject.next(id);
+        // Sync scroll lock with hash state (handles page refresh with hash)
+        document.body.style.overflow = id ? 'hidden' : '';
     }
 }
