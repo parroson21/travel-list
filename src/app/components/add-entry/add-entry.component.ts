@@ -1,5 +1,5 @@
 import {
-    Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, HostListener
+    Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, HostListener, ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -85,7 +85,8 @@ export class AddEntryComponent implements OnInit, OnChanges {
     constructor(
         private travel: TravelService,
         private auth: AuthService,
-        private hashRouter: HashRouterService
+        private hashRouter: HashRouterService,
+        private cdr: ChangeDetectorRef
     ) {}
 
     ngOnInit() {
@@ -93,11 +94,16 @@ export class AddEntryComponent implements OnInit, OnChanges {
             this.allCountries = countries;
             this.updateFilteredCountries();
             this.initFromInputs();
+            // Firestore may fire outside Angular's zone — force a sync.
+            this.cdr.detectChanges();
         });
     }
 
     ngOnChanges(changes: SimpleChanges) {
         if (changes['preselectedCountry'] || changes['existingEntry']) {
+            // Countries load async — if they aren't ready yet, ngOnInit's
+            // subscription will call initFromInputs() once they arrive.
+            if (this.allCountries.length === 0) return;
             this.initFromInputs();
         }
     }
