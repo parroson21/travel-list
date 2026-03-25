@@ -45,7 +45,7 @@ export class AddEntryComponent implements OnInit, OnChanges {
     // Stage 2 — Status & date
     status: 'visited' | 'planned' = 'visited';
     selectedYear: number = new Date().getFullYear();
-    selectedMonth: number = new Date().getMonth() + 1; // 1–12
+    selectedMonth: number = 0; // 0 = no month selected
     skipDate = false;
 
     // Stage 3 — Subdivisions & heritage sites
@@ -213,7 +213,7 @@ export class AddEntryComponent implements OnInit, OnChanges {
 
     canGoNext(): boolean {
         if (this.stage === 1) return !!this.selectedCountry;
-        if (this.stage === 2) return this.skipDate || (this.selectedYear > 0 && this.selectedMonth > 0);
+        if (this.stage === 2) return this.skipDate || this.selectedYear > 0;
         return true;
     }
 
@@ -259,7 +259,9 @@ export class AddEntryComponent implements OnInit, OnChanges {
             const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
             if (!user) { this.auth.loginWithGoogle(); return; }
 
-            const date = this.skipDate ? '' : `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`;
+            const date = this.skipDate ? '' : this.selectedMonth > 0
+                ? `${this.selectedYear}-${String(this.selectedMonth).padStart(2, '0')}`
+                : `${this.selectedYear}`;
             const payload: Omit<TravelEntry, 'id' | 'createdAt'> = {
                 countryId: this.selectedCountry.id,
                 countryName: this.selectedCountry.name,
