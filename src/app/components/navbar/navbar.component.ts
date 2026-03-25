@@ -5,11 +5,12 @@ import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
 import { SearchOverlayService } from '../../services/search-overlay.service';
 import { SearchOverlayComponent } from '../search-overlay/search-overlay.component';
+import { AddEntryComponent } from '../add-entry/add-entry.component';
 
 @Component({
     selector: 'app-navbar',
     standalone: true,
-    imports: [CommonModule, RouterModule, SearchOverlayComponent],
+    imports: [CommonModule, RouterModule, SearchOverlayComponent, AddEntryComponent],
     templateUrl: './navbar.html',
     styleUrls: ['./navbar.scss']
 })
@@ -20,6 +21,7 @@ export class NavbarComponent {
     settingsOpen = false;
     showThemes = false;
     fabOpen = false;
+    addEntryOpen = false;
 
     constructor(
         public auth: AuthService,

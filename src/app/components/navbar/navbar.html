@@ -2,6 +2,13 @@
     <div class="container nav-content">
         <div class="brand" routerLink="/">TRAVEL<span>LIST</span></div>
         <div class="auth-section">
+            <!-- Log a Trip -->
+            <button class="icon-btn add-entry-icon-btn" (click)="addEntryOpen = true" title="Log a Trip" *ngIf="auth.user$ | async">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5" stroke-linecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+            </button>
             <!-- Admin (admin only) -->
             <a *ngIf="auth.isAdmin$ | async" routerLink="/admin" routerLinkActive="active"
                 class="icon-btn admin-icon-link" title="Admin">
@@ -131,6 +138,13 @@
             </svg>
             <span>Profile</span>
         </a>
+        <button class="fab-item" (click)="addEntryOpen = true; fabOpen = false" title="Log a Trip" *ngIf="auth.user$ | async">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>Log a Trip</span>
+        </button>
         <button class="fab-item" (click)="searchOverlay.open(); fabOpen = false" title="Search">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -157,3 +171,8 @@
 
 <!-- Global search overlay -->
 <app-search-overlay></app-search-overlay>
+
+<!-- Global add-entry wizard -->
+@if (addEntryOpen) {
+<app-add-entry (saved)="addEntryOpen = false" (closed)="addEntryOpen = false"></app-add-entry>
+}

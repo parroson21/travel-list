@@ -506,3 +506,10 @@
         color: var(--primary);
     }
 }
+
+@media (max-width: 640px) {
+    .add-entry-icon-btn,
+    .nav-search-btn {
+        display: none;
+    }
+}
