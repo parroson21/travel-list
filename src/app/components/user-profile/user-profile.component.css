@@ -912,22 +912,22 @@
     opacity: .85;
 }
 
-.entry-legacy-badge {
+.entry-no-date-badge {
     display: inline-flex;
     align-items: center;
     gap: .3rem;
     font-size: .7rem;
     font-weight: 600;
-    color: #f59e0b;
-    background: rgba(245, 158, 11, .12);
-    border: 1px solid rgba(245, 158, 11, .25);
+    color: #f97316;
+    background: rgba(249, 115, 22, .12);
+    border: 1px solid rgba(249, 115, 22, .3);
     border-radius: 999px;
     padding: .15rem .55rem;
     white-space: nowrap;
     flex-shrink: 0;
 }
 
-.entry-legacy-badge svg {
+.entry-no-date-badge svg {
     flex-shrink: 0;
 }
 

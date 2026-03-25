@@ -74,12 +74,15 @@
                             </div>
                             <div class="entry-list" *ngIf="vm.plannedEntryRows.length > 0">
                                 <div *ngFor="let row of vm.plannedEntryRows" class="entry-row glass-panel"
-                                    [class.entry-legacy]="row.legacy">
-                                    <span class="entry-flag flag-emoji">{{ row.country?.emoji || '🌐' }}</span>
+                                    [class.entry-legacy]="row.legacy"
+                                    role="button" tabindex="0"
+                                    [attr.aria-label]="(row.country?.name || row.entry.countryName) + ' — planned trip. Click to view country.'"
+                                    (click)="navigateToCountry(row.entry.countryId)"
+                                    (keydown.enter)="navigateToCountry(row.entry.countryId)">
+                                    <span class="entry-flag flag-emoji" aria-hidden="true">{{ row.country?.emoji || '🌐' }}</span>
                                     <div class="entry-info">
                                         <div class="entry-name-row">
-                                            <span class="entry-name row-link" (click)="navigateToCountry(row.entry.countryId)"
-                                                title="Open country page">{{ row.country?.name || row.entry.countryName }}</span>
+                                            <span class="entry-name row-link" (click)="navigateToCountry(row.entry.countryId)">{{ row.country?.name || row.entry.countryName }}</span>
                                             <ng-container *ngIf="!row.legacy && daysUntil(row.entry.date) !== null">
                                                 <span class="countdown-tag"
                                                     [class.countdown-today]="daysUntil(row.entry.date) === 0"
@@ -94,11 +97,10 @@
                                             </ng-container>
                                         </div>
                                         <span class="entry-year planned-year" *ngIf="!row.legacy">{{ row.entry.date | slice:0:4 }}</span>
-                                        <span class="entry-legacy-badge" *ngIf="row.legacy">
+                                        <span class="entry-no-date-badge" *ngIf="row.legacy" aria-label="Date not set">
                                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                                                <path
-                                                    d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                                                 <line x1="12" y1="9" x2="12" y2="13" />
                                                 <line x1="12" y1="17" x2="12.01" y2="17" />
                                             </svg>
@@ -106,9 +108,9 @@
                                         </span>
                                     </div>
                                     <button *ngIf="vm.isOwnProfile" class="entry-edit-btn" (click)="openEditModal(row, $event)"
-                                        title="Edit or remove this entry">
+                                        [attr.aria-label]="'Edit entry for ' + (row.country?.name || row.entry.countryName)">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2.5" stroke-linecap="round">
+                                            stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                         </svg>
@@ -132,18 +134,19 @@
                             <!-- Visited -->
                             <div class="entry-list" *ngIf="vm.visitedEntryRows.length > 0">
                                 <div *ngFor="let row of vm.visitedEntryRows" class="entry-row glass-panel"
-                                    [class.entry-legacy]="row.legacy">
-                                    <span class="entry-flag flag-emoji">{{ row.country?.emoji || '🌐' }}</span>
+                                    [class.entry-legacy]="row.legacy"
+                                    role="button" tabindex="0"
+                                    [attr.aria-label]="(row.country?.name || row.entry.countryName) + ' — visited. Click to view country.'"
+                                    (click)="navigateToCountry(row.entry.countryId)"
+                                    (keydown.enter)="navigateToCountry(row.entry.countryId)">
+                                    <span class="entry-flag flag-emoji" aria-hidden="true">{{ row.country?.emoji || '🌐' }}</span>
                                     <div class="entry-info">
-                                        <span class="entry-name row-link" (click)="navigateToCountry(row.entry.countryId)"
-                                            title="Open country page">{{ row.country?.name || row.entry.countryName
-                                            }}</span>
+                                        <span class="entry-name row-link" (click)="navigateToCountry(row.entry.countryId)">{{ row.country?.name || row.entry.countryName }}</span>
                                         <span class="entry-year" *ngIf="!row.legacy">{{ row.entry.date | slice:0:4 }}</span>
-                                        <span class="entry-legacy-badge" *ngIf="row.legacy">
+                                        <span class="entry-no-date-badge" *ngIf="row.legacy" aria-label="Date not set">
                                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                                                <path
-                                                    d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                                                 <line x1="12" y1="9" x2="12" y2="13" />
                                                 <line x1="12" y1="17" x2="12.01" y2="17" />
                                             </svg>
@@ -151,9 +154,9 @@
                                         </span>
                                     </div>
                                     <button *ngIf="vm.isOwnProfile" class="entry-edit-btn" (click)="openEditModal(row, $event)"
-                                        title="Edit or remove this entry">
+                                        [attr.aria-label]="'Edit entry for ' + (row.country?.name || row.entry.countryName)">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2.5" stroke-linecap="round">
+                                            stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                         </svg>
