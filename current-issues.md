@@ -1,0 +1,7 @@
+- When a user is not logged in the page should display something instead of just an empty page with the header
+- The add-entry overlay does not make a good use of space. The page has a lot of space and most of the data is being truncated or cut off.
+- Mobile profile view the list items should always should the edit option as its not possible to open it
+- I need a long term solution to geojson, how its stored, and how its shown.
+  - I would like a way to move it out of being a geojson file that lives in public, but instead to be in the database and fetched.
+- I have committed the firebase config to the repo which exposes the api key which is bad
+  - There should be a proper solution to this as I will need it to be removed from the git repo
