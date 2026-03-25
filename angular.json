@@ -63,7 +63,8 @@
               "buildTarget": "travel-app:build:production"
             },
             "development": {
-              "buildTarget": "travel-app:build:development"
+              "buildTarget": "travel-app:build:development",
+              "port": 5478
             }
           },
           "defaultConfiguration": "development"

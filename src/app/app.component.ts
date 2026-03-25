@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { UsernamePromptComponent } from './components/username-prompt/username-prompt.component';
+import { CountryOverlayComponent } from './components/country-detail/country-detail.component';
 import { TravelService } from './services/travel.service';
 import { Subscription } from 'rxjs';
 
@@ -10,12 +11,15 @@ import { Subscription } from 'rxjs';
   selector: 'app-root',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, NavbarComponent, CommonModule, UsernamePromptComponent],
+  imports: [RouterOutlet, NavbarComponent, CommonModule, UsernamePromptComponent, CountryOverlayComponent],
   template: `
     <app-navbar (changeUsername)="openChangeUsername()"></app-navbar>
     <main>
       <router-outlet></router-outlet>
     </main>
+
+    <!-- Country overlay — globally mounted, driven by URL hash -->
+    <app-country-overlay></app-country-overlay>
 
     <!-- Username Prompt — create mode (mandatory) or update mode (closeable) -->
     <app-username-prompt

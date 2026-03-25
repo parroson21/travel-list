@@ -8,7 +8,8 @@ import { Observable, combineLatest, firstValueFrom } from 'rxjs';
 import { map, startWith, switchMap, take } from 'rxjs/operators';
 import { Country, UserProfile, TravelEntry } from '../../models/travel.model';
 import { WorldMapComponent } from '../world-map/world-map.component';
-import { EntryModalComponent } from '../entry-modal/entry-modal.component';
+import { AddEntryComponent } from '../add-entry/add-entry.component';
+import { HashRouterService } from '../../services/hash-router.service';
 
 export interface ProfileEntryRow {
     entry: TravelEntry;
@@ -20,7 +21,7 @@ export interface ProfileEntryRow {
     selector: 'app-profile',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, FormsModule, WorldMapComponent, DecimalPipe, EntryModalComponent],
+    imports: [CommonModule, FormsModule, WorldMapComponent, DecimalPipe, AddEntryComponent],
     templateUrl: './profile.html',
     styleUrls: ['./profile.css']
 })
@@ -48,7 +49,7 @@ export class ProfileComponent implements OnInit {
         homeCountry: Country | undefined
     }> | undefined;
 
-    constructor(public travel: TravelService, public auth: AuthService, private router: Router) { }
+    constructor(public travel: TravelService, public auth: AuthService, private router: Router, public hashRouter: HashRouterService) { }
 
     ngOnInit() {
         this.vm$ = combineLatest([
@@ -274,7 +275,13 @@ export class ProfileComponent implements OnInit {
 
     // ── Navigation ───────────────────────────────────────────
     navigateToCountry(countryId: string) {
-        this.router.navigate(['/explore', countryId]);
+        this.hashRouter.openCountry(countryId);
+    }
+
+    /** Called when a filled country polygon is clicked on the map. `name` is the GeoJSON feature name. */
+    onMapCountryClicked(name: string, countries: Country[]) {
+        const country = countries.find(c => c.name === name);
+        if (country) this.hashRouter.openCountry(country.id);
     }
 
     @HostListener('document:click', ['$event'])

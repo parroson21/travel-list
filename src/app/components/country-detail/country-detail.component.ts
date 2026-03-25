@@ -1,15 +1,13 @@
-import { Component, OnInit, HostListener, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
 import { TravelService } from '../../services/travel.service';
 import { AuthService } from '../../services/auth.service';
-import { Country, UserProfile, Subdivision } from '../../models/travel.model';
-import { Observable, combineLatest, firstValueFrom } from 'rxjs';
-import { map, switchMap, startWith, take } from 'rxjs/operators';
+import { Country, UserProfile, Subdivision, TravelEntry } from '../../models/travel.model';
+import { Observable, combineLatest, Subject } from 'rxjs';
+import { map, startWith, switchMap, takeUntil } from 'rxjs/operators';
 import { WorldMapComponent } from '../world-map/world-map.component';
-import { FormsModule } from '@angular/forms';
-import { Location } from '@angular/common';
-import { EntryModalComponent } from '../entry-modal/entry-modal.component';
+import { HashRouterService } from '../../services/hash-router.service';
+import { AddEntryComponent } from '../add-entry/add-entry.component';
 
 interface SubdivisionGroup {
     divisionType: string;
@@ -18,13 +16,13 @@ interface SubdivisionGroup {
 }
 
 @Component({
-    selector: 'app-country-detail',
+    selector: 'app-country-overlay',
     standalone: true,
-    imports: [CommonModule, WorldMapComponent, FormsModule, EntryModalComponent],
+    imports: [CommonModule, WorldMapComponent, AddEntryComponent],
     templateUrl: './country-detail.component.html',
     styleUrls: ['./country-detail.component.css']
 })
-export class CountryDetailComponent implements OnInit {
+export class CountryOverlayComponent implements OnInit, OnDestroy {
     @ViewChild(WorldMapComponent) worldMap?: WorldMapComponent;
 
     activeTab: 'subdivisions' | 'heritage' = 'subdivisions';
@@ -33,19 +31,9 @@ export class CountryDetailComponent implements OnInit {
     hoveredSiteId: string | null = null;
     hoveredSubdivisionCode: string | null = null;
 
-    // ── Entry modal ──────────────────────────────────────────
-    modalCountry: { id: string; name: string; emoji: string } | null = null;
-
-    openEntryModal(country: Country | null, event: Event) {
-        event.stopPropagation();
-        if (!country) return;
-        this.modalCountry = { id: country.id, name: country.name, emoji: country.emoji };
-    }
-
-    closeModal() {
-        this.modalCountry = null;
-    }
-
+    // AddEntry wizard
+    addEntryOpen = false;
+    addEntryCountry: { id: string; name: string; emoji: string } | null = null;
 
     vm$: Observable<{
         country: Country | null,
@@ -53,112 +41,112 @@ export class CountryDetailComponent implements OnInit {
         totalSubdivisions: number,
         heritageSites: any[],
         profile: UserProfile | null,
-        isVisited: boolean,
+        visitedSubdivisions: string[],
+        visitedHeritageSiteIds: string[],
         isLoggedIn: boolean
     }> | undefined;
 
+    private destroy$ = new Subject<void>();
+
     constructor(
-        private route: ActivatedRoute,
-        private router: Router,
         private travel: TravelService,
         private auth: AuthService,
-        private location: Location
-    ) { }
+        public hashRouter: HashRouterService
+    ) {}
 
     ngOnInit() {
-        this.route.params.pipe(take(1)).subscribe(params => {
-            const id = params['countryId'];
-            if (id) {
-                const stored = JSON.parse(localStorage.getItem('recentlyViewed') || '[]') as string[];
-                const updated = [id, ...stored.filter(v => v !== id)].slice(0, 5);
-                localStorage.setItem('recentlyViewed', JSON.stringify(updated));
-            }
-        });
-
         this.vm$ = combineLatest([
-            this.route.params.pipe(
-                switchMap(params => this.travel.getCountries().pipe(
-                    map(countries => countries.find(c => c.id === params['countryId']) || null)
-                ))
+            this.hashRouter.activeCountryId$.pipe(
+                switchMap(id => id
+                    ? this.travel.getCountries().pipe(map(cs => cs.find(c => c.id === id) || null))
+                    : [null]
+                )
             ),
-            this.route.params.pipe(
-                switchMap(params => this.travel.getSubdivisions(params['countryId']))
+            this.hashRouter.activeCountryId$.pipe(
+                switchMap(id => id
+                    ? this.travel.getSubdivisions(id)
+                    : [[]]
+                )
             ),
             this.travel.getUserProfile().pipe(startWith(null)),
-            this.auth.user$
+            this.auth.user$,
+            // Stream entries to derive visited subdivisions/heritage from entry data
+            this.travel.getUserProfile().pipe(
+                startWith(null),
+                switchMap(profile => profile?.uid
+                    ? this.travel.getTravelEntries(profile.uid)
+                    : [[]]
+                )
+            )
         ]).pipe(
-            map(([country, subdivisions, profile, user]) => {
-                const isVisited = profile?.visitedCountries?.includes(country?.id || '') || false;
-                const heritageSites = country?.worldHeritageSites || [];
-
-                // Group subdivisions by division type
+            map(([country, subdivisions, profile, user, entries]) => {
                 const grouped = new Map<string, Subdivision[]>();
                 for (const sub of subdivisions) {
                     const type = sub.division || 'other';
-                    if (!grouped.has(type)) {
-                        grouped.set(type, []);
-                    }
+                    if (!grouped.has(type)) grouped.set(type, []);
                     grouped.get(type)!.push(sub);
                 }
-
                 const subdivisionGroups: SubdivisionGroup[] = Array.from(grouped.entries()).map(([type, subs]) => ({
                     divisionType: type,
                     label: this.pluralizeDivisionType(type),
                     subdivisions: subs.sort((a, b) => a.name.localeCompare(b.name))
                 }));
 
+                // Derive visited state from entries (read-only country page)
+                const countryEntries = entries.filter(e => e.countryId === country?.id);
+                const visitedSubdivisions = [...new Set(countryEntries.flatMap(e => e.subdivisions || []))];
+                const visitedHeritageSiteIds = [...new Set(countryEntries.flatMap(e => e.heritageSites || []))];
+
                 return {
                     country,
                     subdivisionGroups,
                     totalSubdivisions: subdivisions.length,
-                    heritageSites,
+                    heritageSites: country?.worldHeritageSites || [],
                     profile,
-                    isVisited,
+                    visitedSubdivisions,
+                    visitedHeritageSiteIds,
                     isLoggedIn: !!user
                 };
             })
         );
     }
 
-    setActiveTab(tab: 'subdivisions' | 'heritage') {
-        this.activeTab = tab;
+    ngOnDestroy() {
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 
-    getCountryStatus(countryId: string, profile: UserProfile | null): 'visited' | 'planned' | 'none' {
-        if (profile?.visitedCountries?.includes(countryId)) return 'visited';
-        if (profile?.plannedCountries?.includes(countryId)) return 'planned';
-        return 'none';
+    close() {
+        this.hashRouter.closeCountry();
+        this.addEntryOpen = false;
+        this.selectedSite = null;
+    }
+
+    setActiveTab(tab: 'subdivisions' | 'heritage') {
+        this.activeTab = tab;
+        this.selectedSite = null;
+    }
+
+    openAddEntry(country: Country | null) {
+        if (!country) return;
+        this.addEntryCountry = { id: country.id, name: country.name, emoji: country.emoji };
+        this.addEntryOpen = true;
+    }
+
+    closeAddEntry() {
+        this.addEntryOpen = false;
+        this.addEntryCountry = null;
     }
 
     @HostListener('document:click', ['$event'])
     onDocumentClick(event: MouseEvent) {
-        // Close the inline detail when clicking outside of it
         if (this.selectedSite) {
             const target = event.target as HTMLElement;
             const inDetail = target.closest('.inline-detail');
             const inCard = target.closest('.heritage-card');
             const inMap = target.closest('.country-map-section');
-            if (!inDetail && !inCard && !inMap) {
-                this.closeSiteDetails();
-            }
+            if (!inDetail && !inCard && !inMap) this.closeSiteDetails();
         }
-    }
-
-    isSubdivisionVisited(subdivisionId: string, profile: UserProfile | null): boolean {
-        return profile?.visitedSubdivisions?.includes(subdivisionId) || false;
-    }
-
-    isPOIVisited(poiId: string, profile: UserProfile | null): boolean {
-        return profile?.visitedPOIs?.includes(poiId) || false;
-    }
-
-    async toggleSubdivisionVisited(subdivisionId: string, profile: UserProfile | null, countryId?: string) {
-        const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
-        if (!user) {
-            this.auth.loginWithGoogle();
-            return;
-        }
-        this.travel.toggleSubdivisionVisited(subdivisionId, profile, countryId);
     }
 
     focusSubdivision(subdivision: any) {
@@ -168,26 +156,11 @@ export class CountryDetailComponent implements OnInit {
         }
     }
 
-    async togglePOIVisited(poiId: string, profile: UserProfile | null, countryId?: string, event?: Event) {
-        if (event) {
-            event.stopPropagation();
-        }
-        const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
-        if (!user) {
-            this.auth.loginWithGoogle();
-            return;
-        }
-        const visited = this.isPOIVisited(poiId, profile);
-        this.travel.markPOIVisited(poiId, !visited, countryId);
-    }
-
     openSiteDetails(site: any) {
         this.selectedSite = site;
+        this.hoveredSiteId = site.id_no;
         this.activeTab = 'heritage';
-        // Fly the map to the selected site
-        if (this.worldMap) {
-            this.worldMap.flyToSite(site.id_no);
-        }
+        if (this.worldMap) this.worldMap.flyToSite(site.id_no);
     }
 
     navigateSite(direction: 1 | -1, heritageSites: any[]) {
@@ -207,19 +180,15 @@ export class CountryDetailComponent implements OnInit {
         if (site) this.openSiteDetails(site);
     }
 
-    closeSiteDetails() {
-        this.selectedSite = null;
+    closeSiteDetails() { this.selectedSite = null; this.hoveredSiteId = null; }
+    setSiteHover(siteId: string | null) { this.hoveredSiteId = siteId; }
+    setSubdivisionHover(code: string | null) { this.hoveredSubdivisionCode = code; }
+
+    getCountryStatus(countryId: string, profile: UserProfile | null): 'visited' | 'planned' | 'none' {
+        if (profile?.visitedCountries?.includes(countryId)) return 'visited';
+        if (profile?.plannedCountries?.includes(countryId)) return 'planned';
+        return 'none';
     }
-
-    setSiteHover(siteId: string | null) {
-        this.hoveredSiteId = siteId;
-    }
-
-    setSubdivisionHover(code: string | null) {
-        this.hoveredSubdivisionCode = code;
-    }
-
-
 
     private pluralizeDivisionType(type: string): string {
         const capitalized = type.charAt(0).toUpperCase() + type.slice(1);
@@ -230,9 +199,5 @@ export class CountryDetailComponent implements OnInit {
             return capitalized + 'es';
         }
         return capitalized + 's';
-    }
-
-    goBack() {
-        this.location.back();
     }
 }

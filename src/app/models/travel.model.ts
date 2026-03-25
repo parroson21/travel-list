@@ -44,13 +44,17 @@ export interface Subdivision {
 }
 
 export interface TravelEntry {
-    id: string;           // auto-generated Firestore doc ID
-    countryId: string;    // ISO2 code (e.g., "FR")
+    id: string;              // auto-generated Firestore doc ID
+    countryId: string;       // ISO2 code (e.g., "FR")
     countryName: string;
     status: 'visited' | 'planned';
-    date: string;         // ISO date string YYYY-MM-DD (required)
-    note?: string;        // optional free-form note
-    createdAt: string;    // ISO timestamp when this entry was created
+    date: string;            // Month/year string YYYY-MM (or empty string for legacy)
+    note?: string;           // optional free-form note
+    rating?: number;         // optional 1–5 star rating
+    subdivisions?: string[]; // subdivision codes visited on this trip
+    heritageSites?: string[]; // heritage site id_no values seen on this trip
+    needsDate?: boolean;     // true for migrated legacy entries missing a date
+    createdAt: string;       // ISO timestamp when this entry was created
 }
 
 export interface UserProfile {

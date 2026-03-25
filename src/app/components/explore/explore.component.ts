@@ -102,22 +102,20 @@ export class ExploreComponent implements OnInit {
     const params = this.route.snapshot.queryParamMap;
     const hasParams = params.has('q') || params.has('c') || params.has('v');
 
-    const q = hasParams ? (params.get('q') || '') : this.travel.exploreState.searchQuery;
+    const q = hasParams ? (params.get('q') || '') : '';
     const c = hasParams
       ? (params.get('c') ? params.get('c')!.split(',').filter(x => x) : [])
-      : this.travel.exploreState.selectedContinents;
+      : [];
     const v = hasParams
       ? ((params.get('v') as any) || 'all')
-      : this.travel.exploreState.visitedFilter;
+      : 'all';
 
     this.searchQuery = q;
     this.searchSubject.next(q);
     this.selectedContinentsSubject.next(c);
     this.visitedFilterSubject.next(['all', 'visited', 'planned', 'unvisited'].includes(v) ? v as any : 'all');
 
-    this.searchSubject.subscribe(val => this.travel.exploreState.searchQuery = val);
-    this.selectedContinentsSubject.subscribe(val => this.travel.exploreState.selectedContinents = val);
-    this.visitedFilterSubject.subscribe(val => this.travel.exploreState.visitedFilter = val);
+    // (exploreState persistence removed — Explore page is deprecated)
 
     this.vm$ = combineLatest([
       this.travel.getCountries(),

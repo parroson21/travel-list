@@ -1,12 +1,30 @@
 <nav class="glass-panel navbar">
     <div class="container nav-content">
         <div class="brand" routerLink="/">TRAVEL<span>LIST</span></div>
-        <div class="nav-links">
-            <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Profile</a>
-            <a routerLink="/explore" routerLinkActive="active">Explore</a>
-            <a *ngIf="auth.isAdmin$ | async" routerLink="/admin" routerLinkActive="active">Admin</a>
-        </div>
         <div class="auth-section">
+            <!-- Log a Trip -->
+            <button class="icon-btn add-entry-icon-btn" (click)="addEntryOpen = true" title="Log a Trip" *ngIf="auth.user$ | async">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5" stroke-linecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+            </button>
+            <!-- Admin (admin only) -->
+            <a *ngIf="auth.isAdmin$ | async" routerLink="/admin" routerLinkActive="active"
+                class="icon-btn admin-icon-link" title="Admin">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+            </a>
+            <!-- Search -->
+            <button class="nav-search-btn icon-btn" (click)="searchOverlay.toggle()" title="Search">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+            </button>
             <!-- Settings Toggle -->
             <div class="user-menu-wrapper">
                 <button class="icon-btn" (click)="toggleSettings($event)" title="Settings">
@@ -111,7 +129,6 @@
 
 <!-- Mobile FAB navigation -->
 <div class="mobile-fab-container">
-    <!-- Popup links -->
     <div class="fab-menu" [class.open]="fabOpen">
         <a routerLink="/" class="fab-item" (click)="fabOpen = false" title="Profile">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -121,16 +138,22 @@
             </svg>
             <span>Profile</span>
         </a>
-        <a routerLink="/explore" class="fab-item" (click)="fabOpen = false" title="Explore">
+        <button class="fab-item" (click)="addEntryOpen = true; fabOpen = false" title="Log a Trip" *ngIf="auth.user$ | async">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            <span>Explore</span>
-        </a>
+            <span>Log a Trip</span>
+        </button>
+        <button class="fab-item" (click)="searchOverlay.open(); fabOpen = false" title="Search">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <span>Search</span>
+        </button>
     </div>
-    <!-- FAB button -->
     <button class="fab-btn" (click)="toggleFab($event)" [class.open]="fabOpen">
         <svg *ngIf="!fabOpen" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -145,3 +168,11 @@
         </svg>
     </button>
 </div>
+
+<!-- Global search overlay -->
+<app-search-overlay></app-search-overlay>
+
+<!-- Global add-entry wizard -->
+@if (addEntryOpen) {
+<app-add-entry (saved)="addEntryOpen = false" (closed)="addEntryOpen = false"></app-add-entry>
+}
