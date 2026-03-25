@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { TravelService } from '../../services/travel.service';
 import { AuthService } from '../../services/auth.service';
 import { Country, TravelEntry, Subdivision } from '../../models/travel.model';
-import { firstValueFrom, take } from 'rxjs';
+import { take } from 'rxjs';
 import { HashRouterService } from '../../services/hash-router.service';
 
 interface SubdivisionGroup {
@@ -256,7 +256,7 @@ export class AddEntryComponent implements OnInit, OnChanges {
         this.saving = true;
         this.error = null;
         try {
-            const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
+            const user = this.auth.currentUser;
             if (!user) { this.auth.loginWithGoogle(); return; }
 
             const date = this.skipDate ? '' : this.selectedMonth > 0
@@ -303,7 +303,7 @@ export class AddEntryComponent implements OnInit, OnChanges {
         this.deleting = true;
         this.error = null;
         try {
-            const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
+            const user = this.auth.currentUser;
             if (!user) return;
             await this.travel.deleteTravelEntry(user.uid, this.existingEntry.id);
             this.saved.emit();

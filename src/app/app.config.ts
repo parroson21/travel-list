@@ -1,8 +1,8 @@
 import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
-import { getAuth, provideAuth, browserLocalPersistence, initializeAuth, browserPopupRedirectResolver } from '@angular/fire/auth';
-import { getFirestore, provideFirestore } from '@angular/fire/firestore';
+import { initializeApp, provideFirebaseApp, getApp } from '@angular/fire/app';
+import { provideAuth, browserLocalPersistence, initializeAuth, browserPopupRedirectResolver } from '@angular/fire/auth';
+import { initializeFirestore, provideFirestore } from '@angular/fire/firestore';
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 
@@ -26,12 +26,14 @@ export const appConfig: ApplicationConfig = {
       return app;
     }),
     provideAuth(() => {
-      const auth = initializeAuth(initializeApp(firebaseConfig), {
+      const auth = initializeAuth(getApp(), {
         persistence: browserLocalPersistence,
         popupRedirectResolver: browserPopupRedirectResolver
       });
       return auth;
     }),
-    provideFirestore(() => getFirestore())
+    provideFirestore(() => initializeFirestore(getApp(), {
+      ignoreUndefinedProperties: true
+    }))
   ]
 };

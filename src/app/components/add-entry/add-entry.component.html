@@ -210,7 +210,7 @@
             </button>
             <!-- Delete button (edit mode, real entry only) -->
             <button class="btn-delete"
-                *ngIf="existingEntry && !existingEntry.id.startsWith('legacy-') && stage === 4"
+                *ngIf="existingEntry && !existingEntry.id.startsWith('legacy-')"
                 (click)="deleteEntry()"
                 [disabled]="deleting || saving"
                 title="Remove this entry">
