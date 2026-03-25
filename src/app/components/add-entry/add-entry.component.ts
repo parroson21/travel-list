@@ -319,7 +319,7 @@ export class AddEntryComponent implements OnInit, OnChanges {
     @HostListener('keydown.escape')
     close() { this.closed.emit(); }
 
-    onBackdropClick(event: MouseEvent) {
+    onBackdropMousedown(event: MouseEvent) {
         if ((event.target as HTMLElement).classList.contains('entry-backdrop')) {
             this.close();
         }
