@@ -216,6 +216,14 @@
     }
 }
 
+.nav-search-btn, .admin-icon-link {
+    text-decoration: none;
+
+    &:hover {
+        transform: scale(1.1) !important;
+    }
+}
+
 .settings-dropdown {
     width: 280px;
     padding: 1rem;
