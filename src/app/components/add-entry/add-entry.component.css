@@ -435,6 +435,16 @@
 
 .star-btn.filled { color: #f59e0b; }
 .star-btn:hover { transform: scale(1.12); }
+.star-btn:disabled { cursor: not-allowed; }
+
+.stars-readonly { opacity: 0.35; pointer-events: none; }
+.rating-readonly-hint {
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: var(--text-muted, rgba(255,255,255,0.3));
+    margin-left: 6px;
+}
+
 
 .note-section { display: flex; flex-direction: column; gap: 8px; }
 .note-label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted, rgba(255,255,255,0.45)); }

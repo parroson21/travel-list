@@ -172,7 +172,7 @@
             <div class="stage-label">Any thoughts?</div>
 
             <!-- Star rating -->
-            <div class="rating-section">
+            <div class="rating-section" *ngIf="status !== 'planned'">
                 <div class="rating-label">Rating (optional)</div>
                 <div class="stars" (mouseleave)="clearHoverRating()">
                     <button
