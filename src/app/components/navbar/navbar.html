@@ -75,6 +75,11 @@
                         </svg>
                         GitHub
                     </a>
+
+                    <!-- Version badge -->
+                    <div class="version-badge-row">
+                        <button class="version-badge" (click)="patchNotesOpen = true; settingsOpen = false">v{{ versionService.version() }}</button>
+                    </div>
                 </div>
             </div>
 
@@ -172,4 +177,9 @@
 <!-- Global add-entry wizard -->
 @if (addEntryOpen) {
 <app-add-entry (saved)="addEntryOpen = false" (closed)="addEntryOpen = false"></app-add-entry>
+}
+
+<!-- Patch notes overlay -->
+@if (patchNotesOpen) {
+<app-patch-notes (closed)="patchNotesOpen = false"></app-patch-notes>
 }

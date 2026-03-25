@@ -224,6 +224,10 @@
     }
 }
 
+.add-entry-icon-btn:hover {
+    transform: none !important;
+}
+
 .settings-dropdown {
     width: 280px;
     padding: 1rem;
@@ -511,5 +515,33 @@
     .add-entry-icon-btn,
     .nav-search-btn {
         display: none;
+    }
+}
+
+.version-badge-row {
+    display: flex;
+    justify-content: center;
+    padding: 0.25rem 0 0.1rem;
+}
+
+.version-badge {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    opacity: 0.6;
+    text-align: center;
+    transition: opacity 0.2s ease, color 0.2s ease;
+    text-decoration: none;
+
+    &:hover {
+        opacity: 1;
+        color: var(--primary);
+        text-decoration: underline;
+        text-underline-offset: 2px;
     }
 }

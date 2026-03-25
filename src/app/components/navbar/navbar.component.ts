@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -6,11 +6,13 @@ import { ThemeService } from '../../services/theme.service';
 import { SearchOverlayService } from '../../services/search-overlay.service';
 import { SearchOverlayComponent } from '../search-overlay/search-overlay.component';
 import { AddEntryComponent } from '../add-entry/add-entry.component';
+import { PatchNotesComponent } from '../patch-notes/patch-notes.component';
+import { VersionService } from '../../services/version.service';
 
 @Component({
     selector: 'app-navbar',
     standalone: true,
-    imports: [CommonModule, RouterModule, SearchOverlayComponent, AddEntryComponent],
+    imports: [CommonModule, RouterModule, SearchOverlayComponent, AddEntryComponent, PatchNotesComponent],
     templateUrl: './navbar.html',
     styleUrls: ['./navbar.scss']
 })
@@ -22,6 +24,9 @@ export class NavbarComponent {
     showThemes = false;
     fabOpen = false;
     addEntryOpen = false;
+    patchNotesOpen = false;
+
+    readonly versionService = inject(VersionService);
 
     constructor(
         public auth: AuthService,
