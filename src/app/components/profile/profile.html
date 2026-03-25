@@ -58,8 +58,7 @@
                                     <span class="entry-name row-link"
                                         title="Open country page">{{ row.country?.name || row.entry.countryName
                                         }}</span>
-                                    <span class="entry-year planned-year" *ngIf="!row.legacy">{{ row.entry.date |
-                                        date:'yyyy' }}</span>
+                                    <span class="entry-year planned-year" *ngIf="!row.legacy">{{ row.entry.date | slice:0:4 }}</span>
                                     <span class="entry-legacy-badge" *ngIf="row.legacy">
                                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
                                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
@@ -106,8 +105,7 @@
                                     <span class="entry-name row-link"
                                         title="Open country page">{{ row.country?.name || row.entry.countryName
                                         }}</span>
-                                    <span class="entry-year" *ngIf="!row.legacy">{{ row.entry.date | date:'yyyy'
-                                        }}</span>
+                                    <span class="entry-year" *ngIf="!row.legacy">{{ row.entry.date | slice:0:4 }}</span>
                                     <span class="entry-legacy-badge" *ngIf="row.legacy">
                                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
                                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round">

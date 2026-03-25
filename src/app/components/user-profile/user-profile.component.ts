@@ -8,7 +8,7 @@ import { Observable, combineLatest, of, firstValueFrom } from 'rxjs';
 import { map, switchMap, startWith, take } from 'rxjs/operators';
 import { Country, UserProfile, TravelEntry } from '../../models/travel.model';
 import { WorldMapComponent } from '../world-map/world-map.component';
-import { EntryModalComponent } from '../entry-modal/entry-modal.component';
+import { AddEntryComponent } from '../add-entry/add-entry.component';
 import { Location } from '@angular/common';
 import { ProfileEntryRow } from '../profile/profile.component';
 import { HashRouterService } from '../../services/hash-router.service';
@@ -17,7 +17,7 @@ import { HashRouterService } from '../../services/hash-router.service';
     selector: 'app-user-profile',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, FormsModule, WorldMapComponent, DecimalPipe, EntryModalComponent],
+    imports: [CommonModule, FormsModule, WorldMapComponent, DecimalPipe, AddEntryComponent],
     templateUrl: './user-profile.component.html',
     styleUrls: ['./user-profile.component.css']
 })
