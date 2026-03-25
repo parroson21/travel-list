@@ -58,7 +58,7 @@ export class SearchOverlayComponent implements OnInit, OnDestroy {
         this.clearResults();
     }
 
-    onBackdropClick(event: MouseEvent) {
+    onBackdropMousedown(event: MouseEvent) {
         if ((event.target as HTMLElement).classList.contains('search-backdrop')) {
             this.close();
         }

@@ -1,5 +1,5 @@
-<div class="search-backdrop" (click)="onBackdropClick($event)" *ngIf="searchOverlay.isOpen$ | async">
-    <div class="search-panel" (click)="$event.stopPropagation()">
+<div class="search-backdrop" (mousedown)="onBackdropMousedown($event)" *ngIf="searchOverlay.isOpen$ | async">
+    <div class="search-panel" (mousedown)="$event.stopPropagation()">
         <div class="search-input-row">
             <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
                 stroke="var(--text-main)" stroke-width="2" stroke-linecap="round">
