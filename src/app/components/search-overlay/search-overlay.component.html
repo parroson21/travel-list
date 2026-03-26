@@ -65,7 +65,7 @@
                     <div class="result-user-avatar">
                         <img *ngIf="r.user.photoURL" [src]="r.user.photoURL" alt="avatar" referrerpolicy="no-referrer">
                         <span *ngIf="!r.user.photoURL" class="avatar-fallback">
-                            {{ (r.user.displayName || r.user.username || '?').charAt(0).toUpperCase() }}
+                            {{ (r.user.username || '?').charAt(0).toUpperCase() }}
                         </span>
                         <span class="online-dot" *ngIf="isOnline(r.user.lastLoginAt)"></span>
                     </div>

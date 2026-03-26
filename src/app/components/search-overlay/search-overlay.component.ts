@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -40,9 +40,19 @@ export class SearchOverlayComponent implements OnInit, OnDestroy {
         private cdr: ChangeDetectorRef
     ) {}
 
+    @ViewChild('searchInput') searchInputRef?: ElementRef<HTMLInputElement>;
+
     ngOnInit() {
         this.travel.getCountries().pipe(takeUntil(this.destroy$)).subscribe(countries => {
             this.allCountries = countries;
+        });
+
+        // Auto-focus the search input whenever the overlay opens
+        this.searchOverlay.isOpen$.pipe(takeUntil(this.destroy$)).subscribe(open => {
+            if (open) {
+                // Wait a tick for the DOM to render
+                setTimeout(() => this.searchInputRef?.nativeElement.focus(), 50);
+            }
         });
     }
 

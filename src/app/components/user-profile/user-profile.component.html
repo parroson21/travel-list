@@ -19,12 +19,14 @@
     <div *ngIf="!isUsernameRoute && !vm.targetProfile && !vm.currentUser" class="welcome-hero fade-in">
         <div class="welcome-globe">🌍</div>
         <h1 class="welcome-title">Track your world.</h1>
-        <p class="welcome-sub">Log every country you've visited, plan future trips, and explore UNESCO heritage sites — all in one place.</p>
+        <p class="welcome-sub">Log every country you've visited, plan future trips, and explore UNESCO heritage sites —
+            all in one place.</p>
         <button class="welcome-signin-btn" (click)="auth.loginWithGoogle()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                <polyline points="10 17 15 12 10 7"/>
-                <line x1="15" y1="12" x2="3" y2="12"/>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <line x1="15" y1="12" x2="3" y2="12" />
             </svg>
             Sign in with Google
         </button>
@@ -59,10 +61,11 @@
 
             <!-- Left: World Map -->
             <div class="profile-map-section glass-panel fade-in">
-                <app-world-map [visitedCountryNames]="vm.visitedCountryNames" [plannedCountryNames]="vm.plannedCountryNames"
-                    [focusedCountry]="highlightedCountry" [heritageSites]="vm.heritageSites"
-                    [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true" [height]="'100%'"
-                    [highlightedSiteId]="hoveredSiteId" (poiToggled)="openSiteFromPin($event, vm.heritageSites)"
+                <app-world-map [visitedCountryNames]="vm.visitedCountryNames"
+                    [plannedCountryNames]="vm.plannedCountryNames" [focusedCountry]="highlightedCountry"
+                    [heritageSites]="vm.heritageSites" [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true"
+                    [height]="'100%'" [highlightedSiteId]="hoveredSiteId"
+                    (poiToggled)="openSiteFromPin($event, vm.heritageSites)"
                     (countryClicked)="onMapCountryClicked($event, vm.countries)">
                 </app-world-map>
             </div>
@@ -103,43 +106,51 @@
                             </div>
                             <div class="entry-list" *ngIf="vm.plannedEntryRows.length > 0">
                                 <div *ngFor="let row of vm.plannedEntryRows" class="entry-row glass-panel"
-                                    [class.entry-legacy]="row.legacy"
-                                    role="button" tabindex="0"
+                                    [class.entry-legacy]="row.legacy" role="button" tabindex="0"
                                     [attr.aria-label]="(row.country?.name || row.entry.countryName) + ' — planned trip. Click to view country.'"
                                     (click)="navigateToCountry(row.entry.countryId)"
                                     (keydown.enter)="navigateToCountry(row.entry.countryId)">
-                                    <span class="entry-flag flag-emoji" aria-hidden="true">{{ row.country?.emoji || '🌐' }}</span>
+                                    <span class="entry-flag flag-emoji" aria-hidden="true">{{ row.country?.emoji || '🌐'
+                                        }}</span>
                                     <div class="entry-info">
                                         <div class="entry-name-row">
-                                            <span class="entry-name row-link" (click)="navigateToCountry(row.entry.countryId)">{{ row.country?.name || row.entry.countryName }}</span>
+                                            <span class="entry-name row-link"
+                                                (click)="navigateToCountry(row.entry.countryId)">{{ row.country?.name ||
+                                                row.entry.countryName }}</span>
                                             <ng-container *ngIf="!row.legacy && daysUntil(row.entry.date) !== null">
                                                 <span class="countdown-tag"
                                                     [class.countdown-today]="daysUntil(row.entry.date) === 0"
                                                     [class.countdown-soon]="daysUntil(row.entry.date)! > 0 && daysUntil(row.entry.date)! <= 7"
                                                     [class.countdown-past]="daysUntil(row.entry.date)! < 0">
                                                     {{ daysUntil(row.entry.date) === 0 ? 'Today' :
-                                                       daysUntil(row.entry.date) === 1 ? 'Tomorrow' :
-                                                       daysUntil(row.entry.date) === -1 ? 'Yesterday' :
-                                                       daysUntil(row.entry.date)! > 0 ? 'In ' + daysUntil(row.entry.date) + ' Days' :
-                                                       (-daysUntil(row.entry.date)!) + ' Days Ago' }}
+                                                    daysUntil(row.entry.date) === 1 ? 'Tomorrow' :
+                                                    daysUntil(row.entry.date) === -1 ? 'Yesterday' :
+                                                    daysUntil(row.entry.date)! > 0 ? 'In ' + daysUntil(row.entry.date) +
+                                                    ' Days' :
+                                                    (-daysUntil(row.entry.date)!) + ' Days Ago' }}
                                                 </span>
                                             </ng-container>
                                         </div>
-                                        <span class="entry-year planned-year" *ngIf="!row.legacy">{{ row.entry.date | slice:0:4 }}</span>
+                                        <span class="entry-year planned-year" *ngIf="!row.legacy">{{ row.entry.date |
+                                            slice:0:4 }}</span>
                                         <span class="entry-no-date-badge" *ngIf="row.legacy" aria-label="Date not set">
                                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-                                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                                aria-hidden="true">
+                                                <path
+                                                    d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                                                 <line x1="12" y1="9" x2="12" y2="13" />
                                                 <line x1="12" y1="17" x2="12.01" y2="17" />
                                             </svg>
                                             No date
                                         </span>
                                     </div>
-                                    <button *ngIf="vm.isOwnProfile" class="entry-edit-btn" (click)="openEditModal(row, $event)"
+                                    <button *ngIf="vm.isOwnProfile" class="entry-edit-btn"
+                                        (click)="openEditModal(row, $event)"
                                         [attr.aria-label]="'Edit entry for ' + (row.country?.name || row.entry.countryName)">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                            aria-hidden="true">
                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                         </svg>
@@ -163,29 +174,36 @@
                             <!-- Visited -->
                             <div class="entry-list" *ngIf="vm.visitedEntryRows.length > 0">
                                 <div *ngFor="let row of vm.visitedEntryRows" class="entry-row glass-panel"
-                                    [class.entry-legacy]="row.legacy"
-                                    role="button" tabindex="0"
+                                    [class.entry-legacy]="row.legacy" role="button" tabindex="0"
                                     [attr.aria-label]="(row.country?.name || row.entry.countryName) + ' — visited. Click to view country.'"
                                     (click)="navigateToCountry(row.entry.countryId)"
                                     (keydown.enter)="navigateToCountry(row.entry.countryId)">
-                                    <span class="entry-flag flag-emoji" aria-hidden="true">{{ row.country?.emoji || '🌐' }}</span>
+                                    <span class="entry-flag flag-emoji" aria-hidden="true">{{ row.country?.emoji || '🌐'
+                                        }}</span>
                                     <div class="entry-info">
-                                        <span class="entry-name row-link" (click)="navigateToCountry(row.entry.countryId)">{{ row.country?.name || row.entry.countryName }}</span>
-                                        <span class="entry-year" *ngIf="!row.legacy">{{ row.entry.date | slice:0:4 }}</span>
+                                        <span class="entry-name row-link"
+                                            (click)="navigateToCountry(row.entry.countryId)">{{ row.country?.name ||
+                                            row.entry.countryName }}</span>
+                                        <span class="entry-year" *ngIf="!row.legacy">{{ row.entry.date | slice:0:4
+                                            }}</span>
                                         <span class="entry-no-date-badge" *ngIf="row.legacy" aria-label="Date not set">
                                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-                                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                                aria-hidden="true">
+                                                <path
+                                                    d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                                                 <line x1="12" y1="9" x2="12" y2="13" />
                                                 <line x1="12" y1="17" x2="12.01" y2="17" />
                                             </svg>
                                             No date
                                         </span>
                                     </div>
-                                    <button *ngIf="vm.isOwnProfile" class="entry-edit-btn" (click)="openEditModal(row, $event)"
+                                    <button *ngIf="vm.isOwnProfile" class="entry-edit-btn"
+                                        (click)="openEditModal(row, $event)"
                                         [attr.aria-label]="'Edit entry for ' + (row.country?.name || row.entry.countryName)">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                            aria-hidden="true">
                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                         </svg>
@@ -213,7 +231,8 @@
                                             {{ selectedSite.category_short === 'C' ? 'Cultural' :
                                             selectedSite.category_short === 'N' ? 'Natural' : 'Mixed' }}
                                         </span>
-                                        <button class="detail-close-btn" (click)="closeSiteDetails()" title="Back to list">
+                                        <button class="detail-close-btn" (click)="closeSiteDetails()"
+                                            title="Back to list">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                                                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                                                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -254,7 +273,8 @@
                                         <button *ngIf="vm.isOwnProfile" class="btn-visited"
                                             [class.visited]="isPOIVisited(selectedSite.id_no, vm2.targetProfile)"
                                             (click)="togglePOIVisited(selectedSite.id_no, vm2.targetProfile)">
-                                            {{ isPOIVisited(selectedSite.id_no, vm2.targetProfile) ? 'Visited' : 'Mark Visited' }}
+                                            {{ isPOIVisited(selectedSite.id_no, vm2.targetProfile) ? 'Visited' : 'Mark
+                                            Visited' }}
                                         </button>
                                         <span *ngIf="!vm.isOwnProfile" class="viewed-badge">Visited ✓</span>
                                     </ng-container>
@@ -280,14 +300,16 @@
                                                 [class.badge-cultural]="h.site.category_short === 'C'"
                                                 [class.badge-natural]="h.site.category_short === 'N'"
                                                 [class.badge-mixed]="h.site.category_short === 'C/N' || h.site.category_short === 'N/C'">
-                                                {{ h.site.category_short === 'C' ? 'Cultural' : h.site.category_short ===
+                                                {{ h.site.category_short === 'C' ? 'Cultural' : h.site.category_short
+                                                ===
                                                 'N' ? 'Natural' : 'Mixed' }}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
                                 <div *ngIf="vm.visitedHeritageSites.length === 0" class="empty-state glass-panel">
-                                    <p>No heritage sites visited yet.<br>Mark heritage sites as visited on country pages!
+                                    <p>No heritage sites visited yet.<br>Mark heritage sites as visited on country
+                                        pages!
                                     </p>
                                 </div>
                             </ng-container>
@@ -307,16 +329,15 @@
                     <img *ngIf="vm.targetProfile.photoURL" [src]="vm.targetProfile.photoURL" class="profile-avatar"
                         alt="avatar" referrerpolicy="no-referrer" />
                     <div *ngIf="!vm.targetProfile.photoURL" class="profile-avatar-fallback">
-                        {{ (vm.targetProfile.displayName || vm.targetProfile.email || '?').charAt(0).toUpperCase() }}
+                        {{ (vm.targetProfile.username || vm.targetProfile.displayName || '?').charAt(0).toUpperCase() }}
                     </div>
                 </div>
                 <div class="profile-identity">
                     <div class="profile-name-row">
-                        <h1 class="profile-name">{{ vm.targetProfile.displayName || 'Traveler' }}</h1>
+                        <h1 class="profile-name"><span style="color: var(--primary)">@{{ vm.targetProfile.username ||
+                                'Traveler' }}</span></h1>
                         <span *ngIf="vm.isOwnProfile" class="own-profile-badge">You</span>
                     </div>
-                    <span *ngIf="vm.targetProfile.username" class="profile-username">@{{ vm.targetProfile.username }}</span>
-                    <span class="profile-email">{{ vm.targetProfile.email }}</span>
                     <div class="profile-dates">
                         <span class="profile-date" *ngIf="vm.targetProfile.createdAt">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -368,7 +389,8 @@
                     </ng-container>
                     <!-- Read-only home country flag for other users -->
                     <ng-container *ngIf="!vm.isOwnProfile && vm.homeCountry">
-                        <span class="home-flag-readonly flag-emoji" [title]="'Home: ' + vm.homeCountry.name">{{ vm.homeCountry.emoji }}</span>
+                        <span class="home-flag-readonly flag-emoji" [title]="'Home: ' + vm.homeCountry.name">{{
+                            vm.homeCountry.emoji }}</span>
                     </ng-container>
                 </div>
             </div>
@@ -452,8 +474,8 @@
 
     <!-- Search -->
     <div class="hpick-search-wrap">
-        <svg class="hpick-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <svg class="hpick-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round">
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
@@ -464,13 +486,11 @@
     <div class="hpick-list">
         <ng-container *ngIf="vm$ | async as vm">
             <button *ngFor="let c of filteredHomeCountries(vm.countries)" class="hpick-item"
-                [class.hpick-item--active]="c.id === vm.targetProfile?.homeCountryId"
-                (click)="saveHomeCountry(c.id)">
+                [class.hpick-item--active]="c.id === vm.targetProfile?.homeCountryId" (click)="saveHomeCountry(c.id)">
                 <span class="flag-emoji">{{ c.emoji }}</span>
                 <span class="hpick-item-name">{{ c.name }}</span>
                 <svg *ngIf="c.id === vm.targetProfile?.homeCountryId" class="hpick-check" width="13" height="13"
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                    stroke-linecap="round">
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
                     <polyline points="20 6 9 17 4 12" />
                 </svg>
             </button>
@@ -484,8 +504,6 @@
 @if (editModalCountry && editModalEntry) {
 <app-add-entry
     [preselectedCountry]="{ id: editModalCountry.id, name: editModalCountry.name, emoji: editModalCountry.emoji }"
-    [existingEntry]="editModalEntry"
-    (saved)="closeEditModal()"
-    (closed)="closeEditModal()">
+    [existingEntry]="editModalEntry" (saved)="closeEditModal()" (closed)="closeEditModal()">
 </app-add-entry>
 }
