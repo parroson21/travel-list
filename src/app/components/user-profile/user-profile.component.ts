@@ -32,6 +32,7 @@ export class UserProfileComponent implements OnInit {
 
     vm$: Observable<{
         targetProfile: UserProfile | null,
+        currentUser: import('@angular/fire/auth').User | null,
         visitedCountries: Country[],
         visitedCountryNames: string[],
         plannedCountries: Country[],
@@ -108,6 +109,7 @@ export class UserProfileComponent implements OnInit {
                 if (!targetProfile) {
                     return of({
                         targetProfile: null,
+                        currentUser,
                         visitedCountries: [],
                         visitedCountryNames: [],
                         plannedCountries: [],
@@ -212,6 +214,7 @@ export class UserProfileComponent implements OnInit {
 
                         return {
                             targetProfile,
+                            currentUser,
                             visitedCountries,
                             visitedCountryNames: visitedCountries.map(c => c.name),
                             plannedCountries,

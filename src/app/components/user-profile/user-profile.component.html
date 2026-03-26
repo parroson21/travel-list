@@ -15,6 +15,35 @@
         <button class="back-link" (click)="goBack()">← Go back</button>
     </div>
 
+    <!-- Unauthenticated welcome state (root route, not logged in) -->
+    <div *ngIf="!isUsernameRoute && !vm.targetProfile && !vm.currentUser" class="welcome-hero fade-in">
+        <div class="welcome-globe">🌍</div>
+        <h1 class="welcome-title">Track your world.</h1>
+        <p class="welcome-sub">Log every country you've visited, plan future trips, and explore UNESCO heritage sites — all in one place.</p>
+        <button class="welcome-signin-btn" (click)="auth.loginWithGoogle()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                <polyline points="10 17 15 12 10 7"/>
+                <line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+            Sign in with Google
+        </button>
+        <div class="welcome-features">
+            <div class="welcome-feature">
+                <span class="feature-icon">🗺️</span>
+                <span>Interactive world map</span>
+            </div>
+            <div class="welcome-feature">
+                <span class="feature-icon">📅</span>
+                <span>Trip timeline & planning</span>
+            </div>
+            <div class="welcome-feature">
+                <span class="feature-icon">🏛️</span>
+                <span>UNESCO heritage sites</span>
+            </div>
+        </div>
+    </div>
+
     <ng-container *ngIf="vm.targetProfile">
 
         <!-- Back button (only on /user/:username, not on '/') -->
