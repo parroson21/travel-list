@@ -235,7 +235,10 @@ export class AddEntryComponent implements OnInit, OnChanges {
     }
 
     toggleGroup(group: SubdivisionGroup) {
-        group.expanded = !group.expanded;
+        const opening = !group.expanded;
+        // Collapse all groups first, then open the clicked one if it was closed
+        this.subdivisionGroups.forEach(g => g.expanded = false);
+        if (opening) group.expanded = true;
     }
 
     countSelectedInGroup(group: SubdivisionGroup): number {

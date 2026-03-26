@@ -53,6 +53,16 @@ body {
   line-height: 1.6;
 }
 
+/* Lock body scroll whenever any overlay backdrop is in the DOM */
+body:has(.entry-backdrop),
+body:has(.search-backdrop),
+body:has(.overlay-backdrop),
+body:has(.modal-backdrop),
+body:has(.patch-notes-backdrop),
+body:has(.prompt-backdrop) {
+  overflow: hidden;
+}
+
 /* Twemoji Country Flags Font Polyfill for Windows */
 @font-face {
   font-family: "Twemoji Country Flags";

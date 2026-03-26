@@ -958,6 +958,11 @@
     border-color: var(--accent-color);
 }
 
+/* Touch devices: always show edit button since hover is unavailable */
+@media (hover: none) {
+    .entry-edit-btn { opacity: 1; }
+}
+
 /* ── Mark visited button ── */
 .btn-visited {
     padding: .55rem 1.1rem;
