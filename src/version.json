@@ -1,11 +1,14 @@
 {
-  "version": "0.2.3",
+  "version": "0.2.4",
   "patches": [
     {
       "version": "0.2.4",
       "date": "2026-03-26",
       "notes": [
-        "Added Unauth Page State"
+        "Added Unauth Page State",
+        "General overlay UX and add entry overlay tweaks",
+        "Search overlay UX and autofocus",
+        "Removed full name and email from profile"
       ]
     },
     {
