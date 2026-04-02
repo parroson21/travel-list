@@ -71,7 +71,7 @@ export class TravelService {
                                     visitedSubdivisions: [],
                                     visitedPOIs: []
                                 };
-                                setDoc(userDoc, newProfile);
+                                setDoc(userDoc, newProfile, { merge: true });
                             }
                         });
                     }, error => observer.error(error));

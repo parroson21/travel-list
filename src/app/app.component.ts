@@ -114,10 +114,15 @@ export class AppComponent implements OnInit, OnDestroy {
       }
       // Track current username for change-username flow
       this.currentUsername = profile?.username || '';
-      // Show mandatory prompt if user is logged in but hasn't set a username
+      // Show mandatory prompt if user is logged in but hasn't set a username.
+      // The else branch is critical: if an early Firestore snapshot fires before
+      // the username field is populated (cache/offline timing), the prompt shows.
+      // When the subsequent snapshot arrives with the username, we must explicitly hide it.
       if (!!profile && !profile.username) {
         this.usernamePromptMode = 'create';
         this.showUsernamePrompt = true;
+      } else if (profile?.username && this.usernamePromptMode === 'create') {
+        this.showUsernamePrompt = false;
       }
       this.cdr.markForCheck();
     });
