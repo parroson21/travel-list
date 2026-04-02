@@ -93,6 +93,7 @@ export class AdminComponent implements OnInit {
     mostPlanned: { id: string; name: string; emoji: string; count: number }[];
     mostHomeCountry: { id: string; name: string; emoji: string; count: number }[];
     countryReachPct: number; // % of all countries visited by at least one user
+    lastActiveUsers: UserProfile[];
   } | null = null;
 
   constructor(
@@ -437,6 +438,11 @@ export class AdminComponent implements OnInit {
           return { id, count, name: c?.name || id, emoji: c?.emoji || '🌍' };
         });
 
+    const lastActiveUsers = [...users]
+      .filter(u => !!u.lastLoginAt)
+      .sort((a, b) => new Date(b.lastLoginAt!).getTime() - new Date(a.lastLoginAt!).getTime())
+      .slice(0, 5);
+
     this.zone.run(() => {
       this.stats = {
         totalUsers: users.length,
@@ -452,6 +458,7 @@ export class AdminComponent implements OnInit {
         mostVisited:     topN(visitCounts),
         mostPlanned:     topN(planCounts),
         mostHomeCountry: topN(homeCounts),
+        lastActiveUsers: lastActiveUsers,
       };
       this.statsComputed = true;
       this.loadingStats = false;

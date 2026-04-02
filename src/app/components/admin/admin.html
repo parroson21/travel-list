@@ -582,6 +582,27 @@
                 </ul>
             </div>
 
+            <!-- Last Active Users -->
+            <div class="stats-list-panel glass-panel">
+                <h3 class="stats-list-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Latest Active Users
+                </h3>
+                <ul class="stats-rank-list">
+                    <li *ngFor="let u of stats.lastActiveUsers" class="stats-rank-item" style="display: flex; gap: .75rem; align-items: center; padding: .2rem 0">
+                        <span class="user-avatar" style="width: 28px; height: 28px; font-size: .75rem">{{ userInitial(u) }}</span>
+                        <div style="display: flex; flex-direction: column; min-width: 0; gap: .1rem; flex: 1">
+                            <span class="rank-name" style="font-weight: 600; font-size: .85rem; color: var(--text-main)">
+                                <ng-container *ngIf="u.username">@{{u.username}}</ng-container>
+                                <ng-container *ngIf="!u.username">{{ u.displayName || u.email || 'Unknown User' }}</ng-container>
+                            </span>
+                            <span style="font-size: .7rem; color: var(--text-muted)">{{ u.lastLoginAt | date:'MMM d, y · h:mm a' }}</span>
+                        </div>
+                    </li>
+                    <li *ngIf="stats.lastActiveUsers.length === 0" class="stats-empty">No recently active users</li>
+                </ul>
+            </div>
+
         </div>
 
         <div class="stats-refresh-row">
