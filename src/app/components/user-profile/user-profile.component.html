@@ -315,8 +315,8 @@
                             </ng-container>
                         </div>
 
-                    </div>
-                </div>
+                    </div><!-- /tab-scroll -->
+                </div><!-- /tabs-panel -->
             </div><!-- /right-panel -->
         </div><!-- /page-split -->
 
@@ -426,6 +426,19 @@
                 </div>
             </div>
 
+        </div><!-- /stats-section -->
+
+        <!-- ── Activity Timeline ── -->
+        <div class="timeline-section" *ngIf="vm.timelineItems.length > 0">
+            <div class="timeline-section-header">
+                <h2 class="timeline-section-title">Activity</h2>
+                <span class="timeline-section-count">{{ vm.timelineItems.length }} events</span>
+            </div>
+            <app-timeline
+                [items]="vm.timelineItems"
+                [showActor]="false"
+                emptyMessage="No travel activity logged yet.">
+            </app-timeline>
         </div>
 
     </ng-container>

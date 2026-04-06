@@ -1,0 +1,83 @@
+<!-- Skeleton loader -->
+<ng-container *ngIf="loading">
+    <div class="tl-skeleton">
+        <div class="tl-skeleton-item" *ngFor="let i of [0,1,2]">
+            <div class="tl-skel-dot"></div>
+            <div class="tl-skel-body">
+                <div class="tl-skel-line tl-skel-line--short"></div>
+                <div class="tl-skel-line tl-skel-line--long"></div>
+            </div>
+        </div>
+    </div>
+</ng-container>
+
+<!-- Empty state -->
+<ng-container *ngIf="!loading && processedItems.length === 0">
+    <div class="tl-empty">
+        <p class="tl-empty-msg">{{ emptyMessage }}</p>
+    </div>
+</ng-container>
+
+<!-- Timeline feed -->
+<div class="tl-root" *ngIf="!loading && processedItems.length > 0" role="feed" aria-label="Travel activity timeline">
+
+    <div class="tl-item"
+         *ngFor="let item of processedItems; trackBy: trackById"
+         [class]="'tl-item--' + item.type"
+         [attr.aria-label]="typeLabel(item) + (item.countryName ? ' — ' + item.countryName : '')">
+
+        <!-- Card -->
+        <div class="tl-card glass-panel">
+
+            <!-- Actor chip (following / global feeds only) -->
+            <div class="tl-actor" *ngIf="showActor && item.actorUid">
+                <img *ngIf="item.actorPhotoURL"
+                     [src]="item.actorPhotoURL"
+                     class="tl-actor-avatar"
+                     [alt]="item.actorDisplayName || item.actorUsername"
+                     referrerpolicy="no-referrer" />
+                <div *ngIf="!item.actorPhotoURL" class="tl-actor-avatar tl-actor-avatar--fallback">
+                    {{ (item.actorUsername || item.actorDisplayName || '?').charAt(0).toUpperCase() }}
+                </div>
+                <span class="tl-actor-name">&#64;{{ item.actorUsername || item.actorDisplayName }}</span>
+            </div>
+
+            <!-- Joined event -->
+            <ng-container *ngIf="item.type === 'joined'">
+                <span class="tl-rel-time">{{ item.relTime }}</span>
+                <p class="tl-joined-text">Joined TravelList</p>
+            </ng-container>
+
+            <!-- Country events (visited / planned) -->
+            <ng-container *ngIf="item.type !== 'joined'">
+                <div class="tl-card-header">
+                    <span class="tl-rel-time">{{ item.relTime }}</span>
+                    <span class="tl-trip-date" *ngIf="item.formattedTripDate">{{ item.formattedTripDate }}</span>
+                </div>
+
+                <div class="tl-card-main">
+                    <span class="tl-flag flag-emoji" aria-hidden="true">{{ item.countryEmoji || '' }}</span>
+                    <div class="tl-card-body">
+                        <span class="tl-event-type">{{ typeLabel(item) }}</span>
+                        <span class="tl-country-name">{{ item.countryName }}</span>
+                    </div>
+                </div>
+
+                <!-- Heritage sites listed under the country -->
+                <ul class="tl-heritage-list" *ngIf="item.heritageSites && item.heritageSites.length > 0" aria-label="Heritage sites visited">
+                    <li class="tl-heritage-tag" *ngFor="let site of item.heritageSites">{{ site }}</li>
+                </ul>
+
+                <!-- Star rating -->
+                <div class="tl-rating" *ngIf="item.rating" [attr.aria-label]="item.rating + ' stars'">
+                    <span class="tl-star" *ngFor="let s of stars(item.rating)" aria-hidden="true">★</span>
+                </div>
+
+                <!-- Note excerpt -->
+                <p class="tl-note" *ngIf="item.note">{{ item.note }}</p>
+            </ng-container>
+
+        </div>
+    </div>
+
+</div>

@@ -1,0 +1,292 @@
+/* ─────────────────────────────────────────────────────────────
+   Timeline component styles
+   Uses the app's existing CSS custom properties:
+     --primary, --primary-rgb, --text, --text-muted, --surface,
+     --border, --border-light, --radius, --shadow-lg
+   ───────────────────────────────────────────────────────────── */
+
+/* ── Root ─────────────────────────────────────────────────── */
+.tl-root {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0.25rem 0 1rem;
+    position: relative;
+}
+
+/* ── Card header: relative time + trip date in one row ───── */
+.tl-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+}
+
+.tl-rel-time {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    opacity: 0.7;
+    white-space: nowrap;
+}
+
+.tl-trip-date {
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    opacity: 0.6;
+    white-space: nowrap;
+}
+
+/* ── Item row ─────────────────────────────────────────────── */
+.tl-item {
+    display: block;
+    position: relative;
+    animation: tl-slide-in 0.25s ease both;
+}
+
+@keyframes tl-slide-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0);   }
+}
+
+/* Stagger each visible item */
+.tl-item:nth-child(1) { animation-delay: 0.04s; }
+.tl-item:nth-child(2) { animation-delay: 0.08s; }
+.tl-item:nth-child(3) { animation-delay: 0.12s; }
+.tl-item:nth-child(4) { animation-delay: 0.16s; }
+.tl-item:nth-child(5) { animation-delay: 0.20s; }
+
+/* ── Card ────────────────────────────────────────────────── */
+.tl-card {
+    min-width: 0;
+    padding: 0.6rem 0.85rem;
+    border-radius: var(--radius, 10px);
+    margin-bottom: 0.5rem;
+    border-left: 3px solid transparent;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+/* Type-specific left-border accent */
+.tl-item--visited  .tl-card { border-left-color: var(--primary); }
+.tl-item--planned  .tl-card { border-left-color: var(--secondary); }
+.tl-item--heritage .tl-card { border-left-color: var(--primary); }
+.tl-item--joined   .tl-card { border-left-color: var(--secondary); }
+
+.tl-card-main {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.tl-flag {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.tl-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    min-width: 0;
+}
+
+.tl-event-type {
+    font-size: 0.67rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0.55;
+    color: var(--text);
+}
+
+/* Per-type tint on the label */
+.tl-item--visited  .tl-event-type { color: var(--primary);   opacity: 1; }
+.tl-item--planned  .tl-event-type { color: var(--secondary); opacity: 1; }
+.tl-item--heritage .tl-event-type { color: var(--primary);   opacity: 1; }
+
+.tl-country-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Heritage site tag list ───────────────────────────────── */
+.tl-heritage-list {
+    list-style: none;
+    margin: 0.4rem 0 0 1.9rem;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.tl-heritage-tag {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--glass-border, rgba(255,255,255,0.08));
+    border: 1px solid var(--glass-border, rgba(255,255,255,0.12));
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+/* ── Rating ───────────────────────────────────────────────── */
+.tl-rating {
+    display: flex;
+    gap: 1px;
+    margin-top: 0.3rem;
+    padding-left: 1.9rem; /* align with country name */
+}
+
+.tl-star {
+    font-size: 0.75rem;
+    color: var(--secondary);
+}
+
+/* ── Note ─────────────────────────────────────────────────── */
+.tl-note {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin: 0.35rem 0 0;
+    padding-left: 1.9rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ── Joined event ─────────────────────────────────────────── */
+.tl-joined-text {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+}
+
+/* ── Actor chip (following / global feeds) ────────────────── */
+.tl-actor {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.4rem;
+}
+
+.tl-actor-avatar {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.tl-actor-avatar--fallback {
+    background: rgba(var(--primary-rgb, 99,102,241), 0.2);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.tl-actor-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+/* ── Skeleton loader ──────────────────────────────────────── */
+.tl-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.tl-skeleton-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.tl-skel-dot {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+    animation: tl-pulse 1.4s ease-in-out infinite;
+}
+
+.tl-skel-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding-top: 0.3rem;
+}
+
+.tl-skel-line {
+    height: 0.7rem;
+    border-radius: 4px;
+    background: var(--border);
+    animation: tl-pulse 1.4s ease-in-out infinite;
+}
+
+.tl-skel-line--short { width: 40%; }
+.tl-skel-line--long  { width: 70%; }
+
+.tl-skeleton-item:nth-child(2) .tl-skel-dot,
+.tl-skeleton-item:nth-child(2) .tl-skel-line { animation-delay: 0.2s; }
+.tl-skeleton-item:nth-child(3) .tl-skel-dot,
+.tl-skeleton-item:nth-child(3) .tl-skel-line { animation-delay: 0.4s; }
+
+@keyframes tl-pulse {
+    0%, 100% { opacity: 0.5; }
+    50%       { opacity: 1;   }
+}
+
+/* ── Empty state ──────────────────────────────────────────── */
+.tl-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2.5rem 1rem;
+    text-align: center;
+}
+
+.tl-empty-msg {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 480px) {
+    .tl-dot {
+        width: 1.75rem;
+        height: 1.75rem;
+    }
+    .tl-dot-icon {
+        font-size: 0.75rem;
+    }
+    .tl-country-name {
+        font-size: 0.85rem;
+    }
+}
