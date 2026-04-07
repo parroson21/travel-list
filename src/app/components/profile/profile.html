@@ -1,15 +1,14 @@
 <div class="profile-container" *ngIf="vm$ | async as vm">
 
     <!-- â”€â”€ Hero: map + list side by side (viewport height) â”€â”€ -->
-    <div class="page-split">
+    <div class="page-split" [class.sheet-open]="selectedSite">
 
         <!-- Left: World Map -->
         <div class="profile-map-section glass-panel fade-in">
             <app-world-map [visitedCountryNames]="vm.visitedCountryNames" [plannedCountryNames]="vm.plannedCountryNames"
                 [focusedCountry]="highlightedCountry" [heritageSites]="vm.heritageSites"
                 [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true" [height]="'100%'"
-                [highlightedSiteId]="hoveredSiteId"
-                (poiToggled)="openSiteFromPin($event, vm.heritageSites)"
+                [highlightedSiteId]="hoveredSiteId" (poiToggled)="openSiteFromPin($event, vm.heritageSites)"
                 (countryClicked)="onMapCountryClicked($event, vm.countries)">
             </app-world-map>
         </div>
@@ -50,20 +49,23 @@
                         </div>
                         <div class="entry-list" *ngIf="vm.plannedEntryRows.length > 0">
                             <div *ngFor="let row of vm.plannedEntryRows" class="entry-row glass-panel"
-                                [class.entry-legacy]="row.legacy"
-                                (click)="navigateToCountry(row.entry.countryId)"
+                                [class.entry-legacy]="row.legacy" (click)="navigateToCountry(row.entry.countryId)"
                                 role="button" tabindex="0"
                                 [attr.aria-label]="(row.country?.name || row.entry.countryName) + ' — planned trip. Click to view country.'"
-                                (keydown.enter)="navigateToCountry(row.entry.countryId)"
-                                style="cursor:pointer">
-                                <span class="entry-flag flag-emoji" aria-hidden="true">{{ row.country?.emoji || '🌍' }}</span>
+                                (keydown.enter)="navigateToCountry(row.entry.countryId)" style="cursor:pointer">
+                                <span class="entry-flag flag-emoji" aria-hidden="true">{{ row.country?.emoji || '🌍'
+                                    }}</span>
                                 <div class="entry-info">
-                                    <span class="entry-name row-link">{{ row.country?.name || row.entry.countryName }}</span>
-                                    <span class="entry-year planned-year" *ngIf="!row.legacy">{{ row.entry.date | slice:0:4 }}</span>
+                                    <span class="entry-name row-link">{{ row.country?.name || row.entry.countryName
+                                        }}</span>
+                                    <span class="entry-year planned-year" *ngIf="!row.legacy">{{ row.entry.date |
+                                        slice:0:4 }}</span>
                                     <span class="entry-no-date-badge" *ngIf="row.legacy" aria-label="Date not set">
                                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-                                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                            aria-hidden="true">
+                                            <path
+                                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                                             <line x1="12" y1="9" x2="12" y2="13" />
                                             <line x1="12" y1="17" x2="12.01" y2="17" />
                                         </svg>
@@ -97,20 +99,22 @@
                         <!-- Visited -->
                         <div class="entry-list" *ngIf="vm.visitedEntryRows.length > 0">
                             <div *ngFor="let row of vm.visitedEntryRows" class="entry-row glass-panel"
-                                [class.entry-legacy]="row.legacy"
-                                (click)="navigateToCountry(row.entry.countryId)"
+                                [class.entry-legacy]="row.legacy" (click)="navigateToCountry(row.entry.countryId)"
                                 role="button" tabindex="0"
                                 [attr.aria-label]="(row.country?.name || row.entry.countryName) + ' — visited. Click to view country.'"
-                                (keydown.enter)="navigateToCountry(row.entry.countryId)"
-                                style="cursor:pointer">
-                                <span class="entry-flag flag-emoji" aria-hidden="true">{{ row.country?.emoji || '🌍' }}</span>
+                                (keydown.enter)="navigateToCountry(row.entry.countryId)" style="cursor:pointer">
+                                <span class="entry-flag flag-emoji" aria-hidden="true">{{ row.country?.emoji || '🌍'
+                                    }}</span>
                                 <div class="entry-info">
-                                    <span class="entry-name row-link">{{ row.country?.name || row.entry.countryName }}</span>
+                                    <span class="entry-name row-link">{{ row.country?.name || row.entry.countryName
+                                        }}</span>
                                     <span class="entry-year" *ngIf="!row.legacy">{{ row.entry.date | slice:0:4 }}</span>
                                     <span class="entry-no-date-badge" *ngIf="row.legacy" aria-label="Date not set">
                                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-                                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                            aria-hidden="true">
+                                            <path
+                                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                                             <line x1="12" y1="9" x2="12" y2="13" />
                                             <line x1="12" y1="17" x2="12.01" y2="17" />
                                         </svg>
@@ -185,11 +189,6 @@
                                         </svg>
                                     </button>
                                 </div>
-                                <button class="btn-visited"
-                                    [class.visited]="isPOIVisited(selectedSite.id_no, vm2.profile)"
-                                    (click)="togglePOIVisited(selectedSite.id_no, vm2.profile)">
-                                    {{ isPOIVisited(selectedSite.id_no, vm2.profile) ? 'Visited' : 'Mark Visited' }}
-                                </button>
                             </div>
                         </div>
 
@@ -372,8 +371,8 @@
 
     <!-- Search -->
     <div class="hpick-search-wrap">
-        <svg class="hpick-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <svg class="hpick-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round">
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
@@ -384,13 +383,11 @@
     <div class="hpick-list">
         <ng-container *ngIf="vm$ | async as vm">
             <button *ngFor="let c of filteredHomeCountries(vm.countries)" class="hpick-item"
-                [class.hpick-item--active]="c.id === vm.profile?.homeCountryId"
-                (click)="saveHomeCountry(c.id)">
+                [class.hpick-item--active]="c.id === vm.profile?.homeCountryId" (click)="saveHomeCountry(c.id)">
                 <span class="flag-emoji">{{ c.emoji }}</span>
                 <span class="hpick-item-name">{{ c.name }}</span>
                 <svg *ngIf="c.id === vm.profile?.homeCountryId" class="hpick-check" width="13" height="13"
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                    stroke-linecap="round">
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
                     <polyline points="20 6 9 17 4 12" />
                 </svg>
             </button>
@@ -404,8 +401,6 @@
 @if (editModalCountry && editModalEntry) {
 <app-add-entry
     [preselectedCountry]="{ id: editModalCountry.id, name: editModalCountry.name, emoji: editModalCountry.emoji }"
-    [existingEntry]="editModalEntry"
-    (saved)="closeEditModal()"
-    (closed)="closeEditModal()">
+    [existingEntry]="editModalEntry" (saved)="closeEditModal()" (closed)="closeEditModal()">
 </app-add-entry>
 }

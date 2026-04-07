@@ -615,6 +615,12 @@
         display: flex;
     }
 
+    /* Hide chip overlay when a site detail is open */
+    .sheet-open .mobile-top-right {
+        display: none;
+    }
+
+
     /* Chip pill styling inside the wrapper */
     .mobile-top-right .country-title-section {
         display: flex;
@@ -653,6 +659,7 @@
     .country-map-section {
         flex: 3;
         min-height: 0;
+        transition: flex .25s ease, opacity .25s ease;
     }
 
     /* Right panel takes ~50% */
@@ -663,7 +670,39 @@
         flex-direction: column;
         gap: .4rem;
         overflow: hidden;
+        transition: flex .25s ease;
     }
+
+    /* When a heritage site is open, right panel fills the container */
+    .sheet-open .country-map-section {
+        flex: 0;
+        min-height: 0;
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
+
+    .sheet-open .right-panel {
+        flex: 1;
+    }
+
+    .sheet-open .page-split {
+        gap: 0;
+    }
+
+    /* When sheet is open, shrink the outer container padding so detail fills cleanly */
+    .sheet-open {
+        padding: 0;
+    }
+
+    /* When fully expanded: hide the main close button and tab bar */
+    .sheet-open .back-btn,
+    .sheet-open .tabs {
+        display: none;
+    }
+
+
 
     /* â”€â”€ Bigger tab buttons â”€â”€ */
     .tab-btn {
@@ -743,11 +782,8 @@
         min-width: 4rem;
     }
 
-    /* Visited button fills remaining space in the row */
-    .inline-detail-footer .btn-add-entry {
+    /* Nav fills footer row evenly */
+    .inline-detail-footer .panel-nav {
         flex: 1;
-        justify-content: center;
-        padding: .7rem .5rem;
-        font-size: .95rem;
     }
 }
