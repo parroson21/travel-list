@@ -1,0 +1,195 @@
+<div class="tabs-panel glass-panel fade-in">
+
+    <!-- Tab bar -->
+    <div class="tabs">
+        <button class="tab-btn" [class.active]="activeTab === 'countries'"
+            (click)="activeTab === 'heritage' ? setActiveTab('countries') : null">
+            Countries
+            <span class="tab-count">{{ visitedEntryRows.length + plannedEntryRows.length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'heritage'"
+            (click)="setActiveTab('heritage')">
+            Heritage
+            <span class="tab-count">{{ visitedHeritageSites.length }}</span>
+        </button>
+    </div>
+
+    <!-- Scrollable tab content -->
+    <div class="tab-scroll">
+
+        <!-- Countries tab -->
+        <div class="entries-section" *ngIf="activeTab === 'countries'">
+
+            <!-- Planned -->
+            <div class="section-label planned-label" *ngIf="plannedEntryRows.length > 0">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5" stroke-linecap="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 8 12 12 14 14" />
+                </svg>
+                Planning
+                <span class="section-count">{{ plannedEntryRows.length }}</span>
+            </div>
+            <div class="entry-list" *ngIf="plannedEntryRows.length > 0">
+                <div *ngFor="let row of plannedEntryRows" class="entry-row glass-panel"
+                    [class.entry-legacy]="row.legacy"
+                    (click)="onRowClick(row)"
+                    role="button" tabindex="0"
+                    [attr.aria-label]="(row.country?.name || row.entry.countryName) + ' — planned. Click to pan map.'"
+                    (keydown.enter)="onRowClick(row)" style="cursor:pointer">
+                    <span class="entry-flag flag-emoji" aria-hidden="true">{{ row.country?.emoji || '🌍' }}</span>
+                    <div class="entry-info">
+                        <button class="entry-name row-link"
+                            (click)="onCountryNameClick(row.entry.countryId, $event)"
+                            [attr.aria-label]="'Open ' + (row.country?.name || row.entry.countryName)">{{ row.country?.name || row.entry.countryName }}</button>
+                        <span class="entry-year planned-year" *ngIf="!row.legacy">{{ row.entry.date | slice:0:4 }}</span>
+                        <span class="entry-no-date-badge" *ngIf="row.legacy" aria-label="Date not set">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                <line x1="12" y1="9" x2="12" y2="13" />
+                                <line x1="12" y1="17" x2="12.01" y2="17" />
+                            </svg>
+                            No date
+                        </span>
+                    </div>
+                    <button class="entry-edit-btn" (click)="onEditClick(row, $event)"
+                        [attr.aria-label]="'Edit entry for ' + (row.country?.name || row.entry.countryName)">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div *ngIf="plannedEntryRows.length === 0" class="empty-state-inline">
+                <p>No trips planned yet.</p>
+            </div>
+
+            <!-- Divider -->
+            <div class="section-divider">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5" stroke-linecap="round">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Visited
+                <span class="section-count">{{ visitedEntryRows.length }}</span>
+            </div>
+
+            <!-- Visited -->
+            <div class="entry-list" *ngIf="visitedEntryRows.length > 0">
+                <div *ngFor="let row of visitedEntryRows" class="entry-row glass-panel"
+                    [class.entry-legacy]="row.legacy"
+                    (click)="onRowClick(row)"
+                    role="button" tabindex="0"
+                    [attr.aria-label]="(row.country?.name || row.entry.countryName) + ' — visited. Click to pan map.'"
+                    (keydown.enter)="onRowClick(row)" style="cursor:pointer">
+                    <span class="entry-flag flag-emoji" aria-hidden="true">{{ row.country?.emoji || '🌍' }}</span>
+                    <div class="entry-info">
+                        <button class="entry-name row-link"
+                            (click)="onCountryNameClick(row.entry.countryId, $event)"
+                            [attr.aria-label]="'Open ' + (row.country?.name || row.entry.countryName)">{{ row.country?.name || row.entry.countryName }}</button>
+                        <span class="entry-year" *ngIf="!row.legacy">{{ row.entry.date | slice:0:4 }}</span>
+                        <span class="entry-no-date-badge" *ngIf="row.legacy" aria-label="Date not set">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                <line x1="12" y1="9" x2="12" y2="13" />
+                                <line x1="12" y1="17" x2="12.01" y2="17" />
+                            </svg>
+                            No date
+                        </span>
+                    </div>
+                    <button class="entry-edit-btn" (click)="onEditClick(row, $event)"
+                        [attr.aria-label]="'Edit entry for ' + (row.country?.name || row.entry.countryName)">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div *ngIf="visitedEntryRows.length === 0" class="empty-state-inline">
+                <p>No countries visited yet.</p>
+            </div>
+
+        </div>
+
+        <!-- Heritage tab -->
+        <div *ngIf="activeTab === 'heritage'" class="tab-panel fade-in">
+
+            <!-- Inline site detail -->
+            <div *ngIf="selectedSite" class="inline-detail fade-in">
+                <div class="inline-detail-header">
+                    <div class="inline-detail-title-row">
+                        <span class="heritage-badge"
+                            [class.badge-cultural]="selectedSite.category_short === 'C'"
+                            [class.badge-natural]="selectedSite.category_short === 'N'"
+                            [class.badge-mixed]="selectedSite.category_short === 'C/N' || selectedSite.category_short === 'N/C'">
+                            {{ selectedSite.category_short === 'C' ? 'Cultural' : selectedSite.category_short === 'N' ? 'Natural' : 'Mixed' }}
+                        </span>
+                        <button class="detail-close-btn" (click)="closeSiteDetails()" title="Back to list">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+                    <h2 class="inline-detail-name">{{ selectedSite.name_en }}</h2>
+                </div>
+                <div class="inline-detail-body">
+                    <p class="detail-panel-desc">{{ selectedSite.short_description_en }}</p>
+                </div>
+                <div class="inline-detail-footer" (click)="$event.stopPropagation()">
+                    <div class="panel-nav">
+                        <button class="panel-nav-btn" (click)="navigateSite(-1)" title="Previous">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                <polyline points="15 18 9 12 15 6" />
+                            </svg>
+                        </button>
+                        <span class="panel-nav-index">{{ getSiteIndex() + 1 }} / {{ visitedHeritageSites.length }}</span>
+                        <button class="panel-nav-btn" (click)="navigateSite(1)" title="Next">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Heritage list -->
+            <ng-container *ngIf="!selectedSite">
+                <div *ngIf="visitedHeritageSites.length > 0" class="items-grid">
+                    <div *ngFor="let h of visitedHeritageSites"
+                        class="item-card glass-panel heritage-card"
+                        [class.hovered]="hoveredSiteId === h.site.id_no"
+                        (mouseenter)="onSiteHover(h.site.id_no)" (mouseleave)="onSiteHover(null)"
+                        (click)="openSiteDetails(h.site)">
+                        <div class="item-info">
+                            <span class="item-name">{{ h.site.name_en }}</span>
+                            <span class="item-sub">
+                                <span class="flag-emoji">{{ h.countryEmoji }}</span> {{ h.countryName }}
+                            </span>
+                        </div>
+                        <div class="heritage-card-right">
+                            <span class="heritage-badge"
+                                [class.badge-cultural]="h.site.category_short === 'C'"
+                                [class.badge-natural]="h.site.category_short === 'N'"
+                                [class.badge-mixed]="h.site.category_short === 'C/N' || h.site.category_short === 'N/C'">
+                                {{ h.site.category_short === 'C' ? 'Cultural' : h.site.category_short === 'N' ? 'Natural' : 'Mixed' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div *ngIf="visitedHeritageSites.length === 0" class="empty-state glass-panel">
+                    <p>No heritage sites visited yet.<br>Mark heritage sites as visited on country pages!</p>
+                </div>
+            </ng-container>
+        </div><!-- /heritage panel -->
+
+    </div><!-- /tab-scroll -->
+</div><!-- /tabs-panel -->

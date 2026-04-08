@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, ViewChild, HostListener } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ViewChild, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,6 +10,8 @@ import { Country, UserProfile, TravelEntry } from '../../models/travel.model';
 import { WorldMapComponent } from '../world-map/world-map.component';
 import { AddEntryComponent } from '../add-entry/add-entry.component';
 import { HashRouterService } from '../../services/hash-router.service';
+import { ProfilePanelComponent } from './profile-panel/profile-panel.component';
+import { ProfileStatsComponent } from './profile-stats/profile-stats.component';
 
 export interface ProfileEntryRow {
     entry: TravelEntry;
@@ -21,13 +23,14 @@ export interface ProfileEntryRow {
     selector: 'app-profile',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, FormsModule, WorldMapComponent, DecimalPipe, AddEntryComponent],
+    imports: [CommonModule, FormsModule, WorldMapComponent, DecimalPipe, AddEntryComponent, ProfilePanelComponent, ProfileStatsComponent],
     templateUrl: './profile.html',
     styleUrls: ['./profile.css']
 })
 export class ProfileComponent implements OnInit {
 
     @ViewChild(WorldMapComponent) worldMap?: WorldMapComponent;
+    @ViewChild(ProfilePanelComponent) panel?: ProfilePanelComponent;
 
     activeTab: 'countries' | 'planned' | 'heritage' = 'countries';
 
@@ -49,7 +52,7 @@ export class ProfileComponent implements OnInit {
         homeCountry: Country | undefined
     }> | undefined;
 
-    constructor(public travel: TravelService, public auth: AuthService, private router: Router, public hashRouter: HashRouterService) { }
+    constructor(public travel: TravelService, public auth: AuthService, private router: Router, public hashRouter: HashRouterService, private cdr: ChangeDetectorRef) { }
 
     ngOnInit() {
         this.vm$ = combineLatest([
@@ -118,11 +121,8 @@ export class ProfileComponent implements OnInit {
                         const visitedEntries = travelEntries.filter(e => e.status === 'visited');
                         const plannedEntries = travelEntries.filter(e => e.status === 'planned');
 
-                        // Phantom legacy rows: countries in the profile arrays but with no subcollection entry.
-                        // These are old data from before the entry system; display at bottom with legacy badge.
                         const visitedWithEntries = new Set(visitedEntries.map(e => e.countryId));
                         const plannedWithEntries = new Set(plannedEntries.map(e => e.countryId));
-
 
                         const makePhantom = (id: string, status: 'visited' | 'planned'): TravelEntry => {
                             const c = countryById.get(id);
@@ -165,7 +165,7 @@ export class ProfileComponent implements OnInit {
         this.selectedSite = null;
     }
 
-    // ── Entry modal (edit / remove individual entries from profile) ─────────
+    // ── Entry modal ─────────────────────────────────────────
     editModalEntry: TravelEntry | null = null;
     editModalCountry: { id: string; name: string; emoji: string } | null = null;
 
@@ -195,8 +195,9 @@ export class ProfileComponent implements OnInit {
         this.pickerAnchorRight = window.innerWidth - rect.right;
         this.homePickerOpen = true;
         this.homeSearch = '';
+        this.cdr.markForCheck();
     }
-    closeHomePicker() { this.homePickerOpen = false; this.homeSearch = ''; }
+    closeHomePicker() { this.homePickerOpen = false; this.homeSearch = ''; this.cdr.markForCheck(); }
 
     filteredHomeCountries(countries: Country[]): Country[] {
         const q = this.homeSearch.toLowerCase();
@@ -208,12 +209,6 @@ export class ProfileComponent implements OnInit {
         this.closeHomePicker();
     }
 
-    /** Returns true if the ISO timestamp is within the last 5 minutes */
-    isOnline(isoTimestamp: string | undefined): boolean {
-        if (!isoTimestamp) return false;
-        return Date.now() - new Date(isoTimestamp).getTime() < 5 * 60 * 1000;
-    }
-
     // ── Map interaction ─────────────────────────────────────
     highlightedCountry: Country | null = null;
     hoveredSiteId: string | null = null;
@@ -221,40 +216,39 @@ export class ProfileComponent implements OnInit {
 
     focusOnMap(country: Country) {
         this.highlightedCountry = country;
+        this.cdr.markForCheck();
     }
 
     // ── Heritage site detail ─────────────────────────────────
-    openSiteDetails(site: any) {
-        this.selectedSite = site;
-        this.activeTab = 'heritage';
-        if (this.worldMap) {
-            this.worldMap.flyToSite(site.id_no);
-        }
-    }
-
     openSiteFromPin(poiId: string, heritageSites: any[]) {
         const site = heritageSites.find(s => s.id_no === poiId);
-        if (site) this.openSiteDetails(site);
+        if (site) this.panel?.openSiteDetails(site);
     }
 
     closeSiteDetails() {
-        this.selectedSite = null;
+        this.panel?.closeSiteDetails();
+    }
+
+    onPanelSiteChange(site: any | null) {
+        this.selectedSite = site;
+        this.cdr.markForCheck();
+    }
+
+    onSiteFlyTo(site: any) {
+        if (this.worldMap) this.worldMap.flyToSite(site.id_no);
+    }
+
+    onEditRequested(row: ProfileEntryRow) {
+        this.editModalEntry = row.entry;
+        this.editModalCountry = row.country
+            ? { id: row.country.id, name: row.country.name, emoji: row.country.emoji }
+            : { id: row.entry.countryId, name: row.entry.countryName, emoji: '' };
+        this.cdr.markForCheck();
     }
 
     setSiteHover(siteId: string | null) {
         this.hoveredSiteId = siteId;
-    }
-
-    navigateSite(direction: 1 | -1, heritageSites: { site: any; countryName: string; countryEmoji: string }[]) {
-        if (!this.selectedSite || heritageSites.length === 0) return;
-        const idx = heritageSites.findIndex(h => h.site.id_no === this.selectedSite.id_no);
-        const next = (idx + direction + heritageSites.length) % heritageSites.length;
-        this.openSiteDetails(heritageSites[next].site);
-    }
-
-    getSiteIndex(heritageSites: { site: any; countryName: string; countryEmoji: string }[]): number {
-        if (!this.selectedSite) return 0;
-        return heritageSites.findIndex(h => h.site.id_no === this.selectedSite.id_no);
+        this.cdr.markForCheck();
     }
 
     // ── POI visited toggle ───────────────────────────────────
@@ -265,10 +259,7 @@ export class ProfileComponent implements OnInit {
     async togglePOIVisited(poiId: string, profile: UserProfile | null, event?: Event) {
         if (event) event.stopPropagation();
         const user = await firstValueFrom(this.auth.user$.pipe(take(1)));
-        if (!user) {
-            this.auth.loginWithGoogle();
-            return;
-        }
+        if (!user) { this.auth.loginWithGoogle(); return; }
         const visited = profile?.visitedPOIs?.includes(poiId) || false;
         this.travel.markPOIVisited(poiId, !visited);
     }
@@ -278,7 +269,6 @@ export class ProfileComponent implements OnInit {
         this.hashRouter.openCountry(countryId);
     }
 
-    /** Called when a filled country polygon is clicked on the map. `name` is the GeoJSON feature name. */
     onMapCountryClicked(name: string, countries: Country[]) {
         const country = countries.find(c => c.name === name);
         if (country) this.hashRouter.openCountry(country.id);
