@@ -1,6 +1,17 @@
 {
-  "version": "0.2.4",
+  "version": "0.2.5",
   "patches": [
+    {
+      "version": "0.2.5",
+      "date": "2026-04-08",
+      "notes": [
+        "Add timeline to profile",
+        "Refactor profile into panel and stats sub-components",
+        "Fix entry row click to pan map instead of opening country modal",
+        "Stats section goes full width when stacked on mobile",
+        "Remove legacy profile component"
+      ]
+    },
     {
       "version": "0.2.4",
       "date": "2026-03-26",
