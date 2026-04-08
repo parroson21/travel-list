@@ -10,11 +10,17 @@ import { Country, UserProfile, TravelEntry } from '../../models/travel.model';
 import { WorldMapComponent } from '../world-map/world-map.component';
 import { AddEntryComponent } from '../add-entry/add-entry.component';
 import { Location } from '@angular/common';
-import { ProfileEntryRow } from '../profile/profile.component';
 import { HashRouterService } from '../../services/hash-router.service';
+
 import { TimelineComponent } from '../timeline/timeline.component';
 import { TimelineItem } from '../../models/timeline.model';
 import { mapEntriesToTimeline } from '../timeline/timeline-mapper';
+
+export interface ProfileEntryRow {
+    entry: TravelEntry;
+    country: Country | undefined;
+    legacy: boolean;
+}
 
 @Component({
     selector: 'app-user-profile',

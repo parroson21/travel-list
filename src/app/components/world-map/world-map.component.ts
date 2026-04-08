@@ -7,7 +7,7 @@ import { ThemeService } from '../../services/theme.service';
 
 
 @Component({
-    selector: 'app-world-map',
+    selector: 'world-map',
     standalone: true,
     imports: [CommonModule],
     templateUrl: './world-map.component.html',

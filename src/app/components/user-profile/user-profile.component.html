@@ -61,13 +61,12 @@
 
             <!-- Left: World Map -->
             <div class="profile-map-section glass-panel fade-in">
-                <app-world-map [visitedCountryNames]="vm.visitedCountryNames"
-                    [plannedCountryNames]="vm.plannedCountryNames" [focusedCountry]="highlightedCountry"
-                    [heritageSites]="vm.heritageSites" [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true"
-                    [height]="'100%'" [highlightedSiteId]="hoveredSiteId"
-                    (poiToggled)="openSiteFromPin($event, vm.heritageSites)"
+                <world-map [visitedCountryNames]="vm.visitedCountryNames" [plannedCountryNames]="vm.plannedCountryNames"
+                    [focusedCountry]="highlightedCountry" [heritageSites]="vm.heritageSites"
+                    [visitedPOIIds]="vm.visitedPOIIds" [showOnlyVisitedSites]="true" [height]="'100%'"
+                    [highlightedSiteId]="hoveredSiteId" (poiToggled)="openSiteFromPin($event, vm.heritageSites)"
                     (countryClicked)="onMapCountryClicked($event, vm.countries)">
-                </app-world-map>
+                </world-map>
             </div>
 
             <!-- Right panel: tabs only -->
@@ -107,15 +106,15 @@
                             <div class="entry-list" *ngIf="vm.plannedEntryRows.length > 0">
                                 <div *ngFor="let row of vm.plannedEntryRows" class="entry-row glass-panel"
                                     [class.entry-legacy]="row.legacy" role="button" tabindex="0"
-                                    [attr.aria-label]="(row.country?.name || row.entry.countryName) + ' — planned trip. Click to view country.'"
-                                    (click)="navigateToCountry(row.entry.countryId)"
-                                    (keydown.enter)="navigateToCountry(row.entry.countryId)">
+                                    [attr.aria-label]="(row.country?.name || row.entry.countryName) + ' — planned trip. Click to focus on map.'"
+                                    (click)="row.country && focusOnMap(row.country)"
+                                    (keydown.enter)="row.country && focusOnMap(row.country)">
                                     <span class="entry-flag flag-emoji" aria-hidden="true">{{ row.country?.emoji || '🌐'
                                         }}</span>
                                     <div class="entry-info">
                                         <div class="entry-name-row">
                                             <span class="entry-name row-link"
-                                                (click)="navigateToCountry(row.entry.countryId)">{{ row.country?.name ||
+                                                (click)="navigateToCountry(row.entry.countryId); $event.stopPropagation()">{{ row.country?.name ||
                                                 row.entry.countryName }}</span>
                                             <ng-container *ngIf="!row.legacy && daysUntil(row.entry.date) !== null">
                                                 <span class="countdown-tag"
@@ -157,6 +156,7 @@
                                     </button>
                                 </div>
                             </div>
+
                             <div *ngIf="vm.plannedEntryRows.length === 0" class="empty-state-inline">
                                 <p>No trips planned yet.</p>
                             </div>
@@ -175,14 +175,14 @@
                             <div class="entry-list" *ngIf="vm.visitedEntryRows.length > 0">
                                 <div *ngFor="let row of vm.visitedEntryRows" class="entry-row glass-panel"
                                     [class.entry-legacy]="row.legacy" role="button" tabindex="0"
-                                    [attr.aria-label]="(row.country?.name || row.entry.countryName) + ' — visited. Click to view country.'"
-                                    (click)="navigateToCountry(row.entry.countryId)"
-                                    (keydown.enter)="navigateToCountry(row.entry.countryId)">
+                                    [attr.aria-label]="(row.country?.name || row.entry.countryName) + ' — visited. Click to focus on map.'"
+                                    (click)="row.country && focusOnMap(row.country)"
+                                    (keydown.enter)="row.country && focusOnMap(row.country)">
                                     <span class="entry-flag flag-emoji" aria-hidden="true">{{ row.country?.emoji || '🌐'
                                         }}</span>
                                     <div class="entry-info">
                                         <span class="entry-name row-link"
-                                            (click)="navigateToCountry(row.entry.countryId)">{{ row.country?.name ||
+                                            (click)="navigateToCountry(row.entry.countryId); $event.stopPropagation()">{{ row.country?.name ||
                                             row.entry.countryName }}</span>
                                         <span class="entry-year" *ngIf="!row.legacy">{{ row.entry.date | slice:0:4
                                             }}</span>
@@ -210,6 +210,7 @@
                                     </button>
                                 </div>
                             </div>
+
                             <div *ngIf="vm.visitedEntryRows.length === 0" class="empty-state-inline">
                                 <p>No countries visited yet.</p>
                             </div>
@@ -325,123 +326,125 @@
             <!-- ── Stats section (scroll down to see) ── -->
             <div class="stats-section fade-in">
 
-            <!-- User identity -->
-            <div class="profile-header glass-panel">
-                <div class="profile-avatar-wrap">
-                    <img *ngIf="vm.targetProfile.photoURL" [src]="vm.targetProfile.photoURL" class="profile-avatar"
-                        alt="avatar" referrerpolicy="no-referrer" />
-                    <div *ngIf="!vm.targetProfile.photoURL" class="profile-avatar-fallback">
-                        {{ (vm.targetProfile.username || vm.targetProfile.displayName || '?').charAt(0).toUpperCase() }}
+                <!-- User identity -->
+                <div class="profile-header glass-panel">
+                    <div class="profile-avatar-wrap">
+                        <img *ngIf="vm.targetProfile.photoURL" [src]="vm.targetProfile.photoURL" class="profile-avatar"
+                            alt="avatar" referrerpolicy="no-referrer" />
+                        <div *ngIf="!vm.targetProfile.photoURL" class="profile-avatar-fallback">
+                            {{ (vm.targetProfile.username || vm.targetProfile.displayName ||
+                            '?').charAt(0).toUpperCase() }}
+                        </div>
                     </div>
-                </div>
-                <div class="profile-identity">
-                    <div class="profile-name-row">
-                        <h1 class="profile-name"><span style="color: var(--primary)">@{{ vm.targetProfile.username ||
-                                'Traveler' }}</span></h1>
-                        <span *ngIf="vm.isOwnProfile" class="own-profile-badge">You</span>
-                    </div>
-                    <div class="profile-dates">
-                        <span class="profile-date" *ngIf="vm.targetProfile.createdAt">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                                <line x1="16" y1="2" x2="16" y2="6" />
-                                <line x1="8" y1="2" x2="8" y2="6" />
-                                <line x1="3" y1="10" x2="21" y2="10" />
-                            </svg>
-                            Joined {{ vm.targetProfile.createdAt | date:'MMM d, y' }}
-                        </span>
-                        <span class="profile-date online-badge"
-                            *ngIf="vm.targetProfile.lastLoginAt && isOnline(vm.targetProfile.lastLoginAt)">
-                            <span class="online-dot"></span>
-                            Online
-                        </span>
-                        <span class="profile-date"
-                            *ngIf="vm.targetProfile.lastLoginAt && !isOnline(vm.targetProfile.lastLoginAt)">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round">
-                                <circle cx="12" cy="12" r="10" />
-                                <polyline points="12 6 12 12 16 14" />
-                            </svg>
-                            Last online {{ vm.targetProfile.lastLoginAt | date:'MMM d, y' }}
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Home country — right-aligned column (editable only if own profile) -->
-                <div class="home-col" *ngIf="vm.homeCountry || vm.isOwnProfile">
-                    <ng-container *ngIf="vm.isOwnProfile">
-                        <button class="home-btn" (click)="openHomePicker($event)"
-                            [title]="vm.homeCountry ? 'Change: ' + vm.homeCountry.name : 'Set home country'">
-                            <!-- Country is set: show flag -->
-                            <ng-container *ngIf="vm.homeCountry">
-                                <span class="home-btn-flag flag-emoji">{{ vm.homeCountry.emoji }}</span>
-                                <span class="home-btn-hint">Change</span>
-                            </ng-container>
-                            <!-- No country: show house icon -->
-                            <ng-container *ngIf="!vm.homeCountry">
-                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="1.5" stroke-linecap="round">
-                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                                    <polyline points="9 22 9 12 15 12 15 22" />
+                    <div class="profile-identity">
+                        <div class="profile-name-row">
+                            <h1 class="profile-name"><span style="color: var(--primary)">@{{ vm.targetProfile.username
+                                    ||
+                                    'Traveler' }}</span></h1>
+                            <span *ngIf="vm.isOwnProfile" class="own-profile-badge">You</span>
+                        </div>
+                        <div class="profile-dates">
+                            <span class="profile-date" *ngIf="vm.targetProfile.createdAt">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                    <line x1="3" y1="10" x2="21" y2="10" />
                                 </svg>
-                                <span class="home-btn-hint">Home</span>
-                            </ng-container>
-                        </button>
-                    </ng-container>
-                    <!-- Read-only home country flag for other users -->
-                    <ng-container *ngIf="!vm.isOwnProfile && vm.homeCountry">
-                        <span class="home-flag-readonly flag-emoji" [title]="'Home: ' + vm.homeCountry.name">{{
-                            vm.homeCountry.emoji }}</span>
-                    </ng-container>
-                </div>
-            </div>
-
-            <!-- Stat cards row -->
-            <div class="stat-cards">
-                <div class="stat-card glass-panel">
-                    <div class="stat-card-value">{{ vm.stats.countriesVisited }}</div>
-                    <div class="stat-card-bar">
-                        <div class="stat-card-bar-fill" [style.width.%]="(vm.stats.countriesVisited / 197) * 100"></div>
+                                Joined {{ vm.targetProfile.createdAt | date:'MMM d, y' }}
+                            </span>
+                            <span class="profile-date online-badge"
+                                *ngIf="vm.targetProfile.lastLoginAt && isOnline(vm.targetProfile.lastLoginAt)">
+                                <span class="online-dot"></span>
+                                Online
+                            </span>
+                            <span class="profile-date"
+                                *ngIf="vm.targetProfile.lastLoginAt && !isOnline(vm.targetProfile.lastLoginAt)">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 16 14" />
+                                </svg>
+                                Last online {{ vm.targetProfile.lastLoginAt | date:'MMM d, y' }}
+                            </span>
+                        </div>
                     </div>
-                    <div class="stat-card-label">Countries Visited</div>
-                    <div class="stat-card-sub">out of 197</div>
+
+                    <!-- Home country — right-aligned column (editable only if own profile) -->
+                    <div class="home-col" *ngIf="vm.homeCountry || vm.isOwnProfile">
+                        <ng-container *ngIf="vm.isOwnProfile">
+                            <button class="home-btn" (click)="openHomePicker($event)"
+                                [title]="vm.homeCountry ? 'Change: ' + vm.homeCountry.name : 'Set home country'">
+                                <!-- Country is set: show flag -->
+                                <ng-container *ngIf="vm.homeCountry">
+                                    <span class="home-btn-flag flag-emoji">{{ vm.homeCountry.emoji }}</span>
+                                    <span class="home-btn-hint">Change</span>
+                                </ng-container>
+                                <!-- No country: show house icon -->
+                                <ng-container *ngIf="!vm.homeCountry">
+                                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="1.5" stroke-linecap="round">
+                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                        <polyline points="9 22 9 12 15 12 15 22" />
+                                    </svg>
+                                    <span class="home-btn-hint">Home</span>
+                                </ng-container>
+                            </button>
+                        </ng-container>
+                        <!-- Read-only home country flag for other users -->
+                        <ng-container *ngIf="!vm.isOwnProfile && vm.homeCountry">
+                            <span class="home-flag-readonly flag-emoji" [title]="'Home: ' + vm.homeCountry.name">{{
+                                vm.homeCountry.emoji }}</span>
+                        </ng-container>
+                    </div>
                 </div>
 
-                <div class="stat-card glass-panel">
-                    <div class="stat-card-value">{{ vm.stats.countriesPlanned }}</div>
-                    <div class="stat-card-label">Countries Planned</div>
-                    <div class="stat-card-sub">upcoming trips</div>
+                <!-- Stat cards row -->
+                <div class="stat-cards">
+                    <div class="stat-card glass-panel">
+                        <div class="stat-card-value">{{ vm.stats.countriesVisited }}</div>
+                        <div class="stat-card-bar">
+                            <div class="stat-card-bar-fill" [style.width.%]="(vm.stats.countriesVisited / 197) * 100">
+                            </div>
+                        </div>
+                        <div class="stat-card-label">Countries Visited</div>
+                        <div class="stat-card-sub">out of 197</div>
+                    </div>
+
+                    <div class="stat-card glass-panel">
+                        <div class="stat-card-value">{{ vm.stats.countriesPlanned }}</div>
+                        <div class="stat-card-label">Countries Planned</div>
+                        <div class="stat-card-sub">upcoming trips</div>
+                    </div>
+
+                    <div class="stat-card glass-panel">
+                        <div class="stat-card-value">{{ vm.stats.poisVisited }}</div>
+                        <div class="stat-card-label">Heritage Sites</div>
+                        <div class="stat-card-sub">visited</div>
+                    </div>
+
+                    <div class="stat-card glass-panel">
+                        <div class="stat-card-value">{{ vm.stats.countriesVisited > 0 ? ((vm.stats.countriesVisited /
+                            197 *
+                            100) | number:'1.1-1') + '%' : '0%' }}</div>
+                        <div class="stat-card-label">World Coverage</div>
+                        <div class="stat-card-sub">of all countries</div>
+                    </div>
                 </div>
 
-                <div class="stat-card glass-panel">
-                    <div class="stat-card-value">{{ vm.stats.poisVisited }}</div>
-                    <div class="stat-card-label">Heritage Sites</div>
-                    <div class="stat-card-sub">visited</div>
+            </div><!-- /stats-section -->
+
+            <!-- ── Activity Timeline ── -->
+            <div class="timeline-section" *ngIf="vm.timelineItems.length > 0">
+                <div class="timeline-section-header">
+                    <h2 class="timeline-section-title">Activity</h2>
+                    <span class="timeline-section-count">{{ vm.timelineItems.length }} events</span>
                 </div>
-
-                <div class="stat-card glass-panel">
-                    <div class="stat-card-value">{{ vm.stats.countriesVisited > 0 ? ((vm.stats.countriesVisited / 197 *
-                        100) | number:'1.1-1') + '%' : '0%' }}</div>
-                    <div class="stat-card-label">World Coverage</div>
-                    <div class="stat-card-sub">of all countries</div>
-                </div>
-            </div>
-
-        </div><!-- /stats-section -->
-
-        <!-- ── Activity Timeline ── -->
-        <div class="timeline-section" *ngIf="vm.timelineItems.length > 0">
-            <div class="timeline-section-header">
-                <h2 class="timeline-section-title">Activity</h2>
-                <span class="timeline-section-count">{{ vm.timelineItems.length }} events</span>
-            </div>
-            <app-timeline
-                [items]="vm.timelineItems"
-                [showActor]="false"
-                emptyMessage="No travel activity logged yet.">
-            </app-timeline>
-        </div><!-- /timeline-section -->
+                <app-timeline [items]="vm.timelineItems" [showActor]="false"
+                    emptyMessage="No travel activity logged yet.">
+                </app-timeline>
+            </div><!-- /timeline-section -->
         </div><!-- /bottom-content -->
 
     </ng-container>

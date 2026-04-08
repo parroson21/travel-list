@@ -697,6 +697,12 @@
         gap: 1.5rem;
     }
 
+    .stats-section,
+    .timeline-section {
+        width: 100%;
+        flex: none;
+    }
+
     .stat-cards {
         grid-template-columns: repeat(2, 1fr);
     }
