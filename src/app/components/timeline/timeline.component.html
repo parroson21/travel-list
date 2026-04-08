@@ -1,0 +1,99 @@
+<!-- Skeleton loader -->
+<ng-container *ngIf="loading">
+    <div class="el-skeleton">
+        <div class="el-skel-item" *ngFor="let i of [0,1,2]">
+            <div class="el-skel-dot"></div>
+            <div class="el-skel-card">
+                <div class="el-skel-line el-skel-line--label"></div>
+                <div class="el-skel-line el-skel-line--title"></div>
+                <div class="el-skel-line el-skel-line--sub"></div>
+            </div>
+        </div>
+    </div>
+</ng-container>
+
+<!-- Empty state -->
+<ng-container *ngIf="!loading && processedItems.length === 0">
+    <div class="el-empty">
+        <p class="el-empty-msg">{{ emptyMessage }}</p>
+    </div>
+</ng-container>
+
+<!-- Expedition Log feed -->
+<div class="el-feed" *ngIf="!loading && processedItems.length > 0" role="feed" aria-label="Travel activity timeline">
+
+    <div class="el-item"
+         *ngFor="let item of processedItems; trackBy: trackById"
+         [class]="'el-item--' + item.type">
+
+        <!-- Left: dot (line is a ::before on el-feed) -->
+        <div class="el-track">
+            <div class="el-dot"></div>
+        </div>
+
+        <!-- Right: label + card -->
+        <div class="el-content">
+
+            <!-- Section label -->
+            <div class="el-label">{{ sectionLabel(item) }}</div>
+
+            <!-- Card -->
+            <div class="el-card glass-panel">
+
+                <!-- Actor chip (following/global feeds) -->
+                <div class="el-actor" *ngIf="showActor && item.actorUid">
+                    <img *ngIf="item.actorPhotoURL"
+                         [src]="item.actorPhotoURL"
+                         class="el-actor-avatar"
+                         [alt]="item.actorDisplayName || item.actorUsername"
+                         referrerpolicy="no-referrer" />
+                    <div *ngIf="!item.actorPhotoURL" class="el-actor-avatar el-actor-avatar--fallback">
+                        {{ (item.actorUsername || item.actorDisplayName || '?').charAt(0).toUpperCase() }}
+                    </div>
+                    <span class="el-actor-name">&#64;{{ item.actorUsername || item.actorDisplayName }}</span>
+                </div>
+
+                <!-- Joined / milestone -->
+                <ng-container *ngIf="item.type === 'joined'">
+                    <div class="el-milestone-title">{{ milestoneTitle(item) }}</div>
+                    <p class="el-milestone-sub">{{ milestoneDesc(item) }}</p>
+                </ng-container>
+
+                <!-- Country events -->
+                <ng-container *ngIf="item.type !== 'joined'">
+                    <div class="el-card-top">
+                        <span class="el-country-name">
+                            <span class="el-flag flag-emoji" aria-hidden="true">{{ item.countryEmoji || '' }}</span>
+                            {{ item.countryName }}
+                        </span>
+                        <span class="el-date" *ngIf="item.formattedTripDate">{{ item.formattedTripDate | uppercase }}</span>
+                    </div>
+
+                    <!-- Note -->
+                    <p class="el-note" *ngIf="item.note">{{ item.note }}</p>
+
+                    <!-- Star rating -->
+                    <div class="el-rating" *ngIf="item.rating" [attr.aria-label]="item.rating + ' stars'">
+                        <span class="el-star" *ngFor="let s of stars(item.rating)" aria-hidden="true">★</span>
+                        <span class="el-star el-star--empty" *ngFor="let s of emptyStars(item.rating)" aria-hidden="true">★</span>
+                    </div>
+
+                    <!-- Heritage site tags -->
+                    <div class="el-tags" *ngIf="item.heritageSites && item.heritageSites.length > 0">
+                        <span class="el-tag" *ngFor="let site of item.heritageSites">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                            {{ site }}
+                        </span>
+                    </div>
+
+                    <!-- Relative time -->
+                    <div class="el-rel-time" *ngIf="item.relTime">{{ item.relTime }}</div>
+                </ng-container>
+
+            </div><!-- /el-card -->
+        </div><!-- /el-content -->
+    </div><!-- /el-item -->
+
+</div><!-- /el-feed -->

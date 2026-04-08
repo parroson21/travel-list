@@ -10,14 +10,23 @@ import { Country, UserProfile, TravelEntry } from '../../models/travel.model';
 import { WorldMapComponent } from '../world-map/world-map.component';
 import { AddEntryComponent } from '../add-entry/add-entry.component';
 import { Location } from '@angular/common';
-import { ProfileEntryRow } from '../profile/profile.component';
 import { HashRouterService } from '../../services/hash-router.service';
+
+import { TimelineComponent } from '../timeline/timeline.component';
+import { TimelineItem } from '../../models/timeline.model';
+import { mapEntriesToTimeline } from '../timeline/timeline-mapper';
+
+export interface ProfileEntryRow {
+    entry: TravelEntry;
+    country: Country | undefined;
+    legacy: boolean;
+}
 
 @Component({
     selector: 'app-user-profile',
     standalone: true,
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, FormsModule, WorldMapComponent, DecimalPipe, AddEntryComponent],
+    imports: [CommonModule, FormsModule, WorldMapComponent, DecimalPipe, AddEntryComponent, TimelineComponent],
     templateUrl: './user-profile.component.html',
     styleUrls: ['./user-profile.component.css']
 })
@@ -47,7 +56,8 @@ export class UserProfileComponent implements OnInit {
         visitedEntryRows: ProfileEntryRow[],
         plannedEntryRows: ProfileEntryRow[],
         homeCountry: Country | undefined,
-        countries: Country[]
+        countries: Country[],
+        timelineItems: TimelineItem[]
     }> | undefined;
 
     highlightedCountry: Country | null = null;
@@ -124,7 +134,8 @@ export class UserProfileComponent implements OnInit {
                         visitedEntryRows: [] as ProfileEntryRow[],
                         plannedEntryRows: [] as ProfileEntryRow[],
                         homeCountry: undefined as Country | undefined,
-                        countries
+                        countries,
+                        timelineItems: [] as TimelineItem[]
                     });
                 }
 
@@ -233,7 +244,12 @@ export class UserProfileComponent implements OnInit {
                             visitedEntryRows: toRows([...visitedEntries, ...phantomVisited]),
                             plannedEntryRows: toPlannedRows([...plannedEntries, ...phantomPlanned]),
                             homeCountry,
-                            countries
+                            countries,
+                            timelineItems: mapEntriesToTimeline(
+                                travelEntries,
+                                countryById,
+                                targetProfile
+                            )
                         };
                     })
                 );

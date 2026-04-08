@@ -1,0 +1,324 @@
+/* ═══════════════════════════════════════════════════════════
+   Expedition Log — timeline
+   ═══════════════════════════════════════════════════════════ */
+
+:host {
+    display: block;
+}
+
+/* ── Feed wrapper — owns the continuous vertical line ── */
+.el-feed {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Single continuous line behind all dots */
+.el-feed::before {
+    content: '';
+    position: absolute;
+    left: 5px;           /* centres on the 12px dot (6px - 1px half-width) */
+    top: 6px;            /* start at first dot centre */
+    bottom: 6px;         /* end at last dot centre */
+    width: 2px;
+    background: var(--glass-border);
+    border-radius: 2px;
+    z-index: 0;
+}
+
+/* ── Item row ── */
+.el-item {
+    display: flex;
+    gap: 1.25rem;
+    position: relative;
+}
+
+/* ── Track (dot only — line is handled by el-feed::before) ── */
+.el-track {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 12px;
+    z-index: 1;
+    padding-top: .1rem;
+}
+
+.el-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    flex-shrink: 0;
+    transition: transform .2s ease, box-shadow .2s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.el-item:hover .el-dot {
+    transform: scale(1.3);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+}
+
+/* ── Dot colours by type ── */
+.el-item--visited  .el-dot { background: var(--primary); }
+.el-item--planned  .el-dot { background: #a3823a; }
+.el-item--heritage .el-dot { background: #7c5cbf; }
+.el-item--joined   .el-dot { background: var(--primary); }
+
+/* ── Content (label + card) ── */
+.el-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+    padding-bottom: 1.75rem;
+}
+
+.el-item:last-child .el-content {
+    padding-bottom: 0;
+}
+
+/* ── Section label ── */
+.el-label {
+    font-size: .65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--text-muted);
+    line-height: 1;
+    margin-top: .05rem; /* vertically align with dot centre */
+}
+
+.el-item--visited  .el-label { color: var(--primary); }
+.el-item--planned  .el-label { color: #a3823a; }
+.el-item--heritage .el-label { color: #7c5cbf; }
+.el-item--joined   .el-label { color: var(--primary); }
+
+/* ── Card ── */
+.el-card {
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    transition: background .15s ease;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.el-card:hover {
+    background: var(--glass-hover);
+}
+
+/* ── Card top row: country name + date ── */
+.el-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.el-country-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+}
+
+.el-flag {
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.el-date {
+    font-size: .72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: .04em;
+}
+
+/* ── Note ── */
+.el-note {
+    font-size: .875rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ── Stars ── */
+.el-rating {
+    display: flex;
+    gap: .1rem;
+}
+
+.el-star {
+    font-size: .9rem;
+    color: #f59e0b;
+}
+
+.el-star--empty {
+    color: var(--glass-border);
+}
+
+/* ── Heritage tags ── */
+.el-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    min-width: 0;
+}
+
+.el-tag {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: .3rem;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+    border-radius: 6px;
+    padding: .2rem .55rem;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+}
+
+.el-tag svg {
+    flex-shrink: 0;
+    opacity: .8;
+    margin-top: .1rem;
+}
+
+/* ── Relative time ── */
+.el-rel-time {
+    font-size: .72rem;
+    color: var(--text-muted);
+    opacity: .65;
+}
+
+/* ── Milestone / Joined ── */
+.el-milestone-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.el-milestone-sub {
+    font-size: .85rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.55;
+}
+
+/* ── Actor chip ── */
+.el-actor {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .25rem;
+}
+
+.el-actor-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.el-actor-avatar--fallback {
+    background: var(--primary);
+    color: #fff;
+    font-size: .7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.el-actor-name {
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* ── Empty state ── */
+.el-empty {
+    padding: 1.5rem 0;
+}
+
+.el-empty-msg {
+    color: var(--text-muted);
+    font-style: italic;
+    margin: 0;
+    font-size: .9rem;
+}
+
+/* ── Skeleton ── */
+.el-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-left: calc(12px + 1.25rem); /* match track + gap */
+}
+
+.el-skel-item {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+}
+
+.el-skel-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--glass-border);
+    flex-shrink: 0;
+    margin-top: .1rem;
+    animation: skel-pulse 1.5s ease-in-out infinite;
+}
+
+.el-skel-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+}
+
+.el-skel-line {
+    border-radius: 6px;
+    background: var(--glass-border);
+    animation: skel-pulse 1.5s ease-in-out infinite;
+}
+
+.el-skel-line--label { height: 10px; width: 80px; }
+.el-skel-line--title { height: 18px; width: 55%; }
+.el-skel-line--sub   { height: 13px; width: 80%; }
+
+@keyframes skel-pulse {
+    0%, 100% { opacity: .4; }
+    50%       { opacity: 1; }
+}
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+    .el-content {
+        padding-bottom: 1.25rem;
+    }
+
+    .el-card {
+        padding: .85rem 1rem;
+    }
+
+    .el-country-name {
+        font-size: .95rem;
+    }
+}
