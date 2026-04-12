@@ -105,7 +105,7 @@ export class ThemeService {
 
     ];
 
-    selectedPaletteName = signal('Dark');
+    selectedPaletteName = signal('Earthtone');
 
     constructor() {
         this.loadSettings();
@@ -121,9 +121,9 @@ export class ThemeService {
         if (savedTheme) {
             try {
                 const settings = JSON.parse(savedTheme);
-                this.selectedPaletteName.set(settings.palette || 'Dark');
+                this.selectedPaletteName.set(settings.palette || 'Earthtone');
 
-                const palette = this.palettes.find(p => p.name === settings.palette) || this.defaultDark;
+                const palette = this.palettes.find(p => p.name === settings.palette) || this.earthtonePalette;
                 this.darkMode.set(palette.isDark);
             } catch (e) {
                 console.error('Error loading theme settings', e);
@@ -159,7 +159,7 @@ export class ThemeService {
     }
 
     getCurrentPalette(): Palette {
-        return this.palettes.find(p => p.name === this.selectedPaletteName()) || this.defaultDark;
+        return this.palettes.find(p => p.name === this.selectedPaletteName()) || this.earthtonePalette;
     }
 
     private applyTheme() {

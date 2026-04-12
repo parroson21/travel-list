@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, inject, computed } from '@angular/core';
+import { Component, Output, EventEmitter, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VersionService } from '../../services/version.service';
 
@@ -25,11 +25,11 @@ import { VersionService } from '../../services/version.service';
       </div>
 
       <div class="pn-body">
-        @for (patch of filteredPatches(); track patch.version) {
-          <div class="patch-entry" [class.latest]="$first">
+        @for (patch of displayedPatches(); track patch.version) {
+          <div class="patch-entry" [class.latest]="$first && !showAll()">
             <div class="patch-entry-header">
               <span class="patch-version">v{{ patch.version }}</span>
-              @if ($first) { <span class="latest-badge">Latest</span> }
+              @if ($first && !showAll()) { <span class="latest-badge">Latest</span> }
               <span class="patch-date">{{ patch.date }}</span>
             </div>
             <ul class="patch-notes-list">
@@ -39,6 +39,12 @@ import { VersionService } from '../../services/version.service';
             </ul>
           </div>
         }
+      </div>
+
+      <div class="pn-footer">
+        <button class="pn-see-all" (click)="showAll.set(!showAll())">
+          {{ showAll() ? 'Show current version only' : 'See all versions' }}
+        </button>
       </div>
     </div>
   `,
@@ -106,10 +112,37 @@ import { VersionService } from '../../services/version.service';
 
     .pn-body {
       overflow-y: auto;
-      padding: 0.75rem 1.25rem 1.25rem;
+      padding: 0.75rem 1.25rem 1rem;
       display: flex;
       flex-direction: column;
       gap: 1.25rem;
+      flex: 1;
+    }
+
+    .pn-footer {
+      flex-shrink: 0;
+      border-top: 1px solid var(--glass-border);
+      padding: 0.6rem 1.25rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .pn-see-all {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--primary);
+      padding: 0.15rem 0;
+      opacity: 0.8;
+      transition: opacity 0.15s ease;
+      letter-spacing: 0.01em;
+    }
+    .pn-see-all:hover {
+      opacity: 1;
+      text-decoration: underline;
+      text-underline-offset: 2px;
     }
 
     .patch-entry {
@@ -192,11 +225,17 @@ import { VersionService } from '../../services/version.service';
 export class PatchNotesComponent {
   @Output() closed = new EventEmitter<void>();
   protected version = inject(VersionService);
+  protected showAll = signal(false);
 
-  /** Only show patches that share the same major.minor prefix as the current version. */
+  /** Only patches from the current major.minor (default view). */
   protected filteredPatches = computed(() => {
     const [major, minor] = this.version.version().split('.');
     const prefix = `${major}.${minor}.`;
     return this.version.patches().filter(p => p.version.startsWith(prefix));
   });
+
+  /** Switches between filtered and full history based on showAll flag. */
+  protected displayedPatches = computed(() =>
+    this.showAll() ? this.version.patches() : this.filteredPatches()
+  );
 }

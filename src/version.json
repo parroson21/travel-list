@@ -1,6 +1,14 @@
 {
-  "version": "0.3.0",
+  "version": "0.3.1",
   "patches": [
+    {
+      "version": "0.3.1",
+      "date": "2026-04-12",
+      "notes": [
+        "Earthtone is now the default theme for new visitors",
+        "Version history in patch notes modal via 'See all versions'"
+      ]
+    },
     {
       "version": "0.3.0",
       "date": "2026-04-12",
