@@ -55,6 +55,7 @@ export interface TravelEntry {
     heritageSites?: string[]; // heritage site id_no values seen on this trip
     needsDate?: boolean;     // true for migrated legacy entries missing a date
     createdAt: string;       // ISO timestamp when this entry was created
+    updatedAt?: string;      // ISO timestamp of the last edit — used for timeline sort order
 }
 
 export interface UserProfile {
@@ -72,7 +73,8 @@ export interface UserProfile {
     visitedPOIs: string[]; // List of POI IDs
     homeCountryId?: string; // ISO2 code of the user's home country
     dataResetNotification?: boolean; // Set to true when admin resets user data
-
+    following?: string[]; // UIDs this user follows
+    followers?: string[]; // UIDs that follow this user
 }
 
 export interface Continent {

@@ -1,26 +1,28 @@
 <nav class="glass-panel navbar">
     <div class="container nav-content">
-        <div class="brand" routerLink="/">TRAVEL<span>LIST</span></div>
+        <div class="brand" routerLink="/">GEO<span>TISM</span></div>
         <div class="auth-section">
             <!-- Log a Trip -->
-            <button class="icon-btn add-entry-icon-btn" (click)="addEntryOpen = true" title="Log a Trip" *ngIf="auth.user$ | async">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2.5" stroke-linecap="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            <button class="icon-btn add-entry-icon-btn" (click)="addEntryOpen = true" title="Log a Trip"
+                *ngIf="auth.user$ | async">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
             </button>
             <!-- Admin (admin only) -->
             <a *ngIf="auth.isAdmin$ | async" routerLink="/admin" routerLinkActive="active"
                 class="icon-btn admin-icon-link" title="Admin">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
             </a>
             <!-- Search -->
             <button class="nav-search-btn icon-btn" (click)="searchOverlay.toggle()" title="Search">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round">
                     <circle cx="11" cy="11" r="8" />
                     <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
@@ -65,8 +67,6 @@
                         </div>
                     </div>
 
-                    <div class="dropdown-divider"></div>
-
                     <a class="dropdown-item" href="https://github.com/parroson21/travel-list" target="_blank"
                         rel="noopener">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -76,9 +76,12 @@
                         GitHub
                     </a>
 
+                    <div class="dropdown-divider"></div>
+
                     <!-- Version badge -->
                     <div class="version-badge-row">
-                        <button class="version-badge" (click)="patchNotesOpen = true; settingsOpen = false">v{{ versionService.version() }}</button>
+                        <button class="version-badge" (click)="patchNotesOpen = true; settingsOpen = false">v{{
+                            versionService.version() }}</button>
                     </div>
                 </div>
             </div>
@@ -93,18 +96,27 @@
                             {{ (user.displayName ? user.displayName.split(' ')[0] : (user.email ||
                             '?')).charAt(0).toUpperCase() }}
                         </span>
-                        <span class="user-display-name">{{ user.displayName ? user.displayName.split(' ')[0] :
-                            user.email }}</span>
+                        <span class="user-display-name">
+                            <ng-container *ngIf="userProfile$ | async as profile">
+                                {{ profile.username ?? '' }}
+                            </ng-container>
+                        </span>
                         <svg class="chevron" [class.open]="menuOpen" width="12" height="12" viewBox="0 0 12 12">
                             <path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.5" fill="none"
                                 stroke-linecap="round" />
                         </svg>
                     </button>
                     <div class="dropdown-menu glass-panel" *ngIf="menuOpen">
-                        <div class="dropdown-header">
-                            <span class="dropdown-email">{{ user.email }}</span>
-                        </div>
-                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item"
+                           [routerLink]="(userProfile$ | async)?.username ? ['/user', (userProfile$ | async)!.username] : null"
+                           (click)="menuOpen = false">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round">
+                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            Profile
+                        </a>
                         <button class="dropdown-item" (click)="onChangeUsername(); menuOpen = false">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round">
@@ -135,17 +147,20 @@
 <!-- Mobile FAB navigation -->
 <div class="mobile-fab-container">
     <div class="fab-menu" [class.open]="fabOpen">
-        <a routerLink="/" class="fab-item" (click)="fabOpen = false" title="Profile" aria-label="Profile">
+        <a [routerLink]="(userProfile$ | async)?.username ? ['/user', (userProfile$ | async)!.username] : null"
+           class="fab-item" (click)="fabOpen = false" title="Profile" aria-label="Profile">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                 <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
         </a>
-        <button class="fab-item" (click)="addEntryOpen = true; fabOpen = false" title="Log a Trip" aria-label="Log a Trip" *ngIf="auth.user$ | async">
+        <button class="fab-item" (click)="addEntryOpen = true; fabOpen = false" title="Log a Trip"
+            aria-label="Log a Trip" *ngIf="auth.user$ | async">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
         </button>
         <button class="fab-item" (click)="searchOverlay.open(); fabOpen = false" title="Search" aria-label="Search">
@@ -182,4 +197,4 @@
 <!-- Patch notes overlay -->
 @if (patchNotesOpen) {
 <app-patch-notes (closed)="patchNotesOpen = false"></app-patch-notes>
-}
+}

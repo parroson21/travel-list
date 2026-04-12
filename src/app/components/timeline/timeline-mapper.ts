@@ -36,9 +36,9 @@ export function mapEntriesToTimeline(
     for (const entry of entries) {
         const country = countryMap.get(entry.countryId);
 
-        // Activity timestamp: when the entry was created in the app.
+        // Activity timestamp: last edit wins; fall back to createdAt for new entries.
         // Phantom/legacy entries have empty createdAt — push them to the end.
-        const timestamp = entry.createdAt || new Date(0).toISOString();
+        const timestamp = entry.updatedAt || entry.createdAt || new Date(0).toISOString();
         const isLegacy = !entry.createdAt;
 
         // Trip date for display (YYYY-MM → "March 2023")
@@ -58,6 +58,17 @@ export function mapEntriesToTimeline(
             })
             .filter(Boolean) as string[];
 
+        // Resolve subdivision codes to display names for this entry
+        const subdivisionCodes = entry.subdivisions || [];
+        const subdivisionNames: string[] = subdivisionCodes
+            .map((code: string) => {
+                const sub = (country?.subdivisions || []).find(
+                    (s: any) => s.code === code
+                );
+                return sub?.name || null;
+            })
+            .filter(Boolean) as string[];
+
         // ── Primary event ────────────────────────────────────────────────────
         items.push({
             id: entry.id || `entry-${entry.countryId}-${timestamp}`,
@@ -69,6 +80,7 @@ export function mapEntriesToTimeline(
             note: entry.note,
             rating: entry.rating,
             heritageSites: heritageSiteNames.length > 0 ? heritageSiteNames : undefined,
+            subdivisions: subdivisionNames.length > 0 ? subdivisionNames : undefined,
             tripDate: isLegacy ? undefined : tripDate,
             timestamp,
         });

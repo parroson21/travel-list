@@ -1356,3 +1356,35 @@
     }
 }
 
+/* ── Follow button ── */
+.follow-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .25rem .75rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--primary);
+    background: transparent;
+    color: var(--primary);
+    font-size: .78rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease, transform .12s ease;
+    flex-shrink: 0;
+}
+
+.follow-btn:hover {
+    background: rgba(var(--primary-rgb), .12);
+    transform: translateY(-1px);
+}
+
+.follow-btn--following {
+    background: var(--primary);
+    color: #fff;
+}
+
+.follow-btn--following:hover {
+    background: rgba(var(--primary-rgb), .75);
+    color: #fff;
+}

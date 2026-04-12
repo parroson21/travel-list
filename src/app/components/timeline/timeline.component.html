@@ -34,24 +34,78 @@
         <!-- Right: label + card -->
         <div class="el-content">
 
-            <!-- Section label -->
-            <div class="el-label">{{ sectionLabel(item) }}</div>
 
-            <!-- Card -->
-            <div class="el-card glass-panel">
 
-                <!-- Actor chip (following/global feeds) -->
-                <div class="el-actor" *ngIf="showActor && item.actorUid">
-                    <img *ngIf="item.actorPhotoURL"
-                         [src]="item.actorPhotoURL"
-                         class="el-actor-avatar"
-                         [alt]="item.actorDisplayName || item.actorUsername"
-                         referrerpolicy="no-referrer" />
-                    <div *ngIf="!item.actorPhotoURL" class="el-actor-avatar el-actor-avatar--fallback">
-                        {{ (item.actorUsername || item.actorDisplayName || '?').charAt(0).toUpperCase() }}
-                    </div>
-                    <span class="el-actor-name">&#64;{{ item.actorUsername || item.actorDisplayName }}</span>
+            <!-- ═══ SOCIAL CARD (feed mode — showActor=true) ═══ -->
+            <div class="el-card el-card--social glass-panel" *ngIf="showActor && item.actorUid">
+
+                <!-- Header row: avatar · @username · time -->
+                <div class="el-social-header">
+                    <a class="el-social-actor-link"
+                       [routerLink]="item.actorUsername ? ['/user', item.actorUsername] : null">
+                        <img *ngIf="item.actorPhotoURL"
+                             [src]="item.actorPhotoURL"
+                             class="el-social-avatar"
+                             [alt]="item.actorDisplayName || item.actorUsername"
+                             referrerpolicy="no-referrer" />
+                        <div *ngIf="!item.actorPhotoURL" class="el-social-avatar el-social-avatar--fallback">
+                            {{ (item.actorUsername || item.actorDisplayName || '?').charAt(0).toUpperCase() }}
+                        </div>
+                        <span class="el-social-username">&#64;{{ item.actorUsername || item.actorDisplayName }}</span>
+                    </a>
+                    <span class="el-social-time">{{ item.relTime }}</span>
                 </div>
+
+                <!-- Row 1: flag · country · date -->
+                <ng-container *ngIf="item.type !== 'joined'">
+                    <div class="el-social-content">
+                        <span class="el-flag flag-emoji" aria-hidden="true">{{ item.countryEmoji || '🌐' }}</span>
+                        <span class="el-social-country">{{ item.countryName }}</span>
+                        <span class="el-social-date" *ngIf="item.formattedTripDate">{{ item.formattedTripDate }}</span>
+                    </div>
+                    <!-- Row 2: action badge -->
+                    <div>
+                        <span class="el-social-action el-social-action--{{ item.type }}">
+                            {{ item.type === 'planned' ? 'Planned' : 'Visited' }}
+                        </span>
+                    </div>
+                    <!-- Note -->
+                    <p class="el-note" *ngIf="item.note">{{ item.note }}</p>
+                    <!-- Rating -->
+                    <div class="el-rating" *ngIf="item.rating" [attr.aria-label]="item.rating + ' stars'">
+                        <span class="el-star" *ngFor="let s of stars(item.rating)" aria-hidden="true">★</span>
+                        <span class="el-star el-star--empty" *ngFor="let s of emptyStars(item.rating)" aria-hidden="true">★</span>
+                    </div>
+                    <!-- Heritage tags -->
+                    <div class="el-tags" *ngIf="item.heritageSites && item.heritageSites.length > 0">
+                        <span class="el-tag" *ngFor="let site of item.heritageSites">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                            {{ site }}
+                        </span>
+                    </div>
+                    <!-- Subdivision tags -->
+                    <div class="el-tags" *ngIf="item.subdivisions && item.subdivisions.length > 0">
+                        <span class="el-tag el-tag--subdivision" *ngFor="let sub of item.subdivisions">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            {{ sub }}
+                        </span>
+                    </div>
+                </ng-container>
+
+                <!-- Joined milestone in social mode -->
+                <ng-container *ngIf="item.type === 'joined'">
+                    <div class="el-milestone-title" style="margin-top:.25rem">{{ milestoneTitle(item) }}</div>
+                </ng-container>
+
+            </div><!-- /el-card--social -->
+
+            <!-- ═══ CLASSIC CARD (profile mode — showActor=false or no actorUid) ═══ -->
+            <div class="el-card el-card--social glass-panel" *ngIf="!showActor || !item.actorUid">
 
                 <!-- Joined / milestone -->
                 <ng-container *ngIf="item.type === 'joined'">
@@ -59,14 +113,23 @@
                     <p class="el-milestone-sub">{{ milestoneDesc(item) }}</p>
                 </ng-container>
 
-                <!-- Country events -->
+                <!-- Country events — same body layout as social card -->
                 <ng-container *ngIf="item.type !== 'joined'">
-                    <div class="el-card-top">
-                        <span class="el-country-name">
-                            <span class="el-flag flag-emoji" aria-hidden="true">{{ item.countryEmoji || '' }}</span>
-                            {{ item.countryName }}
+                    <!-- Time row: pushed to the right, same as feed actor header -->
+                    <div class="el-classic-time-row" *ngIf="item.relTime">
+                        <span class="el-social-time">{{ item.relTime }}</span>
+                    </div>
+                    <!-- Row 1: flag · country · date -->
+                    <div class="el-social-content">
+                        <span class="el-flag flag-emoji" aria-hidden="true">{{ item.countryEmoji || '' }}</span>
+                        <span class="el-social-country">{{ item.countryName }}</span>
+                        <span class="el-social-date" *ngIf="item.formattedTripDate">{{ item.formattedTripDate }}</span>
+                    </div>
+                    <!-- Row 2: action badge -->
+                    <div>
+                        <span class="el-social-action el-social-action--{{ item.type }}">
+                            {{ item.type === 'planned' ? 'Planned' : 'Visited' }}
                         </span>
-                        <span class="el-date" *ngIf="item.formattedTripDate">{{ item.formattedTripDate | uppercase }}</span>
                     </div>
 
                     <!-- Note -->
@@ -88,11 +151,21 @@
                         </span>
                     </div>
 
-                    <!-- Relative time -->
-                    <div class="el-rel-time" *ngIf="item.relTime">{{ item.relTime }}</div>
+                    <!-- Subdivision tags -->
+                    <div class="el-tags" *ngIf="item.subdivisions && item.subdivisions.length > 0">
+                        <span class="el-tag el-tag--subdivision" *ngFor="let sub of item.subdivisions">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            {{ sub }}
+                        </span>
+                    </div>
+
                 </ng-container>
 
-            </div><!-- /el-card -->
+            </div><!-- /el-card (classic) -->
+
         </div><!-- /el-content -->
     </div><!-- /el-item -->
 

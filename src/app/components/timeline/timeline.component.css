@@ -198,6 +198,13 @@
     margin-top: .1rem;
 }
 
+/* Subdivision variant — uses theme secondary colour to distinguish from heritage (primary) */
+.el-tag--subdivision {
+    color: var(--secondary);
+    background: rgba(var(--secondary-rgb), 0.12);
+    border-color: rgba(var(--secondary-rgb), 0.28);
+}
+
 /* ── Relative time ── */
 .el-rel-time {
     font-size: .72rem;
@@ -219,36 +226,120 @@
     line-height: 1.55;
 }
 
-/* ── Actor chip ── */
-.el-actor {
+/* ── Actor chip (kept for legacy; social layout below) ── */
+.el-actor { display: none; }
+
+/* ══ Social card layout (feed mode) ══════════════════════════════ */
+.el-card--social {
+    padding: .85rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+}
+
+/* Classic card time row: mirrors social header but time-only, right-aligned */
+.el-classic-time-row {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Header: avatar · @username · time */
+.el-social-header {
     display: flex;
     align-items: center;
-    gap: .5rem;
-    margin-bottom: .25rem;
+    gap: .55rem;
 }
 
-.el-actor-avatar {
-    width: 24px;
-    height: 24px;
+.el-social-actor-link {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    flex: 1;
+    min-width: 0;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.el-social-actor-link:hover .el-social-username {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.el-social-avatar {
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     object-fit: cover;
+    flex-shrink: 0;
 }
 
-.el-actor-avatar--fallback {
+.el-social-avatar--fallback {
     background: var(--primary);
     color: #fff;
-    font-size: .7rem;
+    font-size: .75rem;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.el-actor-name {
-    font-size: .78rem;
+.el-social-username {
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.el-social-time {
+    font-size: .72rem;
+    color: var(--text-muted);
+    opacity: .65;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Content: flag · country · action · date — all inline */
+.el-social-content {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: .3rem .4rem;
+    font-size: .93rem;
     font-weight: 600;
+    color: var(--text-main);
+}
+
+.el-social-country {
+    color: var(--text-main);
+}
+
+.el-social-action {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    padding: .1rem .4rem;
+    border-radius: 4px;
+}
+
+.el-social-action--visited {
+    color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+.el-social-action--planned {
+    color: #a3823a;
+    background: color-mix(in srgb, #a3823a 15%, transparent);
+}
+
+.el-social-date {
+    font-size: .8rem;
+    font-weight: 500;
     color: var(--text-muted);
 }
+
 
 /* ── Empty state ── */
 .el-empty {

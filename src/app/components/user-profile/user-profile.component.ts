@@ -42,6 +42,7 @@ export class UserProfileComponent implements OnInit {
     vm$: Observable<{
         targetProfile: UserProfile | null,
         currentUser: import('@angular/fire/auth').User | null,
+        currentUserProfile: UserProfile | null,
         visitedCountries: Country[],
         visitedCountryNames: string[],
         plannedCountries: Country[],
@@ -51,6 +52,7 @@ export class UserProfileComponent implements OnInit {
         visitedPOIIds: string[],
         stats: { countriesVisited: number, poisVisited: number, countriesPlanned: number },
         isOwnProfile: boolean,
+        isFollowing: boolean,
         travelEntries: TravelEntry[],
         entryByCountryId: Map<string, TravelEntry[]>,
         visitedEntryRows: ProfileEntryRow[],
@@ -116,28 +118,37 @@ export class UserProfileComponent implements OnInit {
             this.auth.user$.pipe(startWith(null))
         ]).pipe(
             switchMap(([targetProfile, countries, currentUser]) => {
-                if (!targetProfile) {
-                    return of({
-                        targetProfile: null,
-                        currentUser,
-                        visitedCountries: [],
-                        visitedCountryNames: [],
-                        plannedCountries: [],
-                        plannedCountryNames: [],
-                        heritageSites: [],
-                        visitedHeritageSites: [],
-                        visitedPOIIds: [],
-                        stats: { countriesVisited: 0, poisVisited: 0, countriesPlanned: 0 },
-                        isOwnProfile: false,
-                        travelEntries: [] as TravelEntry[],
-                        entryByCountryId: new Map<string, TravelEntry[]>(),
-                        visitedEntryRows: [] as ProfileEntryRow[],
-                        plannedEntryRows: [] as ProfileEntryRow[],
-                        homeCountry: undefined as Country | undefined,
-                        countries,
-                        timelineItems: [] as TimelineItem[]
-                    });
-                }
+                // Also stream the current user's own profile for the following[] array
+                const currentUserProfile$ = currentUser
+                    ? this.travel.getUserProfileById(currentUser.uid)
+                    : of(null);
+
+                return currentUserProfile$.pipe(
+                    switchMap(currentUserProfile => {
+                        if (!targetProfile) {
+                            return of({
+                                targetProfile: null,
+                                currentUser,
+                                currentUserProfile,
+                                visitedCountries: [],
+                                visitedCountryNames: [],
+                                plannedCountries: [],
+                                plannedCountryNames: [],
+                                heritageSites: [],
+                                visitedHeritageSites: [],
+                                visitedPOIIds: [],
+                                stats: { countriesVisited: 0, poisVisited: 0, countriesPlanned: 0 },
+                                isOwnProfile: false,
+                                isFollowing: false,
+                                travelEntries: [] as TravelEntry[],
+                                entryByCountryId: new Map<string, TravelEntry[]>(),
+                                visitedEntryRows: [] as ProfileEntryRow[],
+                                plannedEntryRows: [] as ProfileEntryRow[],
+                                homeCountry: undefined as Country | undefined,
+                                countries,
+                                timelineItems: [] as TimelineItem[]
+                            });
+                        }
 
                 const visitedCountryIds = targetProfile.visitedCountries || [];
                 const plannedCountryIds = targetProfile.plannedCountries || [];
@@ -226,6 +237,7 @@ export class UserProfileComponent implements OnInit {
                         return {
                             targetProfile,
                             currentUser,
+                            currentUserProfile,
                             visitedCountries,
                             visitedCountryNames: visitedCountries.map(c => c.name),
                             plannedCountries,
@@ -239,6 +251,7 @@ export class UserProfileComponent implements OnInit {
                                 countriesPlanned: plannedCountryIds.length
                             },
                             isOwnProfile,
+                            isFollowing: !isOwnProfile && !!(currentUserProfile?.following?.includes(targetProfile.uid)),
                             travelEntries,
                             entryByCountryId,
                             visitedEntryRows: toRows([...visitedEntries, ...phantomVisited]),
@@ -248,18 +261,35 @@ export class UserProfileComponent implements OnInit {
                             timelineItems: mapEntriesToTimeline(
                                 travelEntries,
                                 countryById,
-                                targetProfile
+                                targetProfile,
+                                {
+                                    uid: targetProfile.uid,
+                                    username: targetProfile.username,
+                                    displayName: targetProfile.displayName,
+                                    photoURL: targetProfile.photoURL
+                                }
                             )
                         };
                     })
                 );
-            })
-        );
+            }) // closes switchMap(currentUserProfile =>
+        );     // closes currentUserProfile$.pipe(
+            }) // closes switchMap(([targetProfile, countries, currentUser]) =>
+        );     // closes combineLatest.pipe(
     }
 
     setActiveTab(tab: 'countries' | 'planned' | 'heritage') {
         this.activeTab = tab;
         this.selectedSite = null;
+    }
+
+    // ── Follow / Unfollow ─────────────────────────────────────────────────
+    async toggleFollow(targetUid: string, isFollowing: boolean) {
+        if (isFollowing) {
+            await this.travel.unfollowUser(targetUid);
+        } else {
+            await this.travel.followUser(targetUid);
+        }
     }
 
     // ── Entry modal ───────────────────────────────────────────────────────

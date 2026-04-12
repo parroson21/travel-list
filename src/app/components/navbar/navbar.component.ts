@@ -2,6 +2,7 @@ import { Component, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { TravelService } from '../../services/travel.service';
 import { ThemeService } from '../../services/theme.service';
 import { SearchOverlayService } from '../../services/search-overlay.service';
 import { SearchOverlayComponent } from '../search-overlay/search-overlay.component';
@@ -30,9 +31,14 @@ export class NavbarComponent {
 
     constructor(
         public auth: AuthService,
+        public travel: TravelService,
         public theme: ThemeService,
         public searchOverlay: SearchOverlayService
-    ) { }
+    ) {
+        this.userProfile$ = this.travel.getUserProfile();
+    }
+
+    readonly userProfile$: import('rxjs').Observable<import('../../models/travel.model').UserProfile | null>;
 
   toggleMenu(event: Event) {
     event.stopPropagation();

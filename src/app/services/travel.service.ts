@@ -2,8 +2,8 @@ import { Injectable, NgZone } from '@angular/core';
 import { POI, Country, UserProfile, Continent, Subdivision, TravelEntry } from '../models/travel.model';
 import { Firestore, collection, doc, setDoc, getDocs, getDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot, query, where, writeBatch, orderBy, limit, startAt, endAt, addDoc, deleteDoc, deleteField } from '@angular/fire/firestore';
 import { Auth, user } from '@angular/fire/auth';
-import { switchMap } from 'rxjs/operators';
-import { of, Observable } from 'rxjs';
+import { switchMap, map, catchError } from 'rxjs/operators';
+import { of, Observable, combineLatest } from 'rxjs';
 
 @Injectable({
     providedIn: 'root'
@@ -202,7 +202,7 @@ export class TravelService {
         if (!snap.exists()) return;
         const entry = snap.data() as TravelEntry;
 
-        await updateDoc(entryDocRef, changes as Record<string, any>);
+        await updateDoc(entryDocRef, { ...changes, updatedAt: new Date().toISOString() } as Record<string, any>);
 
         const userDoc = doc(this.firestore, `users/${uid}`);
         const newStatus = changes.status ?? entry.status;
@@ -280,6 +280,61 @@ export class TravelService {
             await updateDoc(userDoc, { visitedPOIs: arrayRemove(poiId) });
         }
     }
+
+    /** Follow a user — atomically updates both parties' documents */
+    async followUser(targetUid: string): Promise<void> {
+        const u = this.auth.currentUser;
+        if (!u || u.uid === targetUid) return;
+        const batch = writeBatch(this.firestore);
+        batch.update(doc(this.firestore, `users/${u.uid}`), { following: arrayUnion(targetUid) });
+        batch.update(doc(this.firestore, `users/${targetUid}`), { followers: arrayUnion(u.uid) });
+        await batch.commit();
+    }
+
+    /** Unfollow a user — atomically updates both parties' documents */
+    async unfollowUser(targetUid: string): Promise<void> {
+        const u = this.auth.currentUser;
+        if (!u) return;
+        const batch = writeBatch(this.firestore);
+        batch.update(doc(this.firestore, `users/${u.uid}`), { following: arrayRemove(targetUid) });
+        batch.update(doc(this.firestore, `users/${targetUid}`), { followers: arrayRemove(u.uid) });
+        await batch.commit();
+    }
+
+    /**
+     * Stream travel entries for a set of UIDs (self + following).
+     * Returns a flat array of { entry, profile } pairs sorted newest-first.
+     */
+    getFeedEntries(uids: string[]): Observable<{ entry: TravelEntry; profile: UserProfile }[]> {
+        if (!uids.length) return of([]);
+        const streams = uids.map(uid =>
+            this.getTravelEntries(uid).pipe(
+                switchMap(entries =>
+                    this.getUserProfileById(uid).pipe(
+                        map(profile => entries
+                            .filter((e): e is TravelEntry => !!e.createdAt || !!e.updatedAt)
+                            .map(entry => ({ entry, profile: profile! }))
+                        )
+                    )
+                ),
+                catchError(err => {
+                    console.warn(`getFeedEntries: skipping uid ${uid} —`, err?.message || err);
+                    return of([] as { entry: TravelEntry; profile: UserProfile }[]);
+                })
+            )
+        );
+        return combineLatest(streams).pipe(
+            map((groups: { entry: TravelEntry; profile: UserProfile }[][]) => groups
+                .flat()
+                .sort((a: { entry: TravelEntry; profile: UserProfile }, b: { entry: TravelEntry; profile: UserProfile }) => {
+                    const ta = a.entry.updatedAt || a.entry.createdAt || '';
+                    const tb = b.entry.updatedAt || b.entry.createdAt || '';
+                    return tb.localeCompare(ta);
+                })
+            )
+        );
+    }
+
 
     /** Set (or clear) the user's home country */
     async setHomeCountry(countryId: string | null): Promise<void> {

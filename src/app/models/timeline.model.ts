@@ -30,6 +30,7 @@ export interface TimelineItem {
   countryEmoji?: string;
   siteName?: string;   // kept for backwards compat — unused by mapper now
   heritageSites?: string[]; // Names of visited heritage sites, listed under the entry
+  subdivisions?: string[];  // Names of visited subdivisions (states/provinces/etc.)
 
   note?: string;
   rating?: number;     // 1–5 stars

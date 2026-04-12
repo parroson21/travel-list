@@ -1,6 +1,15 @@
 {
-  "version": "0.2.5",
+  "version": "0.3.0",
   "patches": [
+    {
+      "version": "0.3.0",
+      "date": "2026-04-12",
+      "notes": [
+        "Follow/unfollow other users from their profile",
+        "New home feed showing activity from followed accounts",
+        "Unified social timeline card design across feed and profiles"
+      ]
+    },
     {
       "version": "0.2.5",
       "date": "2026-04-08",
